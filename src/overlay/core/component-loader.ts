@@ -7,6 +7,7 @@ import {
 } from "./component-types";
 import { loadGlobalLayoutSettings, isTextComponent } from "./layout-store";
 import { resolveEffectiveColor } from "./team-colors";
+import { toRealUuSpeed, calcNonlinearSpeedProgress, calcSpeedColor } from "./speed-meter";
 
 export interface ParsedComponent {
   manifest: ComponentMeta;
@@ -712,20 +713,18 @@ export function updateComponentInstanceDom(
         box.style.borderRadius = `${radius}px`;
       }
       if (fill) {
-        const uuSpeed = toUu(speed);
-        const pct = Math.min(100, Math.max(0, (uuSpeed / 2300) * 100));
-        fill.style.width = pct + "%";
-        let color = inst.customProps?.colorLow || "#d4af37";
-        if (uuSpeed >= 2200) {
-          color = inst.customProps?.colorHigh || inst.customProps?.colorSupersonic || "#9333ea";
-          fill.classList.add("supersonic-glow");
-        } else if (uuSpeed >= 1400) {
-          color = inst.customProps?.colorMid || inst.customProps?.colorMidStart || "#77ca7a";
-          fill.classList.remove("supersonic-glow");
-        } else {
-          fill.classList.remove("supersonic-glow");
-        }
+        const uuSpeed = toRealUuSpeed(speed);
+        const split1410Pos = Number(inst.customProps?.split1410Pos ?? inst.customProps?.pos1410 ?? 40);
+        const pct = calcNonlinearSpeedProgress(uuSpeed, split1410Pos);
+        fill.style.transform = `scaleX(${pct / 100})`;
+        const { color, isSupersonic } = calcSpeedColor(
+          uuSpeed,
+          inst.customProps?.colorLow || "#d4af37",
+          inst.customProps?.colorMidStart || "#77ca7a",
+          inst.customProps?.colorMidEnd || "#59f168"
+        );
         fill.style.backgroundColor = color;
+        fill.classList.toggle("supersonic-glow", isSupersonic);
         if (inst.customProps?.borderRadius !== undefined) {
           fill.style.borderRadius = inst.customProps.borderRadius + "px";
         }
@@ -751,20 +750,18 @@ export function updateComponentInstanceDom(
         box.style.borderRadius = `${radius}px`;
       }
       if (fill) {
-        const uuSpeed = toUu(speed);
-        const pct = Math.min(100, Math.max(0, (uuSpeed / 2300) * 100));
-        fill.style.height = pct + "%";
-        let color = inst.customProps?.colorLow || "#d4af37";
-        if (uuSpeed >= 2200) {
-          color = inst.customProps?.colorHigh || inst.customProps?.colorSupersonic || "#9333ea";
-          fill.classList.add("supersonic-glow");
-        } else if (uuSpeed >= 1400) {
-          color = inst.customProps?.colorMid || inst.customProps?.colorMidStart || "#77ca7a";
-          fill.classList.remove("supersonic-glow");
-        } else {
-          fill.classList.remove("supersonic-glow");
-        }
+        const uuSpeed = toRealUuSpeed(speed);
+        const split1410Pos = Number(inst.customProps?.split1410Pos ?? inst.customProps?.pos1410 ?? 40);
+        const pct = calcNonlinearSpeedProgress(uuSpeed, split1410Pos);
+        fill.style.transform = `scaleY(${pct / 100})`;
+        const { color, isSupersonic } = calcSpeedColor(
+          uuSpeed,
+          inst.customProps?.colorLow || "#d4af37",
+          inst.customProps?.colorMidStart || "#77ca7a",
+          inst.customProps?.colorMidEnd || "#59f168"
+        );
         fill.style.backgroundColor = color;
+        fill.classList.toggle("supersonic-glow", isSupersonic);
         if (inst.customProps?.borderRadius !== undefined) {
           fill.style.borderRadius = inst.customProps.borderRadius + "px";
         }
@@ -842,9 +839,10 @@ export function updateComponentInstanceDom(
         const perimeter = 2 * Math.PI * radius;
         const activeAngle = 360 - gap;
         const totalDash = perimeter * (activeAngle / 360);
-        const uuSpeed = toUu(speed);
-        const pct = Math.max(0, Math.min(1, uuSpeed / 2300));
-        const progressDash = totalDash * pct;
+        const uuSpeed = toRealUuSpeed(speed);
+        const split1410Pos = Number(inst.customProps?.split1410Pos ?? inst.customProps?.pos1410 ?? 40);
+        const pct = calcNonlinearSpeedProgress(uuSpeed, split1410Pos);
+        const progressDash = totalDash * (pct / 100);
         const rotate = orient + (gap / 2);
 
         [bg, fill].forEach((el) => {
@@ -857,19 +855,16 @@ export function updateComponentInstanceDom(
         bg.setAttribute("stroke", trackColor);
         bg.setAttribute("stroke-dasharray", totalDash + " " + perimeter);
 
-        let strokeColor = inst.customProps?.colorLow || "#d4af37";
-        if (uuSpeed >= 2200) {
-          strokeColor = inst.customProps?.colorHigh || inst.customProps?.colorSupersonic || "#a020f0";
-          fill.classList.add("curved-supersonic");
-        } else if (uuSpeed >= 1400) {
-          strokeColor = inst.customProps?.colorMid || inst.customProps?.colorMidStart || "#77ca7a";
-          fill.classList.remove("curved-supersonic");
-        } else {
-          fill.classList.remove("curved-supersonic");
-        }
+        const { color, isSupersonic } = calcSpeedColor(
+          uuSpeed,
+          inst.customProps?.colorLow || "#d4af37",
+          inst.customProps?.colorMidStart || "#77ca7a",
+          inst.customProps?.colorMidEnd || "#59f168"
+        );
 
-        fill.setAttribute("stroke", strokeColor);
+        fill.setAttribute("stroke", color);
         fill.setAttribute("stroke-dasharray", progressDash + " " + perimeter);
+        fill.classList.toggle("curved-supersonic", isSupersonic);
       }
       break;
     }

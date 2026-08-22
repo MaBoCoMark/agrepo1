@@ -459,26 +459,37 @@ export function initCompetitiveDesigner(
       );
     }
 
-    // Speed Bar multi-tier colors
-    if (isSpeedBar) {
+    // Speed Bar & Curved Speedometer multi-tier colors & 1410 position
+    if (isSpeedBar || isCurvedSpeed) {
       propsBox.appendChild(
-        createRgbaInputControl('Low Speed Color (<1400)', inst.customProps?.colorLow || '#d4af37', '#d4af37', 1.0, (val) => {
+        createSliderControl(
+          '1410 Speed Position (%)',
+          10,
+          60,
+          1,
+          Number(inst.customProps?.split1410Pos ?? inst.customProps?.pos1410 ?? 40),
+          '%',
+          (val) => {
+            inst.customProps!.split1410Pos = val;
+            saveAndEmit();
+          }
+        )
+      );
+      propsBox.appendChild(
+        createRgbaInputControl('Low Speed Color (0-1410)', inst.customProps?.colorLow || '#d4af37', '#d4af37', 1.0, (val) => {
           inst.customProps!.colorLow = val;
           saveAndEmit();
         })
       );
       propsBox.appendChild(
-        createRgbaInputControl('Mid Speed Color (1400-2200)', inst.customProps?.colorMid || inst.customProps?.colorMidStart || '#77ca7a', '#77ca7a', 1.0, (val) => {
-          inst.customProps!.colorMid = val;
+        createRgbaInputControl('Mid Speed Start (1410)', inst.customProps?.colorMidStart || '#77ca7a', '#77ca7a', 1.0, (val) => {
           inst.customProps!.colorMidStart = val;
-          inst.customProps!.colorMidEnd = val;
           saveAndEmit();
         })
       );
       propsBox.appendChild(
-        createRgbaInputControl('Supersonic Color (>=2200)', inst.customProps?.colorHigh || inst.customProps?.colorSupersonic || '#9333ea', '#9333ea', 1.0, (val) => {
-          inst.customProps!.colorHigh = val;
-          inst.customProps!.colorSupersonic = val;
+        createRgbaInputControl('Mid Speed End (2200)', inst.customProps?.colorMidEnd || '#59f168', '#59f168', 1.0, (val) => {
+          inst.customProps!.colorMidEnd = val;
           saveAndEmit();
         })
       );

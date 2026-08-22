@@ -17,9 +17,10 @@
   "customProperties": [
     { "key": "borderRadius", "label": "Border Radius", "type": "number", "min": 0, "max": 20, "unit": "px", "default": 4 },
     { "key": "bgColor", "label": "Background Color", "type": "color", "default": "rgba(0, 0, 0, 0.65)" },
+    { "key": "split1410Pos", "label": "1410 Speed Position (%)", "type": "number", "min": 10, "max": 60, "unit": "%", "default": 40 },
     { "key": "colorLow", "label": "Low Speed Color", "type": "color", "default": "#d4af37" },
-    { "key": "colorMidStart", "label": "Mid Speed Start", "type": "color", "default": "#77ca7a" },
-    { "key": "colorMidEnd", "label": "Mid Speed End", "type": "color", "default": "#59f168" }
+    { "key": "colorMidStart", "label": "Mid Speed Start (Dark)", "type": "color", "default": "#77ca7a" },
+    { "key": "colorMidEnd", "label": "Mid Speed End (Bright)", "type": "color", "default": "#59f168" }
   ]
 }
 </script>
@@ -48,8 +49,9 @@
 
 .el-speed-bar-fill {
   height: 100%;
-  width: 0%;
+  width: 100%;
   transform-origin: left center;
+  transform: scaleX(0);
   background-color: #d4af37;
   border-radius: 4px;
   transition: none !important;

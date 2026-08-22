@@ -482,11 +482,10 @@ export function createNewComponentInstance(
     customProps.colorMid = "#f59e0b";
     customProps.colorLow = "#ef4444";
   } else if (componentType === "element-speed-bar" || componentType === "element-vertical-speed-bar") {
+    customProps.split1410Pos = 40;
     customProps.colorLow = "#d4af37";
     customProps.colorMidStart = "#77ca7a";
-    customProps.colorMid = "#77ca7a";
-    customProps.colorHigh = "#9333ea";
-    customProps.colorSupersonic = "#9333ea";
+    customProps.colorMidEnd = "#59f168";
     customProps.borderRadius = 4;
     customProps.bgColor = "rgba(0, 0, 0, 0.65)";
   } else if (componentType === "element-curved-speedometer") {
@@ -494,11 +493,10 @@ export function createNewComponentInstance(
     customProps.gap = 90;
     customProps.orientation = 90;
     customProps.trackColor = "rgba(255, 255, 255, 0.15)";
+    customProps.split1410Pos = 40;
     customProps.colorLow = "#d4af37";
     customProps.colorMidStart = "#77ca7a";
-    customProps.colorMid = "#77ca7a";
-    customProps.colorHigh = "#a020f0";
-    customProps.colorSupersonic = "#a020f0";
+    customProps.colorMidEnd = "#59f168";
     customProps.bgColor = "transparent";
   } else if (componentType === "element-system-time") {
     customProps.textColorMode = "default";
