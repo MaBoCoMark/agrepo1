@@ -979,7 +979,23 @@
     <textarea id="packet-display" class="packet-viewer" readonly placeholder="Captured packet JSON will appear here..."></textarea>
   </div>
 
-  <!-- Import / Paste Layout Modal -->
+  <hr>
+
+  <!-- Performance Benchmark Panel -->
+  <div class="section-title">Performance Benchmark</div>
+  <div class="primer-card">
+    <div style="font-size: 11px; color: var(--primer-fg-muted); margin-bottom: 10px;">
+      Measures high-resolution frame timing & jitter across a 10-second RAF recording window (following a 3-second warm-up period).
+    </div>
+    <button id="btn-run-benchmark" class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 600;">
+      <span>⚡</span>
+      <span id="benchmark-btn-text">Run Performance Benchmark</span>
+    </button>
+    <div id="benchmark-status-box" style="display: none; margin-top: 8px; font-size: 11px; color: var(--primer-accent-fg); text-align: center; font-weight: 600;"></div>
+    <div id="benchmark-results-container" style="display: none; margin-top: 12px; flex-direction: column; gap: 8px;"></div>
+  </div>
+
+    <!-- Import / Paste Layout Modal -->
   <div id="import-modal" class="modal-overlay" style="display: none;">
     <div class="modal-box">
       <div class="section-title" style="color: var(--primer-success-fg); margin-bottom: 10px;">📥 Import Layout JSON</div>

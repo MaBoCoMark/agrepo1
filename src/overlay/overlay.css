@@ -685,3 +685,30 @@ body.layout-editing .comp-container:hover {
 .dyn-val.danger-blink {
   animation: textDangerBlink var(--boost-blink-duration, 0.5s) infinite ease-in-out !important;
 }
+
+/* GPU-Accelerated Hardware Compositing for Meters & Progress Bars */
+.boost-bar-fill,
+.el-boost-bar-fill,
+.dyn-boost-fill,
+.roster-bar-fill,
+.dyn-p-boost-fill,
+.dyn-p1-fill,
+.dyn-p2-fill,
+.dyn-p3-fill,
+.hud-boost-bar-fill,
+.dyn-speed-fill,
+.el-speed-bar-fill,
+.widget-bar-fill {
+  transform-origin: 0% 50%;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.dyn-v-boost-fill,
+.el-v-boost-bar-fill,
+.dyn-v-speed-fill,
+.el-v-speed-bar-fill {
+  transform-origin: 50% 100%;
+  will-change: transform;
+  transform: translateZ(0);
+}
