@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="./src/styles/main.css">
+  <style>
+    body {
+      background: var(--primer-canvas-default);
+      color: var(--primer-fg-default);
+      font-family: 'GHMonoR', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      padding: 16px;
+      margin: 0;
+      box-sizing: border-box;
+      user-select: none;
+      font-size: 12px;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid var(--primer-border-muted);
+      margin: 14px 0;
+    }
+
+    p {
+      margin: 6px 0;
+    }
+
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--primer-border-muted);
+    }
+
+    .app-title {
+      font-weight: bold;
+      font-size: 13px;
+      color: var(--primer-fg-default);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .section-title {
+      font-weight: bold;
+      color: var(--primer-accent-fg);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .scroll-zone {
+      border: 1px dashed var(--primer-border-default);
+      background: var(--primer-canvas-subtle);
+      border-radius: 6px;
+      width: 100%;
+      height: 28px;
+      text-align: center;
+      line-height: 28px;
+      cursor: ns-resize;
+      margin-bottom: 8px;
+      color: var(--primer-fg-muted);
+      transition: all 0.15s;
+    }
+
+    .scroll-zone:hover {
+      border-color: var(--primer-accent-fg);
+      color: var(--primer-fg-default);
+      background: var(--primer-accent-muted);
+    }
+
+    /* 🌟 Primer Card Panels */
+    .primer-card {
+      background: var(--primer-canvas-card);
+      border: 1px solid var(--primer-border-default);
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 12px;
+      box-shadow: var(--primer-shadow-card);
+    }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 8px;
+      display: inline-block;
+    }
+
+    .status-dot.connected {
+      background-color: var(--primer-success-emphasis);
+      box-shadow: 0 0 6px var(--primer-success-emphasis);
+    }
+
+    .status-dot.connecting {
+      background-color: var(--primer-warning-emphasis);
+      box-shadow: 0 0 6px var(--primer-warning-emphasis);
+    }
+
+    .status-dot.disconnected {
+      background-color: var(--primer-danger-emphasis);
+    }
+
+    .input-group {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .input-field, .select-field {
+      background: var(--primer-input-bg);
+      border: 1px solid var(--primer-input-border);
+      color: var(--primer-fg-default);
+      padding: 5px 8px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 12px;
+      box-sizing: border-box;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .input-field:focus, .select-field:focus {
+      outline: none;
+      border-color: var(--primer-input-focus-border);
+      box-shadow: var(--primer-input-focus-shadow);
+    }
+
+    .input-field:disabled, .select-field:disabled {
+      background: var(--primer-canvas-subtle);
+      color: var(--primer-fg-subtle);
+      cursor: not-allowed;
+    }
+
+    /* 🌟 Primer Buttons */
+    .btn {
+      background: var(--primer-btn-bg);
+      color: var(--primer-btn-text);
+      border: 1px solid var(--primer-btn-border);
+      border-radius: 6px;
+      padding: 5px 12px;
+      font-family: inherit;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .btn:hover:not(:disabled) {
+      background: var(--primer-btn-hover-bg);
+    }
+
+    .btn:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: var(--primer-accent-emphasis);
+      color: var(--primer-fg-on-emphasis);
+      border-color: var(--primer-accent-emphasis);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--primer-accent-hover);
+    }
+
+    .btn-success {
+      background: var(--primer-success-emphasis);
+      color: var(--primer-fg-on-emphasis);
+      border-color: var(--primer-success-emphasis);
+    }
+
+    .btn-success:hover:not(:disabled) {
+      background: var(--primer-success-hover);
+    }
+
+    .btn-danger {
+      background: var(--primer-danger-emphasis);
+      color: var(--primer-fg-on-emphasis);
+      border-color: var(--primer-danger-emphasis);
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      background: var(--primer-danger-hover);
+    }
+
+    .btn-secondary {
+      background: var(--primer-btn-bg);
+      color: var(--primer-fg-default);
+      border: 1px solid var(--primer-border-default);
+    }
+
+    .btn-sm {
+      padding: 3px 8px;
+      font-size: 11px;
+    }
+
+    /* 🌟 9-Grid Anchor Picker */
+    .anchor-grid-3x3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      max-width: 180px;
+      margin: 4px 0 8px 0;
+    }
+
+    .anchor-grid-btn {
+      background: var(--primer-canvas-subtle);
+      border: 1px solid var(--primer-border-default);
+      color: var(--primer-fg-default);
+      border-radius: 4px;
+      padding: 5px 0;
+      font-size: 11px;
+      font-weight: bold;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+    }
+
+    .anchor-grid-btn:hover {
+      background: var(--primer-accent-muted);
+      border-color: var(--primer-accent-fg);
+      color: var(--primer-accent-fg);
+    }
+
+    .anchor-grid-btn.active {
+      background: var(--primer-accent-emphasis);
+      border-color: var(--primer-accent-emphasis);
+      color: var(--primer-fg-on-emphasis);
+      box-shadow: 0 0 6px var(--primer-accent-emphasis);
+    }
+
+    /* 🌐 Global Competitive Layout Settings Drawer */
+    .global-settings-box {
+      background: var(--primer-canvas-subtle);
+      border: 1px solid var(--primer-border-muted);
+      border-radius: 6px;
+      padding: 10px;
+      margin-bottom: 12px;
+    }
+
+    .comp-list-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 520px;
+      overflow-y: auto;
+      margin: 10px 0;
+      padding-right: 4px;
+    }
+
+    .comp-item-card {
+      background: var(--primer-canvas-card);
+      border: 1px solid var(--primer-border-default);
+      border-radius: 6px;
+      padding: 8px 10px;
+      box-shadow: var(--primer-shadow-card);
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .comp-item-card:hover {
+      border-color: var(--primer-accent-fg);
+    }
+
+    .comp-item-card.selected {
+      border-color: var(--primer-accent-emphasis);
+      box-shadow: 0 0 0 2px var(--primer-accent-muted);
+    }
+
+    .comp-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .comp-card-title {
+      font-weight: bold;
+      color: var(--primer-fg-default);
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .comp-type-tag {
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 12px;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    .layer-badge {
+      background: var(--primer-canvas-subtle);
+      color: var(--primer-fg-muted);
+      border: 1px solid var(--primer-border-default);
+      font-size: 10px;
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+
+    .layer-btn-group {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .layer-btn {
+      background: var(--primer-canvas-subtle);
+      color: var(--primer-fg-default);
+      border: 1px solid var(--primer-border-default);
+      border-radius: 3px;
+      padding: 1px 4px;
+      font-size: 10px;
+      cursor: pointer;
+      line-height: 1.2;
+    }
+
+    .layer-btn:hover:not(:disabled) {
+      background: var(--primer-accent-muted);
+      color: var(--primer-accent-fg);
+      border-color: var(--primer-accent-fg);
+    }
+
+    .layer-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    /* Advanced Drawer inside Component Card */
+    .advanced-drawer {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed var(--primer-border-default);
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .advanced-drawer.open {
+      display: flex;
+    }
+
+    .control-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      font-size: 11px;
+    }
+
+    .control-label {
+      color: var(--primer-fg-muted);
+      font-size: 11px;
+    }
+
+    .custom-props-box {
+      background: var(--primer-canvas-subtle);
+      border: 1px solid var(--primer-border-default);
+      border-radius: 6px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .custom-prop-header {
+      font-size: 10px;
+      font-weight: bold;
+      color: var(--primer-accent-fg);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .rgba-control-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .rgba-color-input {
+      width: 26px;
+      height: 22px;
+      border: 1px solid var(--primer-border-default);
+      border-radius: 4px;
+      background: transparent;
+      cursor: pointer;
+      padding: 0;
+      flex-shrink: 0;
+    }
+
+    .rgba-alpha-slider {
+      flex: 1;
+      cursor: pointer;
+      min-width: 40px;
+    }
+
+    .rgba-alpha-label {
+      font-size: 10px;
+      color: var(--primer-accent-fg);
+      min-width: 28px;
+      text-align: right;
+    }
+
+    .rgba-text-box {
+      width: 100%;
+      font-size: 10px;
+      padding: 2px 5px;
+    }
+
+    .layout-actions-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    /* Packet Inspector */
+    .packet-viewer {
+      width: 100%;
+      height: 120px;
+      background: var(--primer-canvas-inset);
+      border: 1px solid var(--primer-border-default);
+      border-radius: 6px;
+      color: var(--primer-success-fg);
+      font-family: 'GHMonoR', monospace;
+      font-size: 11px;
+      padding: 8px;
+      box-sizing: border-box;
+      resize: vertical;
+      overflow: auto;
+      white-space: pre;
+    }
+
+    /* Modals */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(3px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+    }
+
+    .modal-box {
+      background: var(--primer-canvas-card);
+      border: 1px solid var(--primer-border-default);
+      border-radius: 8px;
+      padding: 16px;
+      width: 90%;
+      max-width: 520px;
+      box-shadow: var(--primer-shadow-modal);
+      color: var(--primer-fg-default);
+    }
+
+    .catalog-modal-box {
+      background: var(--primer-canvas-card);
+      border: 1px solid var(--primer-border-default);
+      border-radius: 8px;
+      padding: 16px;
+      width: 95%;
+      max-width: 820px;
+      height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--primer-shadow-modal);
+      overflow: hidden;
+      color: var(--primer-fg-default);
+    }
+
+    .catalog-split {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 12px;
+      flex: 1;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .catalog-list {
+      background: var(--primer-canvas-subtle);
+      border: 1px solid var(--primer-border-default);
+      border-radius: 6px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 6px;
+    }
+
+    .catalog-item-card {
+      background: var(--primer-canvas-card);
+      border: 1px solid var(--primer-border-default);
+      border-radius: 6px;
+      padding: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .catalog-item-card:hover {
+      border-color: var(--primer-accent-fg);
+      background: var(--primer-accent-muted);
+    }
+
+    .catalog-item-card.active {
+      border-color: var(--primer-accent-emphasis);
+      background: var(--primer-accent-muted);
+      box-shadow: 0 0 0 1px var(--primer-accent-emphasis);
+    }
+
+    .catalog-preview-pane {
+      background: var(--primer-canvas-subtle);
+      border: 1px solid var(--primer-border-default);
+      border-radius: 6px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .catalog-stage {
+      flex: 1;
+      min-height: 200px;
+      background: var(--primer-canvas-stage);
+      border: 1px dashed var(--primer-border-default);
+      border-radius: 6px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+
+    .catalog-preview-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+      container-type: size;
+    }
+
+    #catalog-mount {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      container-type: size;
+    }
+
+    .comp-inner {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      box-sizing: border-box;
+      container-type: size;
+    }
+
+    .comp-proportional {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .comp-flexible {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* 8-Point Dragger Frame in Catalog Preview */
+    .dragger-frame {
+      position: absolute;
+      inset: -2px;
+      border: 1px dashed var(--primer-accent-emphasis);
+      pointer-events: none;
+      z-index: 999;
+      box-sizing: border-box;
+    }
+
+    .dragger-handle {
+      position: absolute;
+      width: 9px;
+      height: 9px;
+      background-color: var(--primer-accent-emphasis);
+      border: 1px solid #ffffff;
+      pointer-events: auto;
+      transform: translate(-50%, -50%);
+      z-index: 1000;
+      border-radius: 2px;
+      touch-action: none;
+    }
+
+    .handle-nw { top: 0%; left: 0%; cursor: nwse-resize; }
+    .handle-n  { top: 0%; left: 50%; cursor: ns-resize; }
+    .handle-ne { top: 0%; left: 100%; cursor: nesw-resize; }
+    .handle-e  { top: 50%; left: 100%; cursor: ew-resize; }
+    .handle-se { top: 100%; left: 100%; cursor: nwse-resize; }
+    .handle-s  { top: 100%; left: 50%; cursor: ns-resize; }
+    .handle-sw { top: 100%; left: 0%; cursor: nesw-resize; }
+    .handle-w  { top: 50%; left: 0%; cursor: ew-resize; }
+
+    @keyframes dangerBlink {
+      0%, 100% {
+        opacity: 1;
+        box-shadow: 0 0 10px rgba(239, 68, 68, 0.9);
+        filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.9));
+      }
+      50% {
+        opacity: 0.3;
+        box-shadow: 0 0 2px rgba(239, 68, 68, 0.2);
+        filter: drop-shadow(0 0 2px rgba(239, 68, 68, 0.2));
+      }
+    }
+
+    .danger-blink {
+      animation: dangerBlink var(--boost-blink-duration, 0.5s) infinite ease-in-out !important;
+    }
+
+    @keyframes textDangerBlink {
+      0%, 100% {
+        opacity: 1;
+        text-shadow: 0 0 10px rgba(239, 68, 68, 0.9);
+      }
+      50% {
+        opacity: 0.3;
+        text-shadow: 0 0 2px rgba(239, 68, 68, 0.2);
+      }
+    }
+
+    .dyn-val.danger-blink {
+      animation: textDangerBlink var(--boost-blink-duration, 0.5s) infinite ease-in-out !important;
+    }
+
+    /* Event Manager Modal Styles */
+    .events-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+      max-height: 280px;
+      overflow-y: auto;
+      background: var(--primer-canvas-subtle);
+      border: 1px solid var(--primer-border-default);
+      border-radius: 6px;
+      padding: 8px;
+      margin: 10px 0;
+    }
+
+    .event-item-label {
+      display: flex;
+      align-items: center;
+      font-size: 11px;
+      color: var(--primer-fg-default);
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 4px;
+      transition: background 0.1s;
+    }
+
+    .event-item-label:hover {
+      background: var(--primer-accent-muted);
+    }
+
+    .event-item-label.filtered-out {
+      opacity: 0.35;
+    }
+  </style>
+</head>
+<body>
+  <!-- 🌟 Top Header: Title & GitHub Primer Theme Toggle -->
+  <div class="header-bar">
+    <div class="app-title">
+      <span>🚀</span>
+      <span>Rocket League Overlay Configurator</span>
+    </div>
+    <button id="theme-toggle-btn" class="btn btn-sm btn-secondary" title="Toggle Light / Dark theme">
+      <span id="theme-icon">☀️</span>
+      <span id="theme-label">Light Mode</span>
+    </button>
+  </div>
+
+  <!-- Automatic Scene Control Checkbox -->
+  <div class="primer-card">
+    <label style="display: flex; align-items: center; cursor: pointer; font-weight: bold; color: var(--primer-success-fg); font-size: 12px;">
+      <input type="checkbox" id="auto-scene-control-check" checked style="margin-right: 8px; cursor: pointer; transform: scale(1.15);">
+      Automatic Scene Control
+    </label>
+    <div style="font-size: 11px; color: var(--primer-fg-muted); margin-top: 4px; margin-left: 24px;">
+      Automatically manages HUD scenes based on connection & match events. Uncheck to allow manual scene selection for debugging.
+    </div>
+  </div>
+
+  <!-- Automatically Hide Non-Existing Players' Component Checkbox -->
+  <div class="primer-card">
+    <label style="display: flex; align-items: center; cursor: pointer; font-weight: bold; color: var(--primer-accent-fg); font-size: 12px;">
+      <input type="checkbox" id="auto-hide-non-existing-check" checked style="margin-right: 8px; cursor: pointer; transform: scale(1.15);">
+      Automatically hide non-existing players' component
+    </label>
+    <div style="font-size: 11px; color: var(--primer-fg-muted); margin-top: 4px; margin-left: 24px;">
+      Automatically hides HUD components bound to players whose HasCar value is false or non-existent, saving rendering overhead.
+    </div>
+  </div>
+
+  <div class="section-title">Display Metrics</div>
+  <p>Resolution: <span id="res-val" style="color: var(--primer-accent-fg); font-weight: 600;">wait...</span></p>
+  <p>Scale: <span id="scale-val" style="color: var(--primer-accent-fg); font-weight: 600;">wait...</span></p>
+
+  <!-- Background Color Configuration (Transparent vs Solid/RGBA) -->
+  <div class="primer-card">
+    <div style="font-size: 11px; color: var(--primer-accent-fg); font-weight: bold; margin-bottom: 6px; text-transform: uppercase;">Canvas Background</div>
+    <div style="display: flex; gap: 14px; align-items: center; margin-bottom: 8px;">
+      <label style="display: flex; align-items: center; cursor: pointer; font-size: 11px; color: var(--primer-fg-default);">
+        <input type="radio" name="canvas-bg-mode" id="bg-mode-transparent" value="transparent" checked style="margin-right: 6px; cursor: pointer;">
+        Transparent
+      </label>
+      <label style="display: flex; align-items: center; cursor: pointer; font-size: 11px; color: var(--primer-fg-default);">
+        <input type="radio" name="canvas-bg-mode" id="bg-mode-solid" value="solid" style="margin-right: 6px; cursor: pointer;">
+        Solid / RGBA
+      </label>
+    </div>
+
+    <div id="bg-custom-controls" style="display: none; flex-direction: column; gap: 8px; background: var(--primer-canvas-subtle); padding: 8px; border-radius: 6px; border: 1px solid var(--primer-border-default);">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 11px; color: var(--primer-fg-muted); width: 50px;">Color:</span>
+        <input type="color" id="bg-color-picker" value="#0b0f19" style="width: 32px; height: 26px; border: 1px solid var(--primer-border-default); border-radius: 4px; background: transparent; cursor: pointer; padding: 0;">
+        <input type="text" id="bg-hex-input" class="input-field" value="#0b0f19" style="width: 80px; padding: 3px 6px; font-size: 11px;">
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 11px; color: var(--primer-fg-muted); width: 50px;">Opacity:</span>
+        <input type="range" id="bg-opacity-slider" min="0" max="100" value="100" style="flex: 1; cursor: pointer;">
+        <span id="bg-opacity-label" style="font-size: 11px; color: var(--primer-accent-fg); min-width: 38px; text-align: right;">100%</span>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 11px; color: var(--primer-fg-muted); width: 50px;">RGBA:</span>
+        <input type="text" id="bg-rgba-input" class="input-field" value="rgba(11, 15, 25, 1)" style="flex: 1; padding: 3px 6px; font-size: 11px;" readonly>
+      </div>
+    </div>
+  </div>
+  <hr>
+
+  <!-- Reference Box Background -->
+  <div class="section-title">Reference Box Background</div>
+  <div id="ref-container"><!-- Auto Generated --></div>
+  <p>Box Opacity: <span id="opacity-val" style="color: var(--primer-accent-fg); font-weight: 600;">100</span>%</p>
+  <div id="opacity-zone" class="scroll-zone">scroll here to adjust</div>
+  <hr>
+
+  <!-- Active Scene Group Container -->
+  <div class="section-title">Active Scene</div>
+  <div id="scene-container"><!-- Auto Generated --></div>
+  <hr>
+
+  <!-- 🌟 Competitive HUD Designer Panel -->
+  <div id="competitive-designer-section" class="primer-card" style="display: none;">
+    <div class="section-title" style="color: var(--primer-success-fg);">
+      <span>🏎️ Competitive HUD Designer</span>
+    </div>
+
+    <!-- Component Catalog & Previewer Launch Button -->
+    <button id="btn-open-catalog" class="btn btn-secondary" style="width: 100%; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+      <span>🧩</span>
+      <span>Explore Built-in Component Catalog & Previewer</span>
+    </button>
+    
+    <!-- Layout Adjustment Checkbox -->
+    <div style="margin-bottom: 10px; padding: 6px 8px; background: var(--primer-canvas-subtle); border-radius: 6px; border: 1px solid var(--primer-border-default);">
+      <label style="display: flex; align-items: center; cursor: pointer; font-weight: bold; color: var(--primer-warning-fg);">
+        <input type="checkbox" id="layout-editing-check" style="margin-right: 8px; cursor: pointer; transform: scale(1.15);">
+        Allow Layout Adjustment (8-Point Dragger)
+      </label>
+    </div>
+
+    <!-- 🌐 Global Competitive Layout Settings Section -->
+    <div class="global-settings-box">
+      <div style="font-size: 11px; font-weight: bold; color: var(--primer-accent-fg); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+        <span>🌐 GLOBAL HUD STYLE SETTINGS</span>
+        <span style="font-size: 10px; color: var(--primer-fg-muted);">Followed by all components by default</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 6px;" id="global-settings-controls">
+        <!-- Injected dynamically via JS -->
+      </div>
+    </div>
+
+    <!-- Tier Filter & Dynamic Add Component Bar -->
+    <div style="background: var(--primer-canvas-subtle); border: 1px solid var(--primer-border-default); border-radius: 6px; padding: 10px; margin-bottom: 12px;">
+      <div style="font-size: 11px; color: var(--primer-success-fg); margin-bottom: 6px; font-weight: bold;">+ Insert Component to Layout:</div>
+      
+      <!-- Regex-based search bar -->
+      <input type="text" id="component-filter-regex" class="input-field" placeholder="🔍 Search / Regex filter (e.g. boost|speed, text$, ^el-)..." style="width: 100%; margin-bottom: 8px;">
+
+      <!-- 1. Tier Dropdown -->
+      <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+        <select id="filter-tier-select" class="select-field" style="flex: 1;">
+          <option value="element">🧩 Element (Atomic)</option>
+          <option value="widget">📦 Widget (Composite)</option>
+          <option value="panel">🖥️ Panel (HUD Board)</option>
+          <option value="all">📂 All Categories</option>
+        </select>
+        
+        <!-- 2. Cascading Component Dropdown -->
+        <select id="add-component-select" class="select-field" style="flex: 2;"></select>
+      </div>
+
+      <!-- 3. Visual 9-Grid Relative Anchor Selector -->
+      <div style="margin-bottom: 8px;">
+        <div style="font-size: 10px; color: var(--primer-fg-muted); margin-bottom: 4px; font-weight: bold;">SELECT RELATIVE SCREEN ANCHOR:</div>
+        <div class="anchor-grid-3x3" id="anchor-grid-picker">
+          <button type="button" class="anchor-grid-btn" data-anchor="top-left" title="Top-Left">↖ TL</button>
+          <button type="button" class="anchor-grid-btn" data-anchor="top-center" title="Top-Center">⬆ TC</button>
+          <button type="button" class="anchor-grid-btn" data-anchor="top-right" title="Top-Right">↗ TR</button>
+          <button type="button" class="anchor-grid-btn" data-anchor="center-left" title="Center-Left">⬅ CL</button>
+          <button type="button" class="anchor-grid-btn active" data-anchor="center" title="Center">⏺ C</button>
+          <button type="button" class="anchor-grid-btn" data-anchor="center-right" title="Center-Right">➡ CR</button>
+          <button type="button" class="anchor-grid-btn" data-anchor="bottom-left" title="Bottom-Left">↙ BL</button>
+          <button type="button" class="anchor-grid-btn" data-anchor="bottom-center" title="Bottom-Center">⬇ BC</button>
+          <button type="button" class="anchor-grid-btn" data-anchor="bottom-right" title="Bottom-Right">↘ BR</button>
+        </div>
+      </div>
+
+      <!-- 4. Dynamic Target Player / Lock Aspect Checkbox -->
+      <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 6px;">
+        <select id="add-target-player-select" class="select-field" style="flex: 1; min-width: 90px;">
+          <option value="p1">P1 (Target)</option>
+          <option value="p2">P2 (Team 1)</option>
+          <option value="p3">P3 (Team 2)</option>
+        </select>
+        
+        <select id="add-speed-unit-select" class="select-field" style="flex: 1; min-width: 80px; display: none;">
+          <option value="kph">km/h</option>
+          <option value="uu/s">uu/s</option>
+        </select>
+
+        <select id="add-align-select" class="select-field" style="flex: 1; min-width: 80px; display: none;">
+          <option value="right">Align Right</option>
+          <option value="center">Align Center</option>
+          <option value="left">Align Left</option>
+        </select>
+
+        <label style="display: flex; align-items: center; font-size: 11px; color: var(--primer-fg-default); cursor: pointer; font-weight: 600;">
+          <input type="checkbox" id="add-follow-aspect-check" checked style="margin-right: 4px; cursor: pointer;">
+          Lock Ratio
+        </label>
+      </div>
+
+      <button id="add-component-btn" class="btn btn-success" style="width: 100%; margin-top: 4px;">+ Insert to Layout</button>
+    </div>
+
+    <!-- Component List & Stacking Management -->
+    <div class="section-title" style="font-size: 11px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+      <span>HUD Layers & Components:</span>
+      <div style="display: flex; gap: 4px;">
+        <button id="collapse-all-btn" class="btn btn-secondary btn-sm" title="Collapse all advanced options">Collapse All</button>
+        <button id="deselect-all-btn" class="btn btn-secondary btn-sm" title="Deselect all components (hide 8-point draggers)">Deselect All</button>
+      </div>
+    </div>
+    <div id="competitive-component-list" class="comp-list-container"><!-- Dynamic list rendered here --></div>
+
+    <!-- Layout Actions Bar: Copy JSON, Paste/Import JSON, Reset Layout -->
+    <div class="layout-actions-bar">
+      <button id="copy-layout-btn" class="btn btn-secondary btn-sm" style="flex: 1;">📋 Copy Config</button>
+      <button id="paste-layout-btn" class="btn btn-secondary btn-sm" style="flex: 1;">📥 Paste Config</button>
+      <button id="reset-layout-btn" class="btn btn-danger btn-sm" style="flex: 1;">↺ Reset Default</button>
+    </div>
+  </div>
+  <hr id="comp-divider" style="display: none;">
+
+  <!-- Developer Dashboard Tuning Section -->
+  <div id="dev-dashboard-tuning-section" style="display: none;">
+    <div class="section-title">Replay Font Scale (vw)</div>
+    <p>Font Size: <span id="font-size-val" style="color: var(--primer-accent-fg); font-weight: 600;">2.0</span>vw</p>
+    <div id="font-size-zone" class="scroll-zone">scroll here to adjust</div>
+    <hr>
+
+    <div class="section-title">Progress Bar Dimensions (vw)</div>
+    <p>Width: <span id="bar-width-val" style="color: var(--primer-accent-fg); font-weight: 600;">12.0</span>vw</p>
+    <div id="bar-width-zone" class="scroll-zone">scroll here to adjust width</div>
+    <p>Height: <span id="bar-height-val" style="color: var(--primer-accent-fg); font-weight: 600;">1.0</span>vw</p>
+    <div id="bar-height-zone" class="scroll-zone">scroll here to adjust height</div>
+    <hr>
+
+    <div class="section-title">Alert Blink Duration (s)</div>
+    <p>Duration: <span id="blink-freq-val" style="color: var(--primer-accent-fg); font-weight: 600;">0.50</span>s</p>
+    <div id="blink-freq-zone" class="scroll-zone">scroll here to adjust</div>
+    <hr>
+  </div>
+
+  <!-- Replay Viewer Scene Tuning Section -->
+  <div id="replay-tuning-section" style="display: none;">
+    <div class="section-title">Replay Scene Tuning & Animation Test</div>
+    
+    <div class="primer-card" style="margin-bottom: 12px;">
+      <div style="font-size: 11px; font-weight: bold; color: var(--primer-accent-fg); margin-bottom: 8px;">
+        🎬 FOOTER ANIMATION CONTROLS
+      </div>
+      <button id="btn-toggle-replay-footer" class="btn btn-primary" style="width: 100%; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+        <span>🎬</span>
+        <span>Toggle Footer Animation (Slide Up / Down)</span>
+      </button>
+      <button id="btn-test-replay-lifecycle" class="btn btn-secondary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px;">
+        <span>⚡</span>
+        <span>Simulate Full Goal & Replay Lifecycle</span>
+      </button>
+    </div>
+
+    <div class="section-title">Slide Transition Duration (s)</div>
+    <p>Duration: <span id="replay-transition-val" style="color: var(--primer-accent-fg); font-weight: 600;">0.75</span>s</p>
+    <div id="replay-transition-zone" class="scroll-zone">scroll here to adjust duration</div>
+    <hr>
+  </div>
+
+  <!-- WebSocket Connection Panel -->
+  <div class="section-title">WebSocket Connection</div>
+  <div class="primer-card">
+    <div class="status-row">
+      <span id="ws-status-dot" class="status-dot disconnected"></span>
+      <span id="ws-status-text" style="font-weight: bold; color: var(--primer-danger-fg);">Disconnected</span>
+    </div>
+
+    <div class="input-group">
+      <input type="text" id="ws-host-input" class="input-field" value="127.0.0.1" placeholder="Host (e.g. 127.0.0.1)" style="flex: 2;">
+      <input type="text" id="ws-port-input" class="input-field" value="52950" placeholder="Port" style="flex: 1;">
+    </div>
+
+    <button id="ws-toggle-btn" class="btn btn-primary" style="width: 100%; margin-bottom: 8px;">Connect</button>
+
+    <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 6px;">
+      <label style="display: flex; align-items: center; cursor: pointer; font-size: 11px; color: var(--primer-fg-default);">
+        <input type="checkbox" id="mock-simulation-check" style="margin-right: 6px; cursor: pointer;">
+        Enable Mock Simulation (Test without game)
+      </label>
+
+      <!-- 🌟 Disable Auto Retry Checkbox -->
+      <label style="display: flex; align-items: center; cursor: pointer; font-size: 11px; color: var(--primer-fg-muted);">
+        <input type="checkbox" id="ws-disable-retry-check" style="margin-right: 6px; cursor: pointer;">
+        Disable Auto Retry (Prevent 1-sec reconnect timer)
+      </label>
+    </div>
+  </div>
+  <hr>
+
+  <!-- Packet Inspector Panel -->
+  <div class="section-title">Packet Inspector</div>
+  <div class="primer-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 4px;">
+      <span id="capture-status" style="color: var(--primer-fg-muted); font-size: 11px;">Status: Idle (1 Event Active)</span>
+      <div style="display: flex; gap: 4px;">
+        <button id="btn-open-events-mgr" class="btn btn-sm btn-secondary">⚙️ Events (<span id="active-events-count">1</span>)</button>
+        <button id="capture-packet-btn" class="btn btn-sm btn-primary">Capture Next</button>
+        <button id="copy-packet-btn" class="btn btn-sm btn-secondary">Copy</button>
+      </div>
+    </div>
+    <textarea id="packet-display" class="packet-viewer" readonly placeholder="Captured packet JSON will appear here..."></textarea>
+  </div>
+
+  <!-- Import / Paste Layout Modal -->
+  <div id="import-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-box">
+      <div class="section-title" style="color: var(--primer-success-fg); margin-bottom: 10px;">📥 Import Layout JSON</div>
+      <p style="color: var(--primer-fg-muted); font-size: 11px; margin-bottom: 8px;">
+        Paste your previously copied layout configuration JSON string below:
+      </p>
+      <textarea id="import-json-input" class="input-field" style="width: 100%; height: 160px; font-family: monospace; font-size: 11px; box-sizing: border-box; resize: vertical; margin-bottom: 12px;" placeholder="[ { &quot;instanceId&quot;: &quot;...&quot;, ... } ]"></textarea>
+      <div style="display: flex; justify-content: flex-end; gap: 8px;">
+        <button id="cancel-import-btn" class="btn btn-secondary">Cancel</button>
+        <button id="confirm-import-btn" class="btn btn-success">Apply Layout</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🌟 Event Manager Modal for Packet Inspector -->
+  <div id="events-mgr-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-box" style="max-width: 580px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--primer-border-default); padding-bottom: 8px; margin-bottom: 8px;">
+        <div>
+          <div style="font-size: 13px; font-weight: bold; color: var(--primer-accent-fg); display: flex; align-items: center; gap: 6px;">
+            <span>⚙️</span>
+            <span>Manage Inspectable WebSocket Packet Events</span>
+          </div>
+          <div style="font-size: 10px; color: var(--primer-fg-muted); margin-top: 2px;">
+            Registry list maintained in <code>src/overlay/core/rl-events.ts</code>
+          </div>
+        </div>
+        <button id="btn-close-events-mgr" class="btn btn-danger btn-sm">✕ Close</button>
+      </div>
+
+      <!-- Search / Regex Filter for Events -->
+      <input type="text" id="event-regex-input" class="input-field" placeholder="🔍 Regex filter (e.g. ^Goal|Match, Tick, Score)..." style="width: 100%; margin-bottom: 8px;">
+
+      <!-- Bulk Action Buttons -->
+      <div style="display: flex; gap: 6px; margin-bottom: 6px; flex-wrap: wrap;">
+        <button id="btn-select-all-filtered" class="btn btn-sm btn-primary" title="Select all events matching search filter and unselect all others">
+          ✓ Select All Filtered (Uncheck Others)
+        </button>
+        <button id="btn-check-all-events" class="btn btn-sm btn-secondary">Select All (22)</button>
+        <button id="btn-clear-all-events" class="btn btn-sm btn-secondary">Clear All</button>
+      </div>
+
+      <!-- Events Checkboxes Grid -->
+      <div class="events-grid" id="events-checkbox-container">
+        <!-- Injected dynamically via JS -->
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+        <span style="font-size: 11px; color: var(--primer-fg-muted);" id="events-selected-summary">Selected: 1 / 22 events</span>
+        <button id="btn-apply-events" class="btn btn-success btn-sm">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Built-in Component Catalog & Interactive Previewer Modal -->
+  <div id="catalog-modal" class="modal-overlay" style="display: none;">
+    <div class="catalog-modal-box">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--primer-border-default); padding-bottom: 8px;">
+        <div style="font-size: 13px; font-weight: bold; color: var(--primer-accent-fg); display: flex; align-items: center; gap: 8px;">
+          <span>🧩</span>
+          <span>Built-in Component Catalog & Interactive Previewer</span>
+        </div>
+        <button id="btn-close-catalog" class="btn btn-danger btn-sm">✕ Close</button>
+      </div>
+
+      <div style="display: flex; gap: 8px; margin-top: 10px; align-items: center;">
+        <input type="text" id="catalog-search-input" class="input-field" placeholder="🔍 Regex search (e.g. boost|speed, text$, ^element)..." style="flex: 2;">
+        <select id="catalog-tier-select" class="select-field" style="flex: 1;">
+          <option value="all">📂 All Categories</option>
+          <option value="element">🧩 Elements</option>
+          <option value="widget">📦 Widgets</option>
+          <option value="panel">🖥️ Panels</option>
+        </select>
+      </div>
+
+      <div class="catalog-split">
+        <!-- Left: Component list -->
+        <div class="catalog-list" id="catalog-item-list"></div>
+
+        <!-- Right: Live preview & Insert -->
+        <div class="catalog-preview-pane">
+          <div style="font-size: 11px; font-weight: bold; color: var(--primer-accent-fg); margin-bottom: 6px;" id="catalog-preview-title">Preview</div>
+          
+          <div class="catalog-stage" id="catalog-stage-viewport">
+            <div id="catalog-preview-wrapper" class="catalog-preview-wrapper">
+              <div id="catalog-mount"></div>
+              <div class="dragger-frame" id="catalog-dragger-frame">
+                <div class="dragger-handle handle-nw" data-handle="nw"></div>
+                <div class="dragger-handle handle-n" data-handle="n"></div>
+                <div class="dragger-handle handle-ne" data-handle="ne"></div>
+                <div class="dragger-handle handle-e" data-handle="e"></div>
+                <div class="dragger-handle handle-se" data-handle="se"></div>
+                <div class="dragger-handle handle-s" data-handle="s"></div>
+                <div class="dragger-handle handle-sw" data-handle="sw"></div>
+                <div class="dragger-handle handle-w" data-handle="w"></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px;">
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <span style="color: var(--primer-fg-muted); font-size: 10px; width: 60px;">Boost:</span>
+              <input type="range" id="catalog-sim-boost" min="0" max="100" value="85" style="flex: 1;">
+              <span id="catalog-sim-boost-val" style="color: var(--primer-accent-fg); font-size: 10px; min-width: 25px;">85</span>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <span style="color: var(--primer-fg-muted); font-size: 10px; width: 60px;">Speed:</span>
+              <input type="range" id="catalog-sim-speed" min="0" max="2300" value="1600" style="flex: 1;">
+              <span id="catalog-sim-speed-val" style="color: var(--primer-accent-fg); font-size: 10px; min-width: 35px;">1600</span>
+            </div>
+          </div>
+
+          <button id="catalog-insert-btn" class="btn btn-success" style="width: 100%; margin-top: auto;">➕ Insert this Component to Layout</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./src/configurator/configurator.ts"></script>
+</body>
+</html>

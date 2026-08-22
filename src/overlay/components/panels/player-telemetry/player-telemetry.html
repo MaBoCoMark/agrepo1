@@ -1,0 +1,146 @@
+<script type="application/json" id="component-manifest">
+{
+  "id": "panel-player-telemetry",
+  "displayName": "Player Full Telemetry Card",
+  "tier": "panel",
+  "category": "player",
+  "isProportional": true,
+  "defaultWidthVw": 18,
+  "defaultHeightVw": 9.0,
+  "minWidthVw": 12,
+  "minHeightVw": 6.0,
+  "baseWidthPx": 288,
+  "baseHeightPx": 144
+}
+</script>
+
+<template id="component-template">
+  <div class="player-telemetry-panel">
+      <div class="player-header">
+        <span class="player-tag tag-target dyn-tag">P1 (TARGET)</span>
+        <span class="player-name-val dyn-name">-</span>
+      </div>
+
+      <div class="metrics-row">
+        <div class="metric-cell speed-cell">
+          <span class="metric-label">SPEED</span>
+          <div class="metric-val dyn-speed-val">0</div>
+        </div>
+
+        <div class="metric-cell boost-cell">
+          <div class="boost-header">
+            <span class="metric-label">BOOST</span>
+            <span class="metric-val dyn-boost-val text-green">100</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="boost-bar-fill dyn-boost-bar bar-green"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="booleans-grid">
+        <div class="bool-item"><span class="status-dot bool-on dyn-hascar"></span><span class="bool-name">HAS CAR</span></div>
+        <div class="bool-item"><span class="status-dot bool-off dyn-boosting"></span><span class="bool-name">BOOSTING</span></div>
+        <div class="bool-item"><span class="status-dot bool-on dyn-onground"></span><span class="bool-name">GROUND</span></div>
+        <div class="bool-item"><span class="status-dot bool-off dyn-onwall"></span><span class="bool-name">WALL</span></div>
+        <div class="bool-item"><span class="status-dot bool-off dyn-slide"></span><span class="bool-name">SLIDE</span></div>
+        <div class="bool-item"><span class="status-dot bool-off dyn-demo"></span><span class="bool-name">DEMO</span></div>
+        <div class="bool-item"><span class="status-dot bool-off dyn-super"></span><span class="bool-name">SUPER</span></div>
+      </div>
+    </div>
+</template>
+
+<style>
+.player-telemetry-panel {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 6px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 6px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(8px);
+    }
+
+    .player-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .player-tag {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 3px;
+      color: #fff;
+    }
+    .tag-target { background: #dd6b20; }
+    .tag-team { background: #3182ce; }
+    .player-name-val {
+      font-size: 14px;
+      font-weight: 700;
+      color: #f8fafc;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .metrics-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .metric-cell {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      padding: 4px 6px;
+    }
+    .speed-cell { width: 60px; text-align: center; }
+    .boost-cell { flex: 1; }
+    .metric-label { font-size: 8px; font-weight: 700; color: #94a3b8; }
+    .metric-val { font-size: 14px; font-weight: 800; color: #f8fafc; }
+    .boost-header { display: flex; justify-content: space-between; align-items: baseline; }
+    .progress-bar-bg { height: 5px; background: rgba(255, 255, 255, 0.15); border-radius: 2px; overflow: hidden; margin-top: 2px; }
+    .boost-bar-fill { height: 100%; width: 100%; transform-origin: left center; background: #10b981; /* instantaneous */ }
+
+    .booleans-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+    }
+    .bool-item { display: flex; align-items: center; gap: 4px; }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; }
+    .bool-off { background: #475569; }
+    .bool-on { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
+    .bool-name { font-size: 8px; font-weight: 700; color: #94a3b8; }
+
+    .bar-red { background-color: #ef4444 !important; }
+    .bar-yellow { background-color: #f59e0b !important; }
+    .bar-green { background-color: #10b981 !important; }
+    .text-red { color: #ef4444 !important; }
+    .text-yellow { color: #f59e0b !important; }
+    .text-green { color: #10b981 !important; }
+
+    
+    
+    
+  
+    
+
+    
+    .handle-nw { top: 0%; left: 0%; cursor: nwse-resize; }
+    .handle-n  { top: 0%; left: 50%; cursor: ns-resize; }
+    .handle-ne { top: 0%; left: 100%; cursor: nesw-resize; }
+    .handle-e  { top: 50%; left: 100%; cursor: ew-resize; }
+    .handle-se { top: 100%; left: 100%; cursor: nwse-resize; }
+    .handle-s  { top: 100%; left: 50%; cursor: ns-resize; }
+    .handle-sw { top: 100%; left: 0%; cursor: nesw-resize; }
+    .handle-w  { top: 50%; left: 0%; cursor: ew-resize; }
+</style>

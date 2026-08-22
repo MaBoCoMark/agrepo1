@@ -1,0 +1,1627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RL Tactical Overlay - Component Studio</title>
+  <link rel="stylesheet" href="../src/styles/main.css">
+  <style>
+    :root {
+      --bg-dark: #0a0e17;
+      --bg-panel: #111827;
+      --bg-card: #1f2937;
+      --border-color: #374151;
+      --border-focus: #38bdf8;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --accent: #38bdf8;
+      --accent-hover: #0ea5e9;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: 'GHMonoR', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      font-size: 12px;
+      user-select: none;
+    }
+
+    /* --- Top Navbar --- */
+    header {
+      background-color: var(--bg-panel);
+      border-bottom: 1px solid var(--border-color);
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      height: 48px;
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn {
+      background-color: #2563eb;
+      color: #ffffff;
+      border: 1px solid transparent;
+      padding: 5px 12px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background-color 0.15s, transform 0.05s;
+    }
+
+    .btn:hover {
+      background-color: #1d4ed8;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-secondary {
+      background-color: var(--bg-card);
+      border-color: var(--border-color);
+      color: var(--text-main);
+    }
+
+    .btn-secondary:hover {
+      background-color: #374151;
+      border-color: #4b5563;
+    }
+
+    .btn-success {
+      background-color: #059669;
+    }
+
+    .btn-success:hover {
+      background-color: #047857;
+    }
+
+    .btn-danger {
+      background-color: #dc2626;
+    }
+
+    .btn-danger:hover {
+      background-color: #b91c1c;
+    }
+
+    /* --- Main Workspace Grid --- */
+    .workspace-container {
+      display: grid;
+      grid-template-columns: 380px 1fr 340px;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* Left Panel: Code & Drag-Drop */
+    .left-panel {
+      background-color: var(--bg-panel);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 10px 14px;
+      background-color: #131b2e;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--accent);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .dropzone-bar {
+      padding: 8px 12px;
+      border: 1px dashed var(--border-color);
+      margin: 8px 12px;
+      border-radius: 6px;
+      background: #172033;
+      text-align: center;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .dropzone-bar:hover, .dropzone-bar.dragover {
+      border-color: var(--accent);
+      background: #1e293b;
+      color: var(--text-main);
+    }
+
+    .editor-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 0 12px 12px 12px;
+      overflow: hidden;
+    }
+
+    .code-editor {
+      flex: 1;
+      width: 100%;
+      background-color: #0b0f19;
+      color: #e2e8f0;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 10px;
+      font-family: inherit;
+      font-size: 11px;
+      line-height: 1.5;
+      resize: none;
+      white-space: pre;
+      overflow: auto;
+      tab-size: 2;
+    }
+
+    .code-editor:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .editor-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    /* Error / Status Bar */
+    .status-banner {
+      margin: 0 12px 8px 12px;
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      display: none;
+      line-height: 1.4;
+    }
+
+    .status-banner.error {
+      display: block;
+      background-color: rgba(239, 68, 68, 0.15);
+      border: 1px solid var(--danger);
+      color: #fca5a5;
+    }
+
+    .status-banner.success {
+      display: block;
+      background-color: rgba(16, 185, 129, 0.15);
+      border: 1px solid var(--success);
+      color: #6ee7b7;
+    }
+
+    /* Center Panel: Stage */
+    .center-stage {
+      background-color: #080c14;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stage-toolbar {
+      padding: 8px 16px;
+      background-color: rgba(17, 24, 39, 0.8);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      z-index: 10;
+    }
+
+    .stage-viewport-area {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: auto;
+      background-image: 
+        radial-gradient(circle, #1e293b 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+
+    .stage-viewport-area.bg-checker {
+      background-image: 
+        linear-gradient(45deg, #131b2e 25%, transparent 25%), 
+        linear-gradient(-45deg, #131b2e 25%, transparent 25%), 
+        linear-gradient(45deg, transparent 75%, #131b2e 75%), 
+        linear-gradient(-45deg, transparent 75%, #131b2e 75%);
+      background-size: 20px 20px;
+      background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    }
+
+    .stage-viewport-area.bg-pitch {
+      background: #000000;
+    }
+
+    #preview-viewport {
+      width: 256px;
+      height: 64px;
+      position: relative;
+      box-sizing: border-box;
+      container-type: size;
+      transition: box-shadow 0.2s;
+    }
+
+    #component-mount {
+      width: 100%;
+      height: 100%;
+      container-type: size;
+    }
+
+    /* 8-Point Dragger Frame */
+    .dragger-frame {
+      position: absolute;
+      inset: -1px;
+      border: 1px dashed var(--accent);
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    .dragger-handle {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background-color: var(--accent);
+      border: 1px solid #0b0f19;
+      pointer-events: auto;
+      transform: translate(-50%, -50%);
+      z-index: 1000;
+    }
+
+    .handle-nw { top: 0%; left: 0%; cursor: nwse-resize; }
+    .handle-n  { top: 0%; left: 50%; cursor: ns-resize; }
+    .handle-ne { top: 0%; left: 100%; cursor: nesw-resize; }
+    .handle-e  { top: 50%; left: 100%; cursor: ew-resize; }
+    .handle-se { top: 100%; left: 100%; cursor: nwse-resize; }
+    .handle-s  { top: 100%; left: 50%; cursor: ns-resize; }
+    .handle-sw { top: 100%; left: 0%; cursor: nesw-resize; }
+    .handle-w  { top: 50%; left: 0%; cursor: ew-resize; }
+
+    /* Right Panel: Auto-Generated Knobs */
+    .right-panel {
+      background-color: var(--bg-panel);
+      border-left: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .knobs-section {
+      padding: 12px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .knob-group-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #93c5fd;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .knob-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 11px;
+    }
+
+    .knob-row label {
+      color: var(--text-muted);
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .knob-row input[type="range"] {
+      flex: 1.2;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .knob-row .knob-val {
+      color: var(--accent);
+      min-width: 38px;
+      text-align: right;
+      font-weight: bold;
+    }
+
+    .knob-row input[type="text"], .knob-row select {
+      background: #0f131a;
+      border: 1px solid var(--border-color);
+      color: #ffffff;
+      padding: 3px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-family: inherit;
+    }
+
+    .knob-row input[type="color"] {
+      width: 28px;
+      height: 22px;
+      border: 1px solid var(--border-color);
+      border-radius: 3px;
+      background: transparent;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .knob-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .bool-btn-toggle {
+      background: #172033;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 5px 8px;
+      color: var(--text-muted);
+      font-size: 10px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+    }
+
+    .bool-btn-toggle.active {
+      background: #0284c7;
+      border-color: var(--accent);
+      color: #ffffff;
+      font-weight: bold;
+    }
+
+    @keyframes dangerBlink {
+      0%, 100% {
+        opacity: 1;
+        box-shadow: 0 0 10px rgba(239, 68, 68, 0.9);
+        filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.9));
+      }
+      50% {
+        opacity: 0.3;
+        box-shadow: 0 0 2px rgba(239, 68, 68, 0.2);
+        filter: drop-shadow(0 0 2px rgba(239, 68, 68, 0.2));
+      }
+    }
+
+    .danger-blink {
+      animation: dangerBlink 0.5s infinite ease-in-out !important;
+    }
+
+    @keyframes textDangerBlink {
+      0%, 100% {
+        opacity: 1;
+        text-shadow: 0 0 10px rgba(239, 68, 68, 0.9);
+      }
+      50% {
+        opacity: 0.3;
+        text-shadow: 0 0 2px rgba(239, 68, 68, 0.2);
+      }
+    }
+
+    .dyn-val.danger-blink {
+      animation: textDangerBlink 0.5s infinite ease-in-out !important;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navbar -->
+  <header>
+    <div class="brand-title">
+      <span>🚀</span>
+      <span>RL Tactical Overlay - Component Studio</span>
+    </div>
+
+    <div class="nav-actions">
+      <select id="sample-selector" class="btn btn-secondary" style="padding: 4px 8px;">
+        <option value="">⚡ Load Starter Example...</option>
+        <option value="text">📝 Boost Text Element</option>
+        <option value="speed-bar">📊 Speed Progress Bar</option>
+        <option value="curved">⭕ Curved Speedometer</option>
+        <option value="indicator">💡 Supersonic Indicator</option>
+        <option value="custom-text">🔤 Custom Dynamic Text</option>
+        <option value="widget">📦 Boost Combo Widget</option>
+      </select>
+
+      <a href="./manual.html" target="_blank" class="btn btn-secondary" style="text-decoration: none;">
+        📖 Developer Manual & Spec
+      </a>
+      <button id="btn-export-code" class="btn btn-success">💾 Export SFC HTML</button>
+    </div>
+  </header>
+
+  <!-- Main Workspace Grid -->
+  <div class="workspace-container">
+    
+    <!-- 1. Left Panel: Editor & Import -->
+    <div class="left-panel">
+      <div class="panel-header">
+        <span>Component Source Code</span>
+        <span id="char-count" style="color: var(--text-muted); font-size: 10px;">0 chars</span>
+      </div>
+
+      <div class="dropzone-bar" id="file-dropzone">
+        📁 Drag & drop component .html file here, or click to upload
+        <input type="file" id="file-input" accept=".html,.htm,.txt" style="display: none;">
+      </div>
+
+      <div id="status-banner" class="status-banner"></div>
+
+      <div class="editor-wrapper">
+        <textarea id="code-editor" class="code-editor" spellcheck="false" placeholder="Paste your component SFC HTML here (Manifest + Template + Style)..."></textarea>
+        <div class="editor-actions">
+          <button id="btn-parse-run" class="btn" style="flex: 1;">▶ Parse & Run</button>
+          <button id="btn-copy-code" class="btn btn-secondary">📋 Copy</button>
+          <button id="btn-clear-code" class="btn btn-danger btn-sm">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Center Panel: Preview Stage & 8-Point Dragger -->
+    <div class="center-stage">
+      <div class="stage-toolbar">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span style="font-weight: bold; color: var(--accent);">Preview Stage</span>
+          <span id="dimension-label" style="color: var(--text-muted); font-size: 11px;">256 x 64 px</span>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <label style="display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 11px;">
+            <input type="checkbox" id="check-lock-aspect"> Lock Aspect Ratio
+          </label>
+          <label style="display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 11px;">
+            <input type="checkbox" id="check-show-frame" checked> Show 8-Point Frame
+          </label>
+          <select id="bg-selector" class="btn btn-secondary" style="padding: 2px 6px; font-size: 11px;">
+            <option value="grid">Grid Pattern</option>
+            <option value="checker">Checkerboard</option>
+            <option value="pitch">Pitch Black</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="stage-viewport-area" id="stage-viewport-area">
+        <div id="preview-viewport">
+          <div id="component-mount"></div>
+          <div class="dragger-frame" id="dragger-frame">
+            <div class="dragger-handle handle-nw" data-handle="nw"></div>
+            <div class="dragger-handle handle-n" data-handle="n"></div>
+            <div class="dragger-handle handle-ne" data-handle="ne"></div>
+            <div class="dragger-handle handle-e" data-handle="e"></div>
+            <div class="dragger-handle handle-se" data-handle="se"></div>
+            <div class="dragger-handle handle-s" data-handle="s"></div>
+            <div class="dragger-handle handle-sw" data-handle="sw"></div>
+            <div class="dragger-handle handle-w" data-handle="w"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Right Panel: Dynamic Knobs -->
+    <div class="right-panel">
+      
+      <!-- Auto-Generated Custom Properties Section -->
+      <div class="knobs-section">
+        <div class="knob-group-title">
+          <span>🎨</span>
+          <span>Manifest Custom Properties</span>
+        </div>
+        <div id="custom-props-container" style="color: var(--text-muted); font-size: 11px;">
+          No custom properties declared in manifest.
+        </div>
+      </div>
+
+      <!-- Simulated Telemetry Section -->
+      <div class="knobs-section">
+        <div class="knob-group-title">
+          <span>🏎️</span>
+          <span>Simulated Telemetry Knobs</span>
+        </div>
+
+        <div class="knob-row">
+          <label>Target Player:</label>
+          <select id="mock-player-select" style="width: 120px;">
+            <option value="p1">P1 (Target)</option>
+            <option value="p2">P2 (Team 1)</option>
+            <option value="p3">P3 (Team 2)</option>
+          </select>
+        </div>
+
+        <div class="knob-row">
+          <label>Boost (0-100):</label>
+          <input type="range" id="mock-boost-slider" min="0" max="100" value="85">
+          <span id="mock-boost-val" class="knob-val">85</span>
+        </div>
+
+        <div class="knob-row">
+          <label>Speed (uu/s):</label>
+          <input type="range" id="mock-speed-slider" min="0" max="2300" value="1650">
+          <span id="mock-speed-val" class="knob-val">1650</span>
+        </div>
+
+        <div class="knob-row">
+          <label>Time Remaining:</label>
+          <input type="range" id="mock-time-slider" min="0" max="300" value="270">
+          <span id="mock-time-val" class="knob-val">4:30</span>
+        </div>
+
+        <div class="knob-row">
+          <label>Score Diff:</label>
+          <input type="range" id="mock-score-diff-slider" min="-10" max="10" value="1">
+          <span id="mock-score-diff-val" class="knob-val">+1</span>
+        </div>
+
+        <div class="knob-row">
+          <label>Ball Speed:</label>
+          <input type="range" id="mock-ball-speed-slider" min="0" max="150" value="65">
+          <span id="mock-ball-speed-val" class="knob-val">65</span>
+        </div>
+
+        <!-- Boolean indicators grid -->
+        <div style="font-size: 10px; color: var(--text-muted); margin: 8px 0 4px 0; font-weight: bold;">BOOLEAN TELEMETRY:</div>
+        <div class="knob-grid">
+          <button class="bool-btn-toggle" id="toggle-supersonic">Supersonic</button>
+          <button class="bool-btn-toggle" id="toggle-boosting">Boosting</button>
+          <button class="bool-btn-toggle active" id="toggle-hascar">Has Car</button>
+          <button class="bool-btn-toggle active" id="toggle-onground">On Ground</button>
+          <button class="bool-btn-toggle" id="toggle-onwall">On Wall</button>
+          <button class="bool-btn-toggle" id="toggle-powersliding">Powersliding</button>
+          <button class="bool-btn-toggle" id="toggle-demolished">Demolished</button>
+          <button class="bool-btn-toggle" id="toggle-overtime">Overtime</button>
+        </div>
+
+        <!-- Team Colors -->
+        <div style="font-size: 10px; color: var(--text-muted); margin: 8px 0 4px 0; font-weight: bold;">TEAM COLORS:</div>
+        <div class="knob-row">
+          <label>My Primary:</label>
+          <input type="color" id="mock-my-primary" value="#1873FF">
+        </div>
+        <div class="knob-row">
+          <label>Opp Primary:</label>
+          <input type="color" id="mock-opp-primary" value="#C26418">
+        </div>
+
+        <!-- Auto animate toggle -->
+        <div style="margin-top: 10px;">
+          <button id="btn-auto-sim" class="btn btn-secondary" style="width: 100%;">⚡ Auto-Simulate Live Game</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script type="module">
+    // --- Sample Starter Templates ---
+    const STARTER_TEMPLATES = {
+      text: `<script type="application/json" id="component-manifest">
+{
+  "id": "element-boost-text",
+  "displayName": "Boost Amount Text",
+  "tier": "element",
+  "category": "player",
+  "isProportional": false,
+  "supportsAlignment": true,
+  "defaultWidthVw": 6,
+  "defaultHeightVw": 3.5,
+  "baseWidthPx": 96,
+  "baseHeightPx": 56,
+  "customProperties": [
+    { "key": "textColor", "label": "Text Color Override", "type": "color", "default": "" },
+    { "key": "strokeWidth", "label": "Outer Stroke Width", "type": "number", "min": 0, "max": 15, "unit": "px", "default": 0 },
+    { "key": "strokeColor", "label": "Stroke Color", "type": "color", "default": "#000000" },
+    { "key": "bgColor", "label": "Background Color", "type": "color", "default": "transparent" },
+    { "key": "bgRadius", "label": "Corner Radius", "type": "number", "min": 0, "max": 20, "unit": "px", "default": 0 }
+  ]
+}
+<\/script>
+
+<template id="component-template">
+  <div class="el-boost-text-box align-right dyn-text-box">
+    <span class="dyn-val text-green">100</span>
+  </div>
+</template>
+
+<style>
+  .el-boost-text-box {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    font-family: "GHMonoR", monospace;
+    line-height: 1;
+    overflow: hidden;
+    user-select: none;
+    container-type: size;
+  }
+  .align-left { justify-content: flex-start; text-align: left; }
+  .align-center { justify-content: center; text-align: center; }
+  .align-right { justify-content: flex-end; text-align: right; }
+  .el-boost-text-box .dyn-val {
+    font-weight: 800;
+    font-size: calc(min(70cqh, 45cqw));
+    color: #10b981;
+  }
+  .text-red { color: #ef4444 !important; }
+  .text-yellow { color: #f59e0b !important; }
+  .text-green { color: #10b981 !important; }
+</style>`,
+
+      "speed-bar": `<script type="application/json" id="component-manifest">
+{
+  "id": "element-speed-bar",
+  "displayName": "Speed Progress Bar",
+  "tier": "element",
+  "category": "player",
+  "isProportional": false,
+  "defaultWidthVw": 16,
+  "defaultHeightVw": 1.8,
+  "baseWidthPx": 256,
+  "baseHeightPx": 24,
+  "customProperties": [
+    { "key": "borderRadius", "label": "Border Radius", "type": "number", "min": 0, "max": 20, "unit": "px", "default": 4 },
+    { "key": "colorLow", "label": "Low Speed Color", "type": "color", "default": "#d4af37" },
+    { "key": "colorMidStart", "label": "Mid Speed Start", "type": "color", "default": "#77ca7a" },
+    { "key": "colorMidEnd", "label": "Mid Speed End", "type": "color", "default": "#59f168" }
+  ]
+}
+<\/script>
+
+<template id="component-template">
+  <div class="el-speed-bar-box dyn-speed-box">
+    <div class="speed-marker"></div>
+    <div class="el-speed-bar-fill dyn-speed-fill"></div>
+  </div>
+</template>
+
+<style>
+  .el-speed-bar-box {
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    background: rgba(0, 0, 0, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+    border-radius: 4px;
+    container-type: size;
+  }
+  .el-speed-bar-fill {
+    height: 100%;
+    width: 0%;
+    transform-origin: left center;
+    background-color: #d4af37;
+    border-radius: 4px;
+    transition: none !important;
+  }
+  .speed-marker {
+    position: absolute;
+    left: 85%;
+    top: 0;
+    width: 2px;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.4);
+    z-index: 2;
+    pointer-events: none;
+  }
+  .supersonic-glow {
+    box-shadow: 0 0 15px #a020f0 !important;
+  }
+</style>`,
+
+      curved: `<script type="application/json" id="component-manifest">
+{
+  "id": "element-curved-speedometer",
+  "displayName": "Curved Speedometer",
+  "tier": "element",
+  "category": "player",
+  "isProportional": true,
+  "defaultWidthVw": 10,
+  "defaultHeightVw": 10,
+  "baseWidthPx": 160,
+  "baseHeightPx": 160,
+  "customProperties": [
+    { "key": "thickness", "label": "Gauge Thickness", "type": "number", "min": 2, "max": 20, "default": 8 },
+    { "key": "gap", "label": "Arc Gap Angle", "type": "number", "min": 0, "max": 360, "unit": "deg", "default": 90 },
+    { "key": "orientation", "label": "Orientation", "type": "number", "min": 0, "max": 360, "unit": "deg", "default": 90 },
+    { "key": "trackColor", "label": "Background Track Color", "type": "color", "default": "rgba(255, 255, 255, 0.15)" },
+    { "key": "colorLow", "label": "Low Speed Color", "type": "color", "default": "#d4af37" }
+  ]
+}
+<\/script>
+
+<template id="component-template">
+  <div class="curved-speed-container dyn-curved-speed-container">
+    <svg viewBox="0 0 100 100">
+      <circle class="curved-bg-track dyn-curved-bg" cx="50" cy="50" fill="none" stroke="rgba(255, 255, 255, 0.15)" stroke-linecap="square" />
+      <circle class="curved-progress-bar dyn-curved-fill" cx="50" cy="50" fill="none" stroke="#d4af37" stroke-linecap="square" />
+    </svg>
+  </div>
+</template>
+
+<style>
+  .curved-speed-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    background: transparent;
+    container-type: size;
+  }
+  .curved-speed-container svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    display: block;
+  }
+  .curved-bg-track, .curved-progress-bar {
+    transition: none !important;
+  }
+</style>`,
+
+      indicator: `<script type="application/json" id="component-manifest">
+{
+  "id": "element-supersonic-indicator",
+  "displayName": "Supersonic Indicator",
+  "tier": "element",
+  "category": "player",
+  "isProportional": true,
+  "defaultWidthVw": 2.5,
+  "defaultHeightVw": 2.5,
+  "baseWidthPx": 40,
+  "baseHeightPx": 40,
+  "customProperties": [
+    { "key": "invertBool", "label": "Invert Condition", "type": "boolean", "default": false },
+    { "key": "activeColor", "label": "Active Glow Color", "type": "color", "default": "#a855f7" },
+    { "key": "inactiveColor", "label": "Inactive Color", "type": "color", "default": "rgba(51, 65, 85, 0.5)" }
+  ]
+}
+<\/script>
+
+<template id="component-template">
+  <div class="el-dot-box">
+    <div class="el-pure-dot dyn-dot bool-off"></div>
+  </div>
+</template>
+
+<style>
+  .el-dot-box {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    container-type: size;
+  }
+  .el-pure-dot {
+    width: calc(min(70cqh, 70cqw));
+    height: calc(min(70cqh, 70cqw));
+    border-radius: 50%;
+    background-color: rgba(51, 65, 85, 0.5);
+    transition: none !important;
+  }
+  .bool-on {
+    background-color: #a855f7 !important;
+    box-shadow: 0 0 12px #a855f7;
+  }
+</style>`,
+
+      "custom-text": `<script type="application/json" id="component-manifest">
+{
+  "id": "element-custom-text",
+  "displayName": "Custom Text Status Indicator",
+  "tier": "element",
+  "category": "player",
+  "isProportional": false,
+  "supportsAlignment": true,
+  "defaultWidthVw": 10,
+  "defaultHeightVw": 3.0,
+  "baseWidthPx": 160,
+  "baseHeightPx": 48,
+  "customProperties": [
+    { "key": "customText", "label": "Display Text", "type": "string", "default": "SUPERSONIC" },
+    { "key": "boolVar", "label": "Listen Variable", "type": "select", "options": ["supersonic", "boosting", "hascar", "onground", "onwall", "powersliding", "demolished", "overtime"], "default": "supersonic" },
+    { "key": "invertBool", "label": "Invert Condition", "type": "boolean", "default": false },
+    { "key": "textColor", "label": "Text Color", "type": "color", "default": "#38bdf8" },
+    { "key": "strokeWidth", "label": "Stroke Width", "type": "number", "min": 0, "max": 10, "unit": "px", "default": 0 },
+    { "key": "strokeColor", "label": "Stroke Color", "type": "color", "default": "#000000" },
+    { "key": "bgColor", "label": "Background Color", "type": "color", "default": "rgba(10, 14, 23, 0.85)" },
+    { "key": "bgRadius", "label": "Corner Radius", "type": "number", "min": 0, "max": 20, "unit": "px", "default": 4 }
+  ]
+}
+<\/script>
+
+<template id="component-template">
+  <div class="el-custom-text-box align-center dyn-text-box">
+    <span class="dyn-val">SUPERSONIC</span>
+  </div>
+</template>
+
+<style>
+  .el-custom-text-box {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    font-family: "GHMonoR", monospace;
+    line-height: 1;
+    overflow: hidden;
+    padding: 0 6px;
+    box-sizing: border-box;
+    container-type: size;
+  }
+  .align-left { justify-content: flex-start; text-align: left; }
+  .align-center { justify-content: center; text-align: center; }
+  .align-right { justify-content: flex-end; text-align: right; }
+  .el-custom-text-box .dyn-val {
+    font-weight: 800;
+    font-size: calc(min(65cqh, 20cqw));
+    letter-spacing: 1px;
+    color: #38bdf8;
+  }
+</style>`,
+
+      widget: `<script type="application/json" id="component-manifest">
+{
+  "id": "widget-boost-combo",
+  "displayName": "Boost Value & Bar Combo",
+  "tier": "widget",
+  "category": "player",
+  "isProportional": false,
+  "defaultWidthVw": 14,
+  "defaultHeightVw": 6.5,
+  "baseWidthPx": 224,
+  "baseHeightPx": 104,
+  "customProperties": [
+    { "key": "enableBlink", "label": "Low Boost Red Glow", "type": "boolean", "default": true }
+  ]
+}
+<\/script>
+
+<template id="component-template">
+  <div class="widget-boost-card dyn-boost-card">
+    <div class="widget-boost-header">
+      <span class="widget-player-label dyn-player-label">P1 BOOST</span>
+      <span class="widget-boost-val dyn-val text-green">100</span>
+    </div>
+    <div class="widget-bar-bg">
+      <div class="widget-bar-fill dyn-boost-fill bar-green"></div>
+    </div>
+  </div>
+</template>
+
+<style>
+  .widget-boost-card {
+    width: 100%;
+    height: 100%;
+    background: rgba(11, 15, 25, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    padding: calc(min(8cqh, 8cqw));
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-sizing: border-box;
+    container-type: size;
+  }
+  .widget-boost-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .widget-player-label {
+    font-size: calc(min(24cqh, 12cqw));
+    color: #94a3b8;
+    font-weight: 700;
+  }
+  .widget-boost-val {
+    font-size: calc(min(45cqh, 22cqw));
+    font-weight: 900;
+  }
+  .widget-bar-bg {
+    width: 100%;
+    height: calc(min(20cqh, 10cqw));
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .widget-bar-fill {
+    width: 100%;
+    height: 100%;
+    transform-origin: left center;
+    transition: none !important;
+  }
+  .bar-red { background-color: #ef4444; }
+  .bar-yellow { background-color: #f59e0b; }
+  .bar-green { background-color: #10b981; }
+  .text-red { color: #ef4444 !important; }
+  .text-yellow { color: #f59e0b !important; }
+  .text-green { color: #10b981 !important; }
+  .glow-red { border-color: #ef4444 !important; box-shadow: 0 0 12px #ef4444; }
+</style>`
+    };
+
+    // --- State Variables ---
+    let currentManifest = null;
+    let currentTemplateHtml = "";
+    let currentCss = "";
+    let currentCustomProps = {};
+    let isAutoSimulating = false;
+    let autoSimTimer = null;
+
+    // Telemetry mock state
+    const mockTelemetry = {
+      p1Boost: 85,
+      p1Speed: 1650,
+      p1Supersonic: false,
+      p1Boosting: false,
+      p1HasCar: true,
+      p1OnGround: true,
+      p1OnWall: false,
+      p1Powersliding: false,
+      p1Demolished: false,
+      timeSeconds: 270,
+      bOvertime: false,
+      scoreDiff: 1,
+      myScore: 2,
+      oppScore: 1,
+      ballSpeed: 65,
+      ballTeamNum: 0,
+      myPrimaryColor: "#1873FF",
+      oppPrimaryColor: "#C26418"
+    };
+
+    // DOM Elements
+    const codeEditor = document.getElementById("code-editor");
+    const statusBanner = document.getElementById("status-banner");
+    const charCount = document.getElementById("char-count");
+    const previewViewport = document.getElementById("preview-viewport");
+    const componentMount = document.getElementById("component-mount");
+    const draggerFrame = document.getElementById("dragger-frame");
+    const dimensionLabel = document.getElementById("dimension-label");
+    const customPropsContainer = document.getElementById("custom-props-container");
+    const stageArea = document.getElementById("stage-viewport-area");
+
+    // Dynamic Style Element in Head
+    let componentStyleTag = document.getElementById("studio-component-style");
+    if (!componentStyleTag) {
+      componentStyleTag = document.createElement("style");
+      componentStyleTag.id = "studio-component-style";
+      document.head.appendChild(componentStyleTag);
+    }
+
+    // --- Component Parser Function ---
+    function parseComponent(sourceCode) {
+      if (!sourceCode || !sourceCode.trim()) {
+        throw new Error("Source code is empty.");
+      }
+
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(sourceCode, "text/html");
+
+      // 1. Extract Manifest JSON
+      const manifestScript = doc.getElementById("component-manifest");
+      if (!manifestScript || !manifestScript.textContent.trim()) {
+        throw new Error("Missing required `<script type=\"application/json\" id=\"component-manifest\">` tag.");
+      }
+
+      let manifest;
+      try {
+        manifest = JSON.parse(manifestScript.textContent.trim());
+      } catch (err) {
+        throw new Error("Failed to parse Manifest JSON: " + err.message);
+      }
+
+      if (!manifest.id) {
+        throw new Error("Manifest is missing required field: `id`");
+      }
+
+      // 2. Extract Template HTML
+      const template = doc.getElementById("component-template");
+      if (!template) {
+        throw new Error("Missing required `<template id=\"component-template\">` tag.");
+      }
+      const templateHtml = template.innerHTML.trim();
+
+      // 3. Extract Styles
+      const styleTags = doc.querySelectorAll("style");
+      let css = "";
+      styleTags.forEach((s) => {
+        css += (s.textContent || "") + "\n";
+      });
+
+      return { manifest, templateHtml, css };
+    }
+
+    // --- Render & Update Engine ---
+    function renderComponent() {
+      if (!currentManifest) return;
+
+      // Update injected CSS
+      componentStyleTag.textContent = currentCss;
+
+      // Render Template DOM
+      componentMount.innerHTML = currentTemplateHtml;
+
+      // Update Viewport Dimensions if not customized yet
+      const baseW = currentManifest.baseWidthPx || 200;
+      const baseH = currentManifest.baseHeightPx || 60;
+      previewViewport.style.width = baseW + "px";
+      previewViewport.style.height = baseH + "px";
+      dimensionLabel.textContent = baseW + " x " + baseH + " px";
+
+      // Build Custom Properties UI
+      buildCustomPropsKnobs();
+
+      // Run live update on component
+      updateComponentDOM();
+    }
+
+    function buildCustomPropsKnobs() {
+      customPropsContainer.innerHTML = "";
+      const props = currentManifest.customProperties || [];
+
+      if (props.length === 0) {
+        customPropsContainer.innerHTML = "<div style='color: var(--text-muted); padding: 4px 0;'>No customProperties declared in manifest.</div>";
+        return;
+      }
+
+      props.forEach((propDef) => {
+        const row = document.createElement("div");
+        row.className = "knob-row";
+
+        const label = document.createElement("label");
+        label.textContent = propDef.label || propDef.key;
+        row.appendChild(label);
+
+        const currentVal = currentCustomProps[propDef.key] !== undefined ? currentCustomProps[propDef.key] : propDef.default;
+
+        if (propDef.type === "number") {
+          const slider = document.createElement("input");
+          slider.type = "range";
+          slider.min = propDef.min !== undefined ? propDef.min : 0;
+          slider.max = propDef.max !== undefined ? propDef.max : 100;
+          slider.step = propDef.step !== undefined ? propDef.step : 1;
+          slider.value = currentVal !== undefined ? currentVal : 0;
+
+          const valBadge = document.createElement("span");
+          valBadge.className = "knob-val";
+          valBadge.textContent = slider.value + (propDef.unit || "");
+
+          slider.addEventListener("input", (e) => {
+            const v = Number(e.target.value);
+            currentCustomProps[propDef.key] = v;
+            valBadge.textContent = v + (propDef.unit || "");
+            updateComponentDOM();
+          });
+
+          row.appendChild(slider);
+          row.appendChild(valBadge);
+        } else if (propDef.type === "color") {
+          const colorInput = document.createElement("input");
+          colorInput.type = "color";
+          colorInput.value = (currentVal && currentVal.startsWith("#")) ? currentVal : "#38bdf8";
+
+          colorInput.addEventListener("input", (e) => {
+            currentCustomProps[propDef.key] = e.target.value;
+            updateComponentDOM();
+          });
+
+          row.appendChild(colorInput);
+        } else if (propDef.type === "boolean") {
+          const check = document.createElement("input");
+          check.type = "checkbox";
+          check.checked = Boolean(currentVal);
+          check.style.cursor = "pointer";
+
+          check.addEventListener("change", (e) => {
+            currentCustomProps[propDef.key] = e.target.checked;
+            updateComponentDOM();
+          });
+
+          row.appendChild(check);
+        } else if (propDef.type === "select") {
+          const sel = document.createElement("select");
+          (propDef.options || []).forEach((opt) => {
+            const optEl = document.createElement("option");
+            optEl.value = opt;
+            optEl.textContent = opt;
+            if (opt === currentVal) optEl.selected = true;
+            sel.appendChild(optEl);
+          });
+
+          sel.addEventListener("change", (e) => {
+            currentCustomProps[propDef.key] = e.target.value;
+            updateComponentDOM();
+          });
+
+          row.appendChild(sel);
+        } else {
+          // String
+          const textInput = document.createElement("input");
+          textInput.type = "text";
+          textInput.value = currentVal || "";
+          textInput.style.flex = "1.2";
+
+          textInput.addEventListener("input", (e) => {
+            currentCustomProps[propDef.key] = e.target.value;
+            updateComponentDOM();
+          });
+
+          row.appendChild(textInput);
+        }
+
+        customPropsContainer.appendChild(row);
+      });
+    }
+
+    // Apply Telemetry and Custom Properties onto the live component DOM
+    function updateComponentDOM() {
+      if (!componentMount) return;
+
+      const boost = mockTelemetry.p1Boost;
+      const speed = mockTelemetry.p1Speed;
+      const isSuper = mockTelemetry.p1Supersonic || speed >= 2200;
+
+      // 1. Text elements (.dyn-val)
+      const valEl = componentMount.querySelector(".dyn-val");
+      if (valEl) {
+        // Boost Text
+        if (currentManifest.id === "element-boost-text" || currentManifest.id.includes("boost-text") || currentManifest.id.includes("boost-val")) {
+          valEl.textContent = boost.toString();
+          if (!currentCustomProps.textColor) {
+            const enableBlink = currentCustomProps.enableBlink !== false;
+            let colorCls = "text-green";
+            let blink = false;
+            if (boost < 12) { colorCls = "text-red"; blink = enableBlink; }
+            else if (boost < 30) { colorCls = "text-red"; }
+            else if (boost < 60) { colorCls = "text-yellow"; }
+            valEl.className = "dyn-val " + colorCls + (blink ? " danger-blink" : "");
+          }
+        } else if (currentManifest.id === "element-speed-text" || currentManifest.id.includes("speed-text")) {
+          valEl.textContent = speed.toString();
+        } else if (currentManifest.id === "element-time-text" || currentManifest.id.includes("time")) {
+          const mins = Math.floor(mockTelemetry.timeSeconds / 60);
+          const secs = (mockTelemetry.timeSeconds % 60).toString().padStart(2, "0");
+          valEl.textContent = mins + ":" + secs;
+        } else if (currentManifest.id === "element-score-diff-text") {
+          valEl.textContent = mockTelemetry.scoreDiff > 0 ? ("+" + mockTelemetry.scoreDiff) : mockTelemetry.scoreDiff.toString();
+        } else if (currentCustomProps.customText) {
+          valEl.textContent = currentCustomProps.customText;
+        }
+
+        // Apply Text Styles (Color, Outer Stroke)
+        if (currentCustomProps.textColor) {
+          valEl.style.color = currentCustomProps.textColor;
+        }
+        const strokeWidth = Number(currentCustomProps.strokeWidth || 0);
+        const strokeColor = currentCustomProps.strokeColor || "#000000";
+        if (strokeWidth > 0) {
+          valEl.style.webkitTextStroke = strokeWidth + "px " + strokeColor;
+          valEl.style.paintOrder = "stroke fill";
+        } else {
+          valEl.style.webkitTextStroke = "0px transparent";
+          valEl.style.paintOrder = "normal";
+        }
+      }
+
+      // 2. Progress Bars (.dyn-boost-fill, .dyn-speed-fill)
+      const boostFill = componentMount.querySelector(".dyn-boost-fill");
+      if (boostFill) {
+        const isVertical = currentManifest.id.includes("vertical");
+        if (isVertical) {
+          boostFill.style.transform = "scaleY(" + (boost / 100) + ")";
+        } else {
+          boostFill.style.transform = "scaleX(" + (boost / 100) + ")";
+        }
+        const enableBlink = currentCustomProps.enableBlink !== false;
+        let colorCls = "bar-green";
+        let blink = false;
+        if (boost < 12) { colorCls = "bar-red"; blink = enableBlink; }
+        else if (boost < 30) { colorCls = "bar-red"; }
+        else if (boost < 60) { colorCls = "bar-yellow"; }
+        boostFill.className = "dyn-boost-fill " + colorCls + (blink ? " danger-blink" : "");
+      }
+
+      const speedFill = componentMount.querySelector(".dyn-speed-fill");
+      if (speedFill) {
+        let p = 0;
+        if (speed <= 1410) p = (speed / 1410) * 40;
+        else if (speed <= 2200) p = 40 + ((speed - 1410) / (2200 - 1410)) * 45;
+        else p = 85 + ((speed - 2200) / (2300 - 2200)) * 15;
+
+        speedFill.style.width = p + "%";
+        if (isSuper) {
+          speedFill.classList.add("supersonic-glow");
+          speedFill.style.backgroundColor = "#a020f0";
+        } else {
+          speedFill.classList.remove("supersonic-glow");
+          speedFill.style.backgroundColor = currentCustomProps.colorLow || "#d4af37";
+        }
+      }
+
+      // 3. Curved Gauges (SVG Circle)
+      const curvedFill = componentMount.querySelector(".dyn-curved-fill");
+      const curvedBg = componentMount.querySelector(".dyn-curved-bg");
+      if (curvedFill && curvedBg) {
+        const thick = Number(currentCustomProps.thickness || 8);
+        const gap = Number(currentCustomProps.gap || 90);
+        const orient = Number(currentCustomProps.orientation || 90);
+        const radius = 50 - (thick / 2);
+        const perimeter = 2 * Math.PI * radius;
+        const activeAngle = 360 - gap;
+        const totalDash = perimeter * (activeAngle / 360);
+
+        let pct = (currentManifest.id.includes("speed")) ? (speed / 2300) : (boost / 100);
+        const progressDash = totalDash * Math.max(0, Math.min(1, pct));
+        const rotate = orient + (gap / 2);
+
+        [curvedBg, curvedFill].forEach(el => {
+          el.setAttribute("r", radius);
+          el.setAttribute("stroke-width", thick);
+          el.style.transform = "rotate(" + rotate + "deg)";
+          el.style.transformOrigin = "center";
+        });
+        curvedBg.setAttribute("stroke-dasharray", totalDash + " " + perimeter);
+        curvedFill.setAttribute("stroke-dasharray", progressDash + " " + perimeter);
+        if (isSuper) {
+          curvedFill.setAttribute("stroke", "#a020f0");
+        } else {
+          curvedFill.setAttribute("stroke", currentCustomProps.colorLow || "#d4af37");
+        }
+      }
+
+      // 4. Status Dot Indicators (.dyn-dot)
+      const dotEl = componentMount.querySelector(".dyn-dot");
+      if (dotEl) {
+        let boolVal = false;
+        if (currentManifest.id.includes("supersonic")) boolVal = isSuper;
+        else if (currentManifest.id.includes("boosting")) boolVal = mockTelemetry.p1Boosting;
+        else if (currentManifest.id.includes("demolished")) boolVal = mockTelemetry.p1Demolished;
+        else if (currentManifest.id.includes("overtime")) boolVal = mockTelemetry.bOvertime;
+        else boolVal = mockTelemetry.p1HasCar;
+
+        if (currentCustomProps.invertBool) boolVal = !boolVal;
+
+        dotEl.className = "dyn-dot " + (boolVal ? "bool-on" : "bool-off");
+        if (currentCustomProps.activeColor && boolVal) {
+          dotEl.style.backgroundColor = currentCustomProps.activeColor;
+          dotEl.style.boxShadow = "0 0 12px " + currentCustomProps.activeColor;
+        } else if (currentCustomProps.inactiveColor && !boolVal) {
+          dotEl.style.backgroundColor = currentCustomProps.inactiveColor;
+          dotEl.style.boxShadow = "none";
+        }
+      }
+
+      // 5. Container Background & Radius
+      const textBox = componentMount.querySelector(".dyn-text-box, .widget-boost-card, .el-speed-bar-box, .el-custom-text-box");
+      if (textBox) {
+        if (currentCustomProps.bgColor) textBox.style.backgroundColor = currentCustomProps.bgColor;
+        if (currentCustomProps.bgRadius !== undefined) textBox.style.borderRadius = currentCustomProps.bgRadius + "px";
+        if (currentCustomProps.borderRadius !== undefined) textBox.style.borderRadius = currentCustomProps.borderRadius + "px";
+      }
+    }
+
+    // --- Interactive 8-Point Dragger Engine ---
+    let isDragging = false;
+    let dragHandle = null;
+    let startX = 0, startY = 0, startW = 256, startH = 64;
+
+    draggerFrame.addEventListener("pointerdown", (e) => {
+      const handle = e.target.getAttribute("data-handle");
+      if (!handle) return;
+      isDragging = true;
+      dragHandle = handle;
+      startX = e.clientX;
+      startY = e.clientY;
+      startW = previewViewport.clientWidth;
+      startH = previewViewport.clientHeight;
+      e.preventDefault();
+      e.stopPropagation();
+    });
+
+    window.addEventListener("pointermove", (e) => {
+      if (!isDragging || !dragHandle) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+
+      let newW = startW;
+      let newH = startH;
+
+      if (dragHandle.includes("e")) newW = Math.max(30, startW + dx);
+      if (dragHandle.includes("w")) newW = Math.max(30, startW - dx);
+      if (dragHandle.includes("s")) newH = Math.max(16, startH + dy);
+      if (dragHandle.includes("n")) newH = Math.max(16, startH - dy);
+
+      if (document.getElementById("check-lock-aspect").checked) {
+        const aspect = startW / startH;
+        if (dragHandle.includes("e") || dragHandle.includes("w")) {
+          newH = Math.round(newW / aspect);
+        } else {
+          newW = Math.round(newH * aspect);
+        }
+      }
+
+      previewViewport.style.width = newW + "px";
+      previewViewport.style.height = newH + "px";
+      dimensionLabel.textContent = Math.round(newW) + " x " + Math.round(newH) + " px";
+    });
+
+    window.addEventListener("pointerup", () => {
+      isDragging = false;
+      dragHandle = null;
+    });
+
+    // --- Actions & Event Listeners ---
+    function loadAndParseCode(code) {
+      try {
+        const parsed = parseComponent(code);
+        currentManifest = parsed.manifest;
+        currentTemplateHtml = parsed.templateHtml;
+        currentCss = parsed.css;
+
+        // Initialize default props
+        currentCustomProps = {};
+        (currentManifest.customProperties || []).forEach(p => {
+          currentCustomProps[p.key] = p.default;
+        });
+
+        // Set lock aspect default
+        document.getElementById("check-lock-aspect").checked = Boolean(currentManifest.isProportional);
+
+        // Success banner
+        statusBanner.className = "status-banner success";
+        statusBanner.innerHTML = `✅ Successfully parsed <b>${currentManifest.id}</b> (${currentManifest.tier} &bull; ${currentManifest.category})`;
+
+        renderComponent();
+      } catch (err) {
+        statusBanner.className = "status-banner error";
+        statusBanner.innerHTML = `❌ <b>Parser Error:</b> ${err.message}`;
+      }
+    }
+
+    // Parse button
+    document.getElementById("btn-parse-run").addEventListener("click", () => {
+      loadAndParseCode(codeEditor.value);
+    });
+
+    // Editor input count
+    codeEditor.addEventListener("input", () => {
+      charCount.textContent = codeEditor.value.length + " chars";
+    });
+
+    // Template selector
+    document.getElementById("sample-selector").addEventListener("change", (e) => {
+      const key = e.target.value;
+      if (key && STARTER_TEMPLATES[key]) {
+        codeEditor.value = STARTER_TEMPLATES[key];
+        charCount.textContent = codeEditor.value.length + " chars";
+        loadAndParseCode(codeEditor.value);
+      }
+    });
+
+    // Drag and drop handler
+    const dropzone = document.getElementById("file-dropzone");
+    const fileInput = document.getElementById("file-input");
+
+    dropzone.addEventListener("click", () => fileInput.click());
+
+    fileInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file) readFile(file);
+    });
+
+    dropzone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropzone.classList.add("dragover");
+    });
+
+    dropzone.addEventListener("dragleave", () => {
+      dropzone.classList.remove("dragover");
+    });
+
+    dropzone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropzone.classList.remove("dragover");
+      const file = e.dataTransfer.files[0];
+      if (file) readFile(file);
+    });
+
+    function readFile(file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        codeEditor.value = event.target.result;
+        charCount.textContent = codeEditor.value.length + " chars";
+        loadAndParseCode(codeEditor.value);
+      };
+      reader.readAsText(file);
+    }
+
+    // Copy Code Button
+    document.getElementById("btn-copy-code").addEventListener("click", () => {
+      navigator.clipboard.writeText(codeEditor.value);
+      alert("Component source code copied to clipboard!");
+    });
+
+    // Clear Code Button
+    document.getElementById("btn-clear-code").addEventListener("click", () => {
+      codeEditor.value = "";
+      charCount.textContent = "0 chars";
+      componentMount.innerHTML = "";
+      statusBanner.style.display = "none";
+    });
+
+    // Export Code Button
+    document.getElementById("btn-export-code").addEventListener("click", () => {
+      if (!currentManifest) {
+        alert("Please parse a valid component first.");
+        return;
+      }
+      const blob = new Blob([codeEditor.value], { type: "text/html" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `${currentManifest.id}.html`;
+      a.click();
+    });
+
+    // Toolbar frame & background toggles
+    document.getElementById("check-show-frame").addEventListener("change", (e) => {
+      draggerFrame.style.display = e.target.checked ? "block" : "none";
+    });
+
+    document.getElementById("bg-selector").addEventListener("change", (e) => {
+      stageArea.className = "stage-viewport-area " + (e.target.value === "checker" ? "bg-checker" : e.target.value === "pitch" ? "bg-pitch" : "");
+    });
+
+    // Mock telemetry slider events
+    document.getElementById("mock-boost-slider").addEventListener("input", (e) => {
+      mockTelemetry.p1Boost = Number(e.target.value);
+      document.getElementById("mock-boost-val").textContent = e.target.value;
+      updateComponentDOM();
+    });
+
+    document.getElementById("mock-speed-slider").addEventListener("input", (e) => {
+      mockTelemetry.p1Speed = Number(e.target.value);
+      document.getElementById("mock-speed-val").textContent = e.target.value;
+      updateComponentDOM();
+    });
+
+    document.getElementById("mock-time-slider").addEventListener("input", (e) => {
+      const v = Number(e.target.value);
+      mockTelemetry.timeSeconds = v;
+      const mins = Math.floor(v / 60);
+      const secs = (v % 60).toString().padStart(2, "0");
+      document.getElementById("mock-time-val").textContent = mins + ":" + secs;
+      updateComponentDOM();
+    });
+
+    document.getElementById("mock-score-diff-slider").addEventListener("input", (e) => {
+      const v = Number(e.target.value);
+      mockTelemetry.scoreDiff = v;
+      document.getElementById("mock-score-diff-val").textContent = v > 0 ? "+" + v : v.toString();
+      updateComponentDOM();
+    });
+
+    // Boolean toggle buttons
+    const boolBtnMap = {
+      "toggle-supersonic": "p1Supersonic",
+      "toggle-boosting": "p1Boosting",
+      "toggle-hascar": "p1HasCar",
+      "toggle-onground": "p1OnGround",
+      "toggle-onwall": "p1OnWall",
+      "toggle-powersliding": "p1Powersliding",
+      "toggle-demolished": "p1Demolished",
+      "toggle-overtime": "bOvertime"
+    };
+
+    Object.entries(boolBtnMap).forEach(([btnId, stateKey]) => {
+      const btn = document.getElementById(btnId);
+      if (btn) {
+        btn.addEventListener("click", () => {
+          mockTelemetry[stateKey] = !mockTelemetry[stateKey];
+          btn.classList.toggle("active", mockTelemetry[stateKey]);
+          updateComponentDOM();
+        });
+      }
+    });
+
+    // Auto Simulation
+    document.getElementById("btn-auto-sim").addEventListener("click", () => {
+      isAutoSimulating = !isAutoSimulating;
+      const btn = document.getElementById("btn-auto-sim");
+      if (isAutoSimulating) {
+        btn.textContent = "⏹ Stop Simulation";
+        btn.classList.add("btn-danger");
+        btn.classList.remove("btn-secondary");
+
+        let boostDir = -1;
+        let speedDir = 1;
+
+        autoSimTimer = setInterval(() => {
+          // Boost
+          mockTelemetry.p1Boost += boostDir * 2;
+          if (mockTelemetry.p1Boost <= 0) { mockTelemetry.p1Boost = 0; boostDir = 1; }
+          if (mockTelemetry.p1Boost >= 100) { mockTelemetry.p1Boost = 100; boostDir = -1; }
+          document.getElementById("mock-boost-slider").value = mockTelemetry.p1Boost;
+          document.getElementById("mock-boost-val").textContent = mockTelemetry.p1Boost;
+
+          // Speed
+          mockTelemetry.p1Speed += speedDir * 35;
+          if (mockTelemetry.p1Speed >= 2300) { mockTelemetry.p1Speed = 2300; speedDir = -1; }
+          if (mockTelemetry.p1Speed <= 100) { mockTelemetry.p1Speed = 100; speedDir = 1; }
+          document.getElementById("mock-speed-slider").value = mockTelemetry.p1Speed;
+          document.getElementById("mock-speed-val").textContent = mockTelemetry.p1Speed;
+
+          mockTelemetry.p1Supersonic = mockTelemetry.p1Speed >= 2200;
+          document.getElementById("toggle-supersonic").classList.toggle("active", mockTelemetry.p1Supersonic);
+
+          updateComponentDOM();
+        }, 50);
+      } else {
+        btn.textContent = "⚡ Auto-Simulate Live Game";
+        btn.classList.remove("btn-danger");
+        btn.classList.add("btn-secondary");
+        clearInterval(autoSimTimer);
+      }
+    });
+
+    // Initial load with starter template
+    codeEditor.value = STARTER_TEMPLATES.text;
+    charCount.textContent = codeEditor.value.length + " chars";
+    loadAndParseCode(STARTER_TEMPLATES.text);
+  </script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+# The official factory fallback profile for the custom workspace scene
+custom_scene_id: "custom-workspace"
+custom_scene_name: "fully customized workspace"
+custom_scene_file: "/src/overlay/scenes/custom-workspace.html"
+
+# Default components coordinates and boundaries
+components:
+  - id: "mini-map-box"
+    name: "Radar MiniMap"
+    anchor: "top-right"
+    default_width: "300px"
+    default_height: "300px"
+    default_top: "10px"
+    default_right: "10px"
+  
+  - id: "health-bar-box"
+    name: "HP Status Dashboard"
+    anchor: "bottom-center"
+    default_width: "600px"
+    default_height: "80px"
+    default_bottom: "20px"
+    default_left: "50%"

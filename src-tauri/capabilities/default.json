@@ -1,0 +1,16 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Capability for the overlay and configurator",
+  "windows": [
+    "main",
+    "configurator",
+    "overlay"
+  ],
+  "permissions": [
+    "core:default",
+    "core:event:allow-emit",
+    "core:event:allow-listen",
+    "core:window:allow-set-ignore-cursor-events"
+  ]
+}

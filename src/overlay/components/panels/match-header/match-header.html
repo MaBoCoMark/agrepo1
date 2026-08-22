@@ -1,0 +1,142 @@
+<script type="application/json" id="component-manifest">
+{
+  "id": "panel-match-header",
+  "displayName": "Match Header Overview Panel",
+  "tier": "panel",
+  "category": "global",
+  "isProportional": true,
+  "defaultWidthVw": 32,
+  "defaultHeightVw": 4.5,
+  "minWidthVw": 18,
+  "minHeightVw": 3.0,
+  "baseWidthPx": 512,
+  "baseHeightPx": 72
+}
+</script>
+
+<template id="component-template">
+  <div class="panel-match-header-container">
+      <!-- 1. Score Diff & Match Score -->
+      <div class="panel-sub-card">
+        <span class="panel-sub-label">SCORE DIFF</span>
+        <div style="display: flex; align-items: baseline; gap: 6px;">
+          <span class="score-diff-val score-tie dyn-diff-val">0</span>
+          <span style="font-size: 11px; color: #94a3b8;" class="dyn-score-text">0 - 0</span>
+        </div>
+      </div>
+
+      <div class="panel-divider"></div>
+
+      <!-- 2. Countdown -->
+      <div class="panel-sub-card">
+        <span class="panel-sub-label">TIME</span>
+        <span class="panel-sub-val dyn-time-val">4:30</span>
+      </div>
+
+      <div class="panel-divider"></div>
+
+      <!-- 3. Overtime -->
+      <div class="panel-sub-card">
+        <span class="panel-sub-label">STATUS</span>
+        <span style="font-size: 11px; font-weight: 700; color: #64748b;" class="dyn-ot-val">REGULAR</span>
+      </div>
+
+      <div class="panel-divider"></div>
+
+      <!-- 4. Ball Speed -->
+      <div class="panel-sub-card">
+        <span class="panel-sub-label">BALL SPEED</span>
+        <span class="panel-sub-val dyn-ball-val">45 km/h</span>
+      </div>
+
+      <div class="panel-divider"></div>
+
+      <!-- 5. Team Colors -->
+      <div class="panel-sub-card">
+        <span class="panel-sub-label">TEAMS</span>
+        <div style="display: flex; gap: 4px; margin-top: 2px;">
+          <span class="color-swatch-box dyn-us-color" style="background:#1873FF;" title="US"></span>
+          <span class="color-swatch-box dyn-opp-color" style="background:#C26418;" title="OPP"></span>
+        </div>
+      </div>
+    </div>
+</template>
+
+<style>
+.panel-match-header-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding: 4px 12px;
+      gap: 8px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(8px);
+    }
+
+    .panel-sub-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .panel-sub-label {
+      font-size: 9px;
+      font-weight: 700;
+      color: #94a3b8;
+      letter-spacing: 0.5px;
+    }
+
+    .panel-sub-val {
+      font-size: 16px;
+      font-weight: 800;
+      color: #f8fafc;
+    }
+
+    .score-diff-val {
+      font-size: 18px;
+      font-weight: 900;
+    }
+    .score-pos { color: #22c55e !important; }
+    .score-neg { color: #ef4444 !important; }
+    .score-tie { color: #f59e0b !important; }
+
+    .color-swatch-box {
+      width: 14px;
+      height: 14px;
+      border-radius: 2px;
+      display: inline-block;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+    }
+
+    .panel-divider {
+      width: 1px;
+      height: 60%;
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    
+
+    
+
+    
+  
+    
+
+    
+    .handle-nw { top: 0%; left: 0%; cursor: nwse-resize; }
+    .handle-n  { top: 0%; left: 50%; cursor: ns-resize; }
+    .handle-ne { top: 0%; left: 100%; cursor: nesw-resize; }
+    .handle-e  { top: 50%; left: 100%; cursor: ew-resize; }
+    .handle-se { top: 100%; left: 100%; cursor: nwse-resize; }
+    .handle-s  { top: 100%; left: 50%; cursor: ns-resize; }
+    .handle-sw { top: 100%; left: 0%; cursor: nesw-resize; }
+    .handle-w  { top: 50%; left: 0%; cursor: ew-resize; }
+</style>

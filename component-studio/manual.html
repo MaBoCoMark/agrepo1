@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RL Tactical Overlay - Community Component Developer Manual</title>
+  <link rel="stylesheet" href="../src/styles/main.css">
+  <style>
+    :root {
+      --bg-dark: #0a0e17;
+      --bg-panel: #111827;
+      --bg-card: #1f2937;
+      --border-color: #374151;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.2);
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: 'GHMonoR', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      margin: 0;
+      padding: 0;
+      line-height: 1.6;
+      font-size: 13px;
+    }
+
+    /* --- Sticky Top Header & TOC Bar --- */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background-color: rgba(17, 24, 39, 0.95);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border-color);
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .toc-nav {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      overflow-x: auto;
+      padding: 4px 0;
+    }
+
+    .toc-nav a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+      transition: color 0.15s, background-color 0.15s;
+    }
+
+    .toc-nav a:hover {
+      color: var(--accent);
+      background-color: var(--bg-card);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn {
+      background-color: #2563eb;
+      color: #ffffff;
+      border: 1px solid transparent;
+      padding: 6px 14px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background-color 0.15s;
+    }
+
+    .btn:hover {
+      background-color: #1d4ed8;
+    }
+
+    .btn-secondary {
+      background-color: var(--bg-card);
+      border-color: var(--border-color);
+      color: var(--text-main);
+    }
+
+    .btn-secondary:hover {
+      background-color: #374151;
+    }
+
+    /* --- Content Layout --- */
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 32px 24px 80px 24px;
+    }
+
+    section {
+      margin-bottom: 48px;
+      scroll-margin-top: 70px;
+    }
+
+    h1, h2, h3 {
+      color: #ffffff;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
+
+    h1 {
+      font-size: 26px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 12px;
+      margin-top: 0;
+      color: var(--accent);
+    }
+
+    h2 {
+      font-size: 18px;
+      color: #93c5fd;
+      border-bottom: 1px solid #1e293b;
+      padding-bottom: 8px;
+      margin-top: 36px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h3 {
+      font-size: 14px;
+      color: #e2e8f0;
+      margin-top: 20px;
+    }
+
+    p {
+      color: #cbd5e1;
+      margin: 10px 0;
+    }
+
+    /* --- Code Blocks & Cards --- */
+    .code-card {
+      background-color: #0b0f19;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      margin: 14px 0;
+      overflow: hidden;
+    }
+
+    .code-card-header {
+      background-color: #131b2e;
+      border-bottom: 1px solid var(--border-color);
+      padding: 6px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: var(--accent);
+      font-weight: bold;
+    }
+
+    pre {
+      margin: 0;
+      padding: 14px;
+      overflow-x: auto;
+      font-size: 11px;
+      line-height: 1.5;
+      color: #e2e8f0;
+    }
+
+    code {
+      font-family: inherit;
+    }
+
+    .inline-code {
+      background-color: #1e293b;
+      color: var(--accent);
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 11px;
+    }
+
+    .copy-btn {
+      background-color: #1e293b;
+      border: 1px solid #4b5563;
+      color: #cbd5e1;
+      border-radius: 3px;
+      padding: 2px 8px;
+      font-size: 10px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .copy-btn:hover {
+      background-color: #374151;
+      color: #ffffff;
+    }
+
+    /* --- Data Dictionary Table --- */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      background-color: #0f1422;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .data-table th, .data-table td {
+      padding: 8px 12px;
+      border: 1px solid var(--border-color);
+      text-align: left;
+      font-size: 11px;
+    }
+
+    .data-table th {
+      background-color: #162035;
+      color: var(--accent);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .data-table tr:hover td {
+      background-color: #151d30;
+    }
+
+    .type-badge {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: bold;
+    }
+
+    .type-num { background-color: #0369a1; color: #e0f2fe; }
+    .type-bool { background-color: #7c2d12; color: #ffedd5; }
+    .type-str { background-color: #065f46; color: #d1fae5; }
+    .type-color { background-color: #581c87; color: #f3e8ff; }
+
+    .note-box {
+      background-color: rgba(56, 189, 248, 0.1);
+      border-left: 3px solid var(--accent);
+      padding: 10px 14px;
+      border-radius: 0 4px 4px 0;
+      margin: 14px 0;
+      color: #bae6fd;
+      font-size: 12px;
+    }
+
+    .warning-box {
+      background-color: rgba(245, 158, 11, 0.1);
+      border-left: 3px solid var(--warning);
+      padding: 10px 14px;
+      border-radius: 0 4px 4px 0;
+      margin: 14px 0;
+      color: #fde68a;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sticky Top Header & TOC Navigation -->
+  <header>
+    <div class="brand-title">
+      <span>📖</span>
+      <span>RL Tactical Overlay - Component Developer Manual</span>
+    </div>
+
+    <nav class="toc-nav">
+      <a href="#overview">1. Overview</a>
+      <a href="#sfc-anatomy">2. SFC Anatomy</a>
+      <a href="#manifest-spec">3. Manifest Spec</a>
+      <a href="#telemetry-dict">4. Telemetry Variables</a>
+      <a href="#custom-props">5. Custom Properties</a>
+      <a href="#css-typography">6. CSS & Fonts</a>
+      <a href="#boilerplates">7. Boilerplates</a>
+    </nav>
+
+    <div class="header-actions">
+      <a href="./studio.html" class="btn">🚀 Open Component Studio</a>
+    </div>
+  </header>
+
+  <div class="container">
+    
+    <!-- Section 1: Overview -->
+    <section id="overview">
+      <h1>Community Component System</h1>
+      <p>
+        The <b>Rocket League Tactical Overlay</b> features a high-performance 120Hz declarative component engine.
+        Community developers can build custom HUD components simply by providing a <b>Single File Component (SFC)</b> in pure HTML.
+      </p>
+      <div class="note-box">
+        💡 <b>Zero Build Step:</b> No npm install, no TypeScript compile, and no runtime JS boilerplate needed.
+        The overlay dynamically extracts the manifest, DOM template, and CSS at runtime, binding telemetry updates at sub-millisecond speeds.
+      </div>
+    </section>
+
+    <!-- Section 2: SFC Anatomy -->
+    <section id="sfc-anatomy">
+      <h2>2. Single File Component (.html) Anatomy</h2>
+      <p>
+        Every component file must contain exactly three standard blocks:
+      </p>
+      <ul>
+        <li><span class="inline-code">&lt;script type="application/json" id="component-manifest"&gt;</span>: Declares metadata, telemetry bindings, and customizable property controls.</li>
+        <li><span class="inline-code">&lt;template id="component-template"&gt;</span>: The inner HTML template of the component.</li>
+        <li><span class="inline-code">&lt;style&gt;</span>: Scoped CSS for the component, responsive via Container Queries (<span class="inline-code">cqw</span>, <span class="inline-code">cqh</span>).</li>
+      </ul>
+
+      <div class="code-card">
+        <div class="code-card-header">
+          <span>Component SFC Skeleton</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><code>&lt;!-- my-component.html --&gt;
+&lt;script type="application/json" id="component-manifest"&gt;
+{
+  "id": "element-my-text",
+  "displayName": "My Custom Value",
+  "tier": "element",
+  "category": "player",
+  "isProportional": false,
+  "supportsAlignment": true,
+  "defaultWidthVw": 6,
+  "defaultHeightVw": 3.5,
+  "baseWidthPx": 96,
+  "baseHeightPx": 56,
+  "customProperties": [
+    { "key": "textColor", "label": "Text Color", "type": "color", "default": "#ffffff" },
+    { "key": "strokeWidth", "label": "Stroke Width", "type": "number", "min": 0, "max": 10, "unit": "px", "default": 0 }
+  ]
+}
+&lt;/script&gt;
+
+&lt;template id="component-template"&gt;
+  &lt;div class="el-my-text-box align-right dyn-text-box"&gt;
+    &lt;span class="dyn-val"&gt;100&lt;/span&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;style&gt;
+  .el-my-text-box {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    container-type: size;
+  }
+  .el-my-text-box .dyn-val {
+    font-weight: 800;
+    font-size: calc(min(70cqh, 45cqw));
+  }
+&lt;/style&gt;</code></pre>
+      </div>
+    </section>
+
+    <!-- Section 3: Manifest Specification -->
+    <section id="manifest-spec">
+      <h2>3. Component Manifest Specification</h2>
+      <p>
+        The manifest is a JSON object located inside the <span class="inline-code">&lt;script id="component-manifest"&gt;</span> tag:
+      </p>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Field</th>
+            <th>Type</th>
+            <th>Default</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="inline-code">id</span></td>
+            <td><span class="type-badge type-str">string</span></td>
+            <td><b>Required</b></td>
+            <td>Unique component identifier (e.g., <span class="inline-code">element-boost-text</span>).</td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">displayName</span></td>
+            <td><span class="type-badge type-str">string</span></td>
+            <td><b>Required</b></td>
+            <td>Human-readable name displayed in Configurator & Catalog.</td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">tier</span></td>
+            <td><span class="type-badge type-str">"element" | "widget" | "panel"</span></td>
+            <td><span class="inline-code">"element"</span></td>
+            <td>Component hierarchy tier. <br>• <b>element</b>: Atomic single-metric item.<br>• <b>widget</b>: Multi-metric combo.<br>• <b>panel</b>: Full HUD board.</td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">category</span></td>
+            <td><span class="type-badge type-str">"player" | "global"</span></td>
+            <td><span class="inline-code">"global"</span></td>
+            <td>Scope of telemetry data. <br>• <b>player</b>: Supports target player switching (P1, P2, P3).<br>• <b>global</b>: Match scores, time, overtime, ball speed.</td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">isProportional</span></td>
+            <td><span class="type-badge type-bool">boolean</span></td>
+            <td><span class="inline-code">true</span></td>
+            <td>Whether 8-point drag resizer locks aspect ratio by default.</td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">supportsSpeedUnit</span></td>
+            <td><span class="type-badge type-bool">boolean</span></td>
+            <td><span class="inline-code">false</span></td>
+            <td>Enables km/h vs uu/s conversion selector in Configurator.</td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">supportsAlignment</span></td>
+            <td><span class="type-badge type-bool">boolean</span></td>
+            <td><span class="inline-code">false</span></td>
+            <td>Enables Left / Center / Right text alignment controls.</td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">defaultWidthVw</span></td>
+            <td><span class="type-badge type-num">number</span></td>
+            <td><span class="inline-code">8</span></td>
+            <td>Initial default width in screen width percent (<span class="inline-code">vw</span>).</td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">defaultHeightVw</span></td>
+            <td><span class="type-badge type-num">number</span></td>
+            <td><span class="inline-code">4.0</span></td>
+            <td>Initial default height in screen width percent (<span class="inline-code">vw</span>).</td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">customProperties</span></td>
+            <td><span class="type-badge type-str">CustomPropertyDef[]</span></td>
+            <td><span class="inline-code">[]</span></td>
+            <td>Array of tunable schema properties for automatic UI control generation.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Section 4: Telemetry Variables Data Dictionary -->
+    <section id="telemetry-dict">
+      <h2>4. Live Telemetry Data Dictionary (120Hz Buffer)</h2>
+      <p>
+        The overlay synchronizes real-time state from Rocket League WebSocket. Your component can bind to any of the following fields:
+      </p>
+
+      <h3>Player Telemetry (Available per Target Player: P1, P2, P3)</h3>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Variable Key</th>
+            <th>Type</th>
+            <th>Range / Values</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="inline-code">boost</span> (<span class="inline-code">p1Boost</span>)</td>
+            <td><span class="type-badge type-num">number</span></td>
+            <td>0 ~ 100</td>
+            <td>Current boost amount.</td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">speed</span> (<span class="inline-code">p1Speed</span>)</td>
+            <td><span class="type-badge type-num">number</span></td>
+            <td>0 ~ 2300 (uu/s)</td>
+            <td>Car linear velocity in Unreal Units per second.</td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">name</span> (<span class="inline-code">p1Name</span>)</td>
+            <td><span class="type-badge type-str">string</span></td>
+            <td>e.g. "steamuser"</td>
+            <td>Player username or gamertag.</td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">bSupersonic</span> (<span class="inline-code">p1Supersonic</span>)</td>
+            <td><span class="type-badge type-bool">boolean</span></td>
+            <td>true / false</td>
+            <td>True when car is supersonic speed (&gt;= 2200 uu/s).</td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">bBoosting</span> (<span class="inline-code">p1Boosting</span>)</td>
+            <td><span class="type-badge type-bool">boolean</span></td>
+            <td>true / false</td>
+            <td>True when player is actively firing boost.</td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">bOnGround</span> (<span class="inline-code">p1OnGround</span>)</td>
+            <td><span class="type-badge type-bool">boolean</span></td>
+            <td>true / false</td>
+            <td>True when all 4 wheels touch pitch ground.</td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">bOnWall</span> (<span class="inline-code">p1OnWall</span>)</td>
+            <td><span class="type-badge type-bool">boolean</span></td>
+            <td>true / false</td>
+            <td>True when car is driving on stadium wall or ceiling.</td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">bPowersliding</span> (<span class="inline-code">p1Powersliding</span>)</td>
+            <td><span class="type-badge type-bool">boolean</span></td>
+            <td>true / false</td>
+            <td>True when handbrake / powerslide is engaged.</td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">bDemolished</span> (<span class="inline-code">p1Demolished</span>)</td>
+            <td><span class="type-badge type-bool">boolean</span></td>
+            <td>true / false</td>
+            <td>True when player has been demolished / respawning.</td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">bHasCar</span> (<span class="inline-code">p1HasCar</span>)</td>
+            <td><span class="type-badge type-bool">boolean</span></td>
+            <td>true / false</td>
+            <td>True when car vehicle actor exists in match.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Global Match Telemetry</h3>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Variable Key</th>
+            <th>Type</th>
+            <th>Range / Values</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="inline-code">timeSeconds</span></td>
+            <td><span class="type-badge type-num">number</span></td>
+            <td>0 ~ 300+</td>
+            <td>Match time remaining in seconds (e.g. 270 -&gt; "4:30").</td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">bOvertime</span></td>
+            <td><span class="type-badge type-bool">boolean</span></td>
+            <td>true / false</td>
+            <td>True when game enters Sudden Death Overtime (+0:00).</td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">scoreDiff</span></td>
+            <td><span class="type-badge type-num">number</span></td>
+            <td>-99 ~ +99</td>
+            <td>My Team Score minus Opponent Team Score (+2, 0, -1).</td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">myScore</span> / <span class="inline-code">oppScore</span></td>
+            <td><span class="type-badge type-num">number</span></td>
+            <td>0 ~ 99</td>
+            <td>Match scoreboard points for both teams.</td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">ballSpeed</span></td>
+            <td><span class="type-badge type-num">number</span></td>
+            <td>0 ~ 200 (km/h)</td>
+            <td>Current velocity of the ball.</td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">ballTeamNum</span></td>
+            <td><span class="type-badge type-num">number</span></td>
+            <td>0 (Blue) / 1 (Orange)</td>
+            <td>Team number of the last player to touch the ball.</td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">myPrimaryColor</span></td>
+            <td><span class="type-badge type-color">hex string</span></td>
+            <td>e.g. "#1873FF"</td>
+            <td>Team primary body color in hex.</td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">oppPrimaryColor</span></td>
+            <td><span class="type-badge type-color">hex string</span></td>
+            <td>e.g. "#C26418"</td>
+            <td>Opponent team primary body color in hex.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Section 5: Custom Properties Schema -->
+    <section id="custom-props">
+      <h2>5. Custom Properties Schema Reference</h2>
+      <p>
+        Declare controls inside <span class="inline-code">customProperties</span> array in the manifest. The Configurator and Component Studio will automatically generate UI controls for users to customize them:
+      </p>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Property Type</th>
+            <th>Required Fields</th>
+            <th>Optional Fields</th>
+            <th>Generated UI Widget</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="type-badge type-color">color</span></td>
+            <td><span class="inline-code">key, label, type, default</span></td>
+            <td>-</td>
+            <td>Color Picker with Alpha & RGBA text sync.</td>
+          </tr>
+          <tr>
+            <td><span class="type-badge type-num">number</span></td>
+            <td><span class="inline-code">key, label, type, default</span></td>
+            <td><span class="inline-code">min, max, step, unit</span></td>
+            <td>Interactive Range Slider + value badge.</td>
+          </tr>
+          <tr>
+            <td><span class="type-badge type-bool">boolean</span></td>
+            <td><span class="inline-code">key, label, type, default</span></td>
+            <td>-</td>
+            <td>Toggle Checkbox.</td>
+          </tr>
+          <tr>
+            <td><span class="type-badge type-str">select</span></td>
+            <td><span class="inline-code">key, label, type, options, default</span></td>
+            <td>-</td>
+            <td>Dropdown Selection menu.</td>
+          </tr>
+          <tr>
+            <td><span class="type-badge type-str">string</span></td>
+            <td><span class="inline-code">key, label, type, default</span></td>
+            <td>-</td>
+            <td>Text Input field.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Section 6: CSS & Typography -->
+    <section id="css-typography">
+      <h2>6. CSS, Container Queries & Typography Guidelines</h2>
+      
+      <h3>Global Monospace Font: Mona Sans Mono (GHMonoR)</h3>
+      <p>
+        The overlay enforces a high-legibility monospace font <span class="inline-code">GHMonoR</span> (defined in <span class="inline-code">src/styles/main.css</span>).
+        This guarantees that rapidly changing digits (such as 100 -&gt; 99 -&gt; 0) will <b>never cause horizontal layout shifting or jitter</b>.
+      </p>
+
+      <h3>Outer Text Stroke (Clean Outlines)</h3>
+      <p>
+        To make text readable against any arena background without clipping the inner letter glyphs, always combine <span class="inline-code">-webkit-text-stroke</span> with <span class="inline-code">paint-order: stroke fill</span>:
+      </p>
+      <div class="code-card">
+        <div class="code-card-header"><span>CSS Outer Stroke Technique</span></div>
+        <pre><code>.dyn-val {
+  -webkit-text-stroke: 4px #000000;
+  paint-order: stroke fill; /* Paints the stroke behind the fill! */
+}</code></pre>
+      </div>
+
+      <h3>Container Queries (<span class="inline-code">cqw</span>, <span class="inline-code">cqh</span>)</h3>
+      <p>
+        All components should set <span class="inline-code">container-type: size;</span> on their root box.
+        Use <span class="inline-code">calc(min(70cqh, 45cqw))</span> for font sizes so the text scales fluidly when resized by the 8-point dragger:
+      </p>
+      <div class="code-card">
+        <div class="code-card-header"><span>Fluid Scaling Example</span></div>
+        <pre><code>.my-box {
+  width: 100%;
+  height: 100%;
+  container-type: size;
+}
+.my-box .dyn-val {
+  font-size: calc(min(75cqh, 40cqw));
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- Section 7: Boilerplates -->
+    <section id="boilerplates">
+      <h2>7. Ready-to-Use Component Boilerplates</h2>
+
+      <h3>1. Minimal Atomic Text Component</h3>
+      <div class="code-card">
+        <div class="code-card-header">
+          <span>element-speed-text.html</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><code>&lt;script type="application/json" id="component-manifest"&gt;
+{
+  "id": "element-speed-text",
+  "displayName": "Speed Value Text",
+  "tier": "element",
+  "category": "player",
+  "isProportional": false,
+  "supportsSpeedUnit": true,
+  "supportsAlignment": true,
+  "defaultWidthVw": 7,
+  "defaultHeightVw": 3.5,
+  "baseWidthPx": 112,
+  "baseHeightPx": 56,
+  "customProperties": [
+    { "key": "textColor", "label": "Text Color", "type": "color", "default": "#ffffff" },
+    { "key": "strokeWidth", "label": "Stroke Width", "type": "number", "min": 0, "max": 15, "unit": "px", "default": 0 },
+    { "key": "strokeColor", "label": "Stroke Color", "type": "color", "default": "#000000" }
+  ]
+}
+&lt;/script&gt;
+
+&lt;template id="component-template"&gt;
+  &lt;div class="el-speed-text-box align-right dyn-text-box"&gt;
+    &lt;span class="dyn-val"&gt;0&lt;/span&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;style&gt;
+  .el-speed-text-box {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    line-height: 1;
+    overflow: hidden;
+    container-type: size;
+  }
+  .align-left { justify-content: flex-start; }
+  .align-center { justify-content: center; }
+  .align-right { justify-content: flex-end; }
+  .el-speed-text-box .dyn-val {
+    font-weight: 800;
+    font-size: calc(min(70cqh, 45cqw));
+    color: #ffffff;
+  }
+&lt;/style&gt;</code></pre>
+      </div>
+
+      <h3>2. Boolean Status Dot Indicator</h3>
+      <div class="code-card">
+        <div class="code-card-header">
+          <span>element-supersonic-indicator.html</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><code>&lt;script type="application/json" id="component-manifest"&gt;
+{
+  "id": "element-supersonic-indicator",
+  "displayName": "Supersonic Status Indicator",
+  "tier": "element",
+  "category": "player",
+  "isProportional": true,
+  "defaultWidthVw": 2.5,
+  "defaultHeightVw": 2.5,
+  "baseWidthPx": 40,
+  "baseHeightPx": 40,
+  "customProperties": [
+    { "key": "invertBool", "label": "Invert Condition", "type": "boolean", "default": false },
+    { "key": "activeColor", "label": "Active Glow Color", "type": "color", "default": "#a855f7" },
+    { "key": "inactiveColor", "label": "Inactive Color", "type": "color", "default": "rgba(51, 65, 85, 0.5)" }
+  ]
+}
+&lt;/script&gt;
+
+&lt;template id="component-template"&gt;
+  &lt;div class="el-dot-box"&gt;
+    &lt;div class="el-pure-dot dyn-dot bool-off"&gt;&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;style&gt;
+  .el-dot-box {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    container-type: size;
+  }
+  .el-pure-dot {
+    width: calc(min(70cqh, 70cqw));
+    height: calc(min(70cqh, 70cqw));
+    border-radius: 50%;
+    background-color: rgba(51, 65, 85, 0.5);
+    transition: none !important;
+  }
+  .bool-on {
+    background-color: #a855f7 !important;
+    box-shadow: 0 0 12px #a855f7;
+  }
+&lt;/style&gt;</code></pre>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    function copyCode(btn) {
+      const code = btn.closest(".code-card").querySelector("pre code").innerText;
+      navigator.clipboard.writeText(code);
+      const originalText = btn.textContent;
+      btn.textContent = "Copied!";
+      setTimeout(() => { btn.textContent = originalText; }, 1500);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<script type="application/json" id="component-manifest">
+{
+  "id": "element-player-name-text",
+  "displayName": "Player Name Text",
+  "tier": "element",
+  "category": "player",
+  "isProportional": false,
+  "supportsSpeedUnit": false,
+  "supportsAlignment": true,
+  "defaultWidthVw": 10,
+  "defaultHeightVw": 3,
+  "minWidthVw": 4,
+  "minHeightVw": 1.5,
+  "baseWidthPx": 160,
+  "baseHeightPx": 48
+}
+</script>
+
+<template id="component-template">
+  <div class="el-name-text-box align-left dyn-text-box"><span class="dyn-val">-</span></div>
+</template>
+
+<style>
+.el-name-text-box { width: 100%; height: 100%; display: flex; align-items: center; font-family: "GHMonoR", monospace; line-height: 1; overflow: hidden; user-select: none; container-type: size; white-space: nowrap; }
+      .align-left { justify-content: flex-start; text-align: left; }
+      .align-center { justify-content: center; text-align: center; }
+      .align-right { justify-content: flex-end; text-align: right; }
+      .el-name-text-box .dyn-val { font-weight: 700; font-size: calc(min(65cqh, 25cqw)); color: #f1f5f9; text-overflow: ellipsis; overflow: hidden; }
+</style>

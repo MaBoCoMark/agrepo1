@@ -1,0 +1,270 @@
+<div class="rl-replay-wrapper">
+    <style>
+        :root {
+            --side-y: -16px;        /* 两侧翼板 offset (-100px 到 30px) */
+            --center-y: 47px;     /* 中间凹陷 offset */
+            --wing-width: 7%;    /* 两侧平直区宽度 % */
+            --slope-width: 15%;   /* 斜角过渡区宽度 % */
+            --footer-height: 98px;
+            --blur-val: 2px;
+            --red-opacity: 0.25;
+            --blue-opacity: 0.35;
+            --stop-color-mid: #edce0b;
+            --replay-transition-duration: 0.75s;
+            --replay-exit-duration: 0.65s;
+
+            /* 三个图标的独立尺寸变量 */
+            --goal-size: 33px;
+            --speed-size: 38px;
+            --assist-size: 27px;
+        }
+
+        .rl-replay-wrapper {
+            position: absolute;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            background: transparent !important;
+            font-family: 'Chakra Petch', 'GHMonoR', system-ui, -apple-system, sans-serif;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        /* 底部 Footer 外层固定容器 */
+        .rl-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: calc(var(--footer-height) + 120px);
+            z-index: 1000;
+            pointer-events: none;
+            transform: translateY(100%);
+            transition: transform var(--replay-transition-duration, 0.75s) cubic-bezier(0.16, 1, 0.3, 1);
+            will-change: transform;
+        }
+
+        .rl-footer.rl-footer-visible {
+            transform: translateY(0);
+        }
+
+        .rl-footer.rl-footer-hiding {
+            transform: translateY(100%);
+            transition: transform var(--replay-exit-duration, 0.65s) cubic-bezier(0.7, 0, 0.84, 0);
+        }
+
+        /* 半透明玻璃背景层 */
+        .rl-footer-bg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: auto;
+            clip-path: polygon(
+                0% calc(120px + var(--side-y)), 
+                var(--wing-width) calc(120px + var(--side-y)), 
+                calc(var(--wing-width) + var(--slope-width)) calc(120px + var(--center-y)), 
+                calc(100% - var(--wing-width) - var(--slope-width)) calc(120px + var(--center-y)), 
+                calc(100% - var(--wing-width)) calc(120px + var(--side-y)), 
+                100% calc(120px + var(--side-y)), 
+                100% 100%, 
+                0% 100%
+            );
+            background: linear-gradient(
+                90deg, 
+                rgba(160, 20, 45, var(--red-opacity)) 0%, 
+                rgba(35, 30, 25, var(--blue-opacity)) 18%, 
+                rgba(250, 200, 0, var(--blue-opacity)) 50%, 
+                rgba(35, 30, 25, var(--blue-opacity)) 82%, 
+                rgba(160, 20, 45, var(--red-opacity)) 100%
+            );
+            backdrop-filter: blur(var(--blur-val)) saturate(130%);
+            -webkit-backdrop-filter: blur(var(--blur-val)) saturate(130%);
+        }
+
+        /* 顶部高亮渐变发光线条 */
+        .rl-footer-border {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* 内容层 */
+        .rl-footer-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            z-index: 2;
+            width: 100%;
+            height: var(--footer-height);
+            display: grid;
+            grid-template-columns: 260px 1fr 260px;
+            align-items: center;
+            padding: 0 32px;
+            pointer-events: auto;
+        }
+
+        /* REPLAY 标示 */
+        .replay-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #ff2a4b;
+            font-size: 1.25rem;
+            font-weight: 800;
+            font-style: italic;
+            letter-spacing: 3px;
+            text-shadow: 0 0 10px rgba(255, 42, 75, 0.6);
+            transform: translateY(calc(var(--side-y) * 0.5));
+            transition: transform 0.05s ease-out;
+        }
+
+        .replay-indicator.right {
+            justify-content: flex-end;
+        }
+
+        /* 呼吸小红点 */
+        .dot {
+            width: 10px;
+            height: 10px;
+            background-color: #ff2a4b;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #ff2a4b, 0 0 16px #ff2a4b;
+            animation: pulse-dot 1.2s infinite ease-in-out;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.25; transform: scale(0.7); }
+        }
+
+        /* 中间球员 / 速度数据 */
+        .center-stats {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 48px;
+            color: #ffffff;
+            font-size: 1.35rem;
+            font-weight: 800;
+            font-style: italic;
+            letter-spacing: 1.5px;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.8);
+            transform: translateY(calc(var(--center-y) * 0.5));
+            transition: transform 0.05s ease-out;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* 图标统一的白色发光 Glow 特效 */
+        .stat-icon {
+            display: inline-block;
+            vertical-align: middle;
+            flex-shrink: 0;
+        }
+
+        /* 独立控制每个图标尺寸 */
+        .icon-goal {
+            width: var(--goal-size);
+            height: var(--goal-size);
+        }
+
+        .icon-speed {
+            width: var(--speed-size);
+            height: var(--speed-size);
+        }
+
+        .icon-assist {
+            width: var(--assist-size);
+            height: var(--assist-size);
+        }
+
+        .speed-text {
+            font-size: 1.25rem;
+            color: #f1f5f9;
+        }
+    </style>
+
+    <!-- 底部 Rocket League Replay Indicator Footer -->
+    <footer class="rl-footer" id="replayFooter">
+        
+        <!-- 背景半透明玻璃层 -->
+        <div class="rl-footer-bg"></div>
+
+        <!-- SVG 顶部高亮描边 -->
+        <svg id="svgBorder" class="rl-footer-border" width="100%" height="100%">
+            <defs>
+                <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#ff2a4b" />
+                    <stop offset="16%" stop-color="#ff2a4b" />
+                    <stop offset="28%" stop-color="var(--stop-color-mid, #edce0b)" />
+                    <stop offset="72%" stop-color="var(--stop-color-mid, #edce0b)" />
+                    <stop offset="84%" stop-color="#ff2a4b" />
+                    <stop offset="100%" stop-color="#ff2a4b" />
+                </linearGradient>
+            </defs>
+            <path id="svgBorderPath" d="" 
+                  fill="none" 
+                  stroke="url(#lineGrad)" 
+                  stroke-width="3" />
+        </svg>
+
+        <!-- 内容区域 -->
+        <div class="rl-footer-content">
+            <!-- 左侧 REPLAY -->
+            <div class="replay-indicator left">
+                <span class="dot"></span>
+                <span>REPLAY</span>
+            </div>
+
+            <!-- 中间球员与速度 -->
+            <div class="center-stats">
+                <!-- Goal Player -->
+                <div class="stat-item" id="replay-goal-item">
+                    <svg class="stat-icon icon-goal" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <g>
+                            <path d="M15,9l-2.5,2.5M15,6V9h3l3-3H18V3Z" fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+                            <path d="M12.33,3H12a9,9,0,1,0,9,9c0-.11,0-.22,0-.33" fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+                            <path d="M16.9,13A5,5,0,1,1,11,7.1" fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+                        </g>
+                    </svg>
+                    <span id="replay-goal-player">Goal Player</span>
+                </div>
+
+                <!-- Speed Indicator -->
+                <div class="stat-item" id="replay-speed-item">
+                    <svg class="stat-icon icon-speed" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M6.34315 17.6569C5.22433 16.538 4.4624 15.1126 4.15372 13.5607C3.84504 12.0089 4.00346 10.4003 4.60896 8.93853C5.21446 7.47672 6.23984 6.22729 7.55544 5.34824C8.87103 4.46919 10.4177 4 12 4C13.5823 4 15.129 4.46919 16.4446 5.34824C17.7602 6.22729 18.7855 7.47672 19.391 8.93853C19.9965 10.4003 20.155 12.0089 19.8463 13.5607C19.5376 15.1126 18.7757 16.538 17.6569 17.6569" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                        <path d="M12 12L16 10" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                    </svg>
+                    <span class="speed-text" id="replay-goal-speed">118KPH</span>
+                </div>
+
+                <!-- Assist Player (Hidden by default unless assister exists) -->
+                <div class="stat-item" id="replay-assist-item" style="display: none;">
+                    <svg class="stat-icon icon-assist" viewBox="0 0 360.001 360.001" xmlns="http://www.w3.org/2000/svg">
+                        <g fill="#ffffff">
+                            <path d="M81.987,165.207c6.078,0,12.154-2.316,16.791-6.947c9.26-9.269,9.26-24.295,0-33.569l-11.02-11.007l11.02-11.008c9.26-9.267,9.26-24.295,0-33.563c-9.271-9.27-24.307-9.272-33.566,0L54.204,80.122L43.183,69.112c-9.258-9.272-24.293-9.27-33.553,0c-9.275,9.269-9.275,24.297,0,33.563l11.006,11.008L9.63,124.69c-9.275,9.274-9.275,24.301,0,33.569c4.635,4.631,10.701,6.947,16.775,6.947c6.078,0,12.154-2.316,16.777-6.951l11.021-11.005l11.008,11.005C69.847,162.89,75.911,165.207,81.987,165.207z"/>
+                            <path d="M250.603,187.093c-30.585,0-55.374,24.79-55.374,55.375s24.789,55.375,55.374,55.375c30.584,0,55.388-24.79,55.388-55.375S281.187,187.093,250.603,187.093z"/>
+                            <path d="M356.897,58.524c-1.021-4.274-3.781-7.933-7.599-10.097L267.346,2.056c-7.598-4.302-17.248-1.631-21.547,5.965l-5.162,9.101c-2.069,3.652-2.604,7.979-1.485,12.023c1.116,4.046,3.809,7.48,7.463,9.548l29.571,16.729c-30.79,11.656-59.528,28.811-85.75,51.206c-31.078,26.548-58.768,60.509-82.283,100.937c-34.674,59.63-49.719,114.674-53.506,130.113c-1.004,4.144-0.307,8.511,1.943,12.128c2.25,3.619,5.857,6.18,10.025,7.097l12.373,2.728c1.139,0.254,2.289,0.371,3.418,0.371c7.107,0,13.559-4.823,15.336-12c3.51-14.113,17.396-64.314,48.717-118.159c37.254-64.053,83.781-107.779,138.668-130.401l-17.693,26.548c-2.325,3.495-3.172,7.77-2.35,11.893c0.832,4.116,3.26,7.735,6.752,10.06l8.711,5.787c7.273,4.833,17.088,2.864,21.933-4.4l52.188-78.358C357.112,67.31,357.915,62.805,356.897,58.524z"/>
+                        </g>
+                    </svg>
+                    <span id="replay-assist-player">Assist Player</span>
+                </div>
+            </div>
+
+            <!-- 右侧 REPLAY -->
+            <div class="replay-indicator right">
+                <span>REPLAY</span>
+                <span class="dot"></span>
+            </div>
+        </div>
+    </footer>
+</div>

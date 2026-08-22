@@ -1,0 +1,110 @@
+@font-face {
+  font-family: 'GHMonoR';
+  src: url('/src/assets/fonts/MonaSansMono-Regular.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+
+* {
+  font-family: 'GHMonoR', monospace, sans-serif;
+  box-sizing: border-box;
+}
+
+/* 🌟 GitHub Primer Design System Variables (Default: Light Mode) */
+:root, [data-theme="light"] {
+  --primer-canvas-default: #ffffff;
+  --primer-canvas-subtle: #f6f8fa;
+  --primer-canvas-inset: #f6f8fa;
+  --primer-canvas-card: #ffffff;
+  --primer-canvas-stage: #f6f8fa;
+
+  --primer-fg-default: #1f2328;
+  --primer-fg-muted: #656d76;
+  --primer-fg-subtle: #8c959f;
+  --primer-fg-on-emphasis: #ffffff;
+
+  --primer-border-default: #d0d7de;
+  --primer-border-muted: #d8dee4;
+  --primer-border-subtle: rgba(31, 35, 40, 0.15);
+
+  --primer-accent-fg: #0969da;
+  --primer-accent-emphasis: #0969da;
+  --primer-accent-hover: #0858b8;
+  --primer-accent-muted: #ddf4ff;
+
+  --primer-success-fg: #1a7f37;
+  --primer-success-emphasis: #1f883d;
+  --primer-success-hover: #1a7f37;
+  --primer-success-muted: #dafbe1;
+
+  --primer-danger-fg: #cf222e;
+  --primer-danger-emphasis: #cf222e;
+  --primer-danger-hover: #b62324;
+  --primer-danger-muted: #ffebe9;
+
+  --primer-warning-fg: #9a6700;
+  --primer-warning-emphasis: #9a6700;
+  --primer-warning-muted: #fff8c5;
+
+  --primer-btn-bg: #f6f8fa;
+  --primer-btn-border: rgba(31, 35, 40, 0.15);
+  --primer-btn-hover-bg: #eaeef2;
+  --primer-btn-text: #24292f;
+
+  --primer-input-bg: #ffffff;
+  --primer-input-border: #d0d7de;
+  --primer-input-focus-border: #0969da;
+  --primer-input-focus-shadow: 0 0 0 3px rgba(9, 105, 218, 0.3);
+
+  --primer-shadow-card: 0 1px 3px rgba(31, 35, 40, 0.12), 0 1px 2px rgba(31, 35, 40, 0.08);
+  --primer-shadow-modal: 0 8px 24px rgba(140, 149, 159, 0.2);
+}
+
+[data-theme="dark"] {
+  --primer-canvas-default: #0d1117;
+  --primer-canvas-subtle: #161b22;
+  --primer-canvas-inset: #010409;
+  --primer-canvas-card: #161b22;
+  --primer-canvas-stage: #020617;
+
+  --primer-fg-default: #e6edf3;
+  --primer-fg-muted: #7d8590;
+  --primer-fg-subtle: #484f58;
+  --primer-fg-on-emphasis: #ffffff;
+
+  --primer-border-default: #30363d;
+  --primer-border-muted: #21262d;
+  --primer-border-subtle: rgba(240, 246, 252, 0.1);
+
+  --primer-accent-fg: #58a6ff;
+  --primer-accent-emphasis: #1f6feb;
+  --primer-accent-hover: #388bfd;
+  --primer-accent-muted: rgba(56, 139, 253, 0.15);
+
+  --primer-success-fg: #3fb950;
+  --primer-success-emphasis: #238636;
+  --primer-success-hover: #2ea043;
+  --primer-success-muted: rgba(46, 160, 67, 0.15);
+
+  --primer-danger-fg: #f85149;
+  --primer-danger-emphasis: #da3633;
+  --primer-danger-hover: #f85149;
+  --primer-danger-muted: rgba(248, 81, 73, 0.15);
+
+  --primer-warning-fg: #d29922;
+  --primer-warning-emphasis: #9e6a03;
+  --primer-warning-muted: rgba(187, 128, 9, 0.15);
+
+  --primer-btn-bg: #21262d;
+  --primer-btn-border: #30363d;
+  --primer-btn-hover-bg: #30363d;
+  --primer-btn-text: #c9d1d9;
+
+  --primer-input-bg: #0d1117;
+  --primer-input-border: #30363d;
+  --primer-input-focus-border: #58a6ff;
+  --primer-input-focus-shadow: 0 0 0 3px rgba(31, 111, 235, 0.4);
+
+  --primer-shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --primer-shadow-modal: 0 12px 36px rgba(0, 0, 0, 0.7);
+}

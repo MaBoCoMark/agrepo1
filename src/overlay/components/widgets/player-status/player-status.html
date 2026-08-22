@@ -1,0 +1,73 @@
+<script type="application/json" id="component-manifest">
+{
+  "id": "player-status",
+  "displayName": "Player Status Indicator",
+  "tier": "widget",
+  "category": "player",
+  "isProportional": true,
+  "defaultWidthVw": 7.5,
+  "defaultHeightVw": 3.0,
+  "minWidthVw": 3.5,
+  "minHeightVw": 1.5,
+  "baseWidthPx": 120,
+  "baseHeightPx": 48
+}
+</script>
+
+<template id="component-template">
+  <div class="hud-card">
+      <div class="hud-bool-row">
+        <span class="status-dot bool-off dyn-dot"></span>
+        <span class="hud-bool-text dyn-label">P1 SUPERSONIC</span>
+      </div>
+    </div>
+</template>
+
+<style>
+.hud-card {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+      background: rgba(0, 0, 0, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+    }
+    .hud-bool-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .bool-off { background-color: #475569; }
+    .bool-on { background-color: #22c55e; box-shadow: 0 0 6px #22c55e; }
+    .hud-bool-text {
+      font-size: 11px;
+      font-weight: 700;
+      color: #f8fafc;
+    }
+
+    
+    
+    
+  
+    
+
+    
+    .handle-nw { top: 0%; left: 0%; cursor: nwse-resize; }
+    .handle-n  { top: 0%; left: 50%; cursor: ns-resize; }
+    .handle-ne { top: 0%; left: 100%; cursor: nesw-resize; }
+    .handle-e  { top: 50%; left: 100%; cursor: ew-resize; }
+    .handle-se { top: 100%; left: 100%; cursor: nwse-resize; }
+    .handle-s  { top: 100%; left: 50%; cursor: ns-resize; }
+    .handle-sw { top: 100%; left: 0%; cursor: nesw-resize; }
+    .handle-w  { top: 50%; left: 0%; cursor: ew-resize; }
+</style>

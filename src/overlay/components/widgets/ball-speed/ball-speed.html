@@ -1,0 +1,66 @@
+<script type="application/json" id="component-manifest">
+{
+  "id": "ball-speed",
+  "displayName": "Ball Speed",
+  "tier": "widget",
+  "category": "global",
+  "isProportional": true,
+  "supportsSpeedUnit": true,
+  "defaultWidthVw": 10,
+  "defaultHeightVw": 4.5,
+  "minWidthVw": 4,
+  "minHeightVw": 2,
+  "baseWidthPx": 160,
+  "baseHeightPx": 72
+}
+</script>
+
+<template id="component-template">
+  <div class="hud-card">
+      <span class="hud-label dyn-label">BALL SPEED (KM/H)</span>
+      <span class="hud-val dyn-val">0</span>
+    </div>
+</template>
+
+<style>
+.hud-card {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+      background: rgba(0, 0, 0, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 4px;
+    }
+    .hud-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: #94a3b8;
+    }
+    .hud-val {
+      font-size: 22px;
+      font-weight: 800;
+      color: #f8fafc;
+    }
+    
+    
+    
+  
+    
+
+    
+    .handle-nw { top: 0%; left: 0%; cursor: nwse-resize; }
+    .handle-n  { top: 0%; left: 50%; cursor: ns-resize; }
+    .handle-ne { top: 0%; left: 100%; cursor: nesw-resize; }
+    .handle-e  { top: 50%; left: 100%; cursor: ew-resize; }
+    .handle-se { top: 100%; left: 100%; cursor: nwse-resize; }
+    .handle-s  { top: 100%; left: 50%; cursor: ns-resize; }
+    .handle-sw { top: 100%; left: 0%; cursor: nesw-resize; }
+    .handle-w  { top: 50%; left: 0%; cursor: ew-resize; }
+</style>

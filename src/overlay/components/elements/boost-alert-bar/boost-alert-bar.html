@@ -1,0 +1,63 @@
+<script type="application/json" id="component-manifest">
+{
+  "id": "element-boost-alert-bar",
+  "displayName": "Boost Alert Bar",
+  "tier": "element",
+  "category": "player",
+  "isProportional": false,
+  "supportsSpeedUnit": false,
+  "supportsAlignment": false,
+  "supportsGlobalStyle": false,
+  "defaultWidthVw": 16,
+  "defaultHeightVw": 2.2,
+  "minWidthVw": 1,
+  "minHeightVw": 0.4,
+  "baseWidthPx": 256,
+  "baseHeightPx": 32,
+  "customProperties": [
+    { "key": "threshold", "label": "Alert Threshold", "type": "number", "min": 0, "max": 100, "unit": "%", "default": 12 },
+    { "key": "borderRadius", "label": "Corner Radius (Square/Circle)", "type": "number", "min": 0, "max": 100, "unit": "px", "default": 4 },
+    { "key": "alertColor", "label": "Alert / Glow Color", "type": "color", "default": "#ef4444" },
+    { "key": "borderWidth", "label": "Border Width", "type": "number", "min": 1, "max": 20, "unit": "px", "default": 2 },
+    { "key": "enableBlink", "label": "Enable Glow & Blink", "type": "boolean", "default": true }
+  ]
+}
+</script>
+
+<template id="component-template">
+  <div class="el-boost-alert-box dyn-boost-alert-box"></div>
+</template>
+
+<style>
+.el-boost-alert-box {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  background: transparent !important;
+  border: 2px solid transparent;
+  overflow: hidden;
+  position: relative;
+  border-radius: 4px;
+  container-type: size;
+  pointer-events: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.el-boost-alert-box.alert-active {
+  border-color: var(--alert-color, #ef4444) !important;
+  animation: alertBarGlowBlink var(--boost-blink-duration, 0.5s) infinite ease-in-out !important;
+}
+
+@keyframes alertBarGlowBlink {
+  0%, 100% {
+    opacity: 1;
+    border-color: var(--alert-color, #ef4444);
+    box-shadow: 0 0 16px var(--alert-color, #ef4444), inset 0 0 10px var(--alert-color, #ef4444);
+  }
+  50% {
+    opacity: 0.35;
+    border-color: var(--alert-color, #ef4444);
+    box-shadow: 0 0 3px var(--alert-color, #ef4444), inset 0 0 2px var(--alert-color, #ef4444);
+  }
+}
+</style>

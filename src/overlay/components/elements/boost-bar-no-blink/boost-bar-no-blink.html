@@ -1,0 +1,47 @@
+<script type="application/json" id="component-manifest">
+{
+  "id": "element-boost-bar-no-blink",
+  "displayName": "Boost Progress Bar (No Blink)",
+  "tier": "element",
+  "category": "player",
+  "isProportional": false,
+  "supportsSpeedUnit": false,
+  "supportsAlignment": false,
+  "defaultWidthVw": 16,
+  "defaultHeightVw": 1.8,
+  "minWidthVw": 4,
+  "minHeightVw": 0.4,
+  "baseWidthPx": 256,
+  "baseHeightPx": 24
+}
+</script>
+
+<template id="component-template">
+  <div class="el-boost-bar-box dyn-boost-box"><div class="el-boost-bar-fill dyn-boost-fill bar-green"></div></div>
+</template>
+
+<style>
+.el-boost-bar-box {
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+      background: rgba(0,0,0,0.65);
+      border: 1px solid rgba(255,255,255,0.2);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      container-type: size;
+    }
+
+    .el-boost-bar-fill {
+      width: 100%;
+      height: 100%;
+      transform-origin: left center;
+      background-color: #10b981;
+      transition: none !important;
+    }
+
+    .bar-red { background-color: #ef4444 !important; }
+    .bar-yellow { background-color: #f59e0b !important; }
+    .bar-green { background-color: #10b981 !important; }
+</style>

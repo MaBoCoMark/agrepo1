@@ -1,0 +1,100 @@
+<script type="application/json" id="component-manifest">
+{
+  "id": "team-colors",
+  "displayName": "Team Colors",
+  "tier": "widget",
+  "category": "global",
+  "isProportional": true,
+  "defaultWidthVw": 11,
+  "defaultHeightVw": 4.5,
+  "minWidthVw": 4,
+  "minHeightVw": 2,
+  "baseWidthPx": 176,
+  "baseHeightPx": 72
+}
+</script>
+
+<template id="component-template">
+  <div class="hud-card">
+      <span class="hud-label">TEAMS</span>
+      <div class="hud-colors-row">
+        <div class="hud-color-group">
+          <span class="hud-color-tag">US</span>
+          <span class="color-swatch dyn-my-primary" style="background-color: #1873FF;"></span>
+          <span class="color-swatch dyn-my-secondary" style="background-color: #E5E5E5;"></span>
+        </div>
+        <div class="hud-color-divider"></div>
+        <div class="hud-color-group">
+          <span class="hud-color-tag">OPP</span>
+          <span class="color-swatch dyn-opp-primary" style="background-color: #C26418;"></span>
+          <span class="color-swatch dyn-opp-secondary" style="background-color: #E5E5E5;"></span>
+        </div>
+      </div>
+    </div>
+</template>
+
+<style>
+.hud-card {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+      background: rgba(0, 0, 0, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 4px;
+    }
+    .hud-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: #94a3b8;
+    }
+    .hud-colors-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .hud-color-group {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .hud-color-tag {
+      font-size: 9px;
+      font-weight: 700;
+      color: #94a3b8;
+    }
+    .color-swatch {
+      width: 14px;
+      height: 14px;
+      border-radius: 2px;
+      display: inline-block;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .hud-color-divider {
+      width: 1px;
+      height: 14px;
+      background: #475569;
+    }
+
+    
+    
+    
+  
+    
+
+    
+    .handle-nw { top: 0%; left: 0%; cursor: nwse-resize; }
+    .handle-n  { top: 0%; left: 50%; cursor: ns-resize; }
+    .handle-ne { top: 0%; left: 100%; cursor: nesw-resize; }
+    .handle-e  { top: 50%; left: 100%; cursor: ew-resize; }
+    .handle-se { top: 100%; left: 100%; cursor: nwse-resize; }
+    .handle-s  { top: 100%; left: 50%; cursor: ns-resize; }
+    .handle-sw { top: 100%; left: 0%; cursor: nesw-resize; }
+    .handle-w  { top: 50%; left: 0%; cursor: ew-resize; }
+</style>

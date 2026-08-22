@@ -1,0 +1,168 @@
+<div id="developer-dashboard-root" class="developer-dashboard-container live-replay-container">
+  <!-- 🌟 1. Global Telemetry Bar (Global Parameters + Score Diff + Team Colors) -->
+  <div class="global-telemetry-bar">
+    <div class="global-card time-card">
+      <span class="global-label">TIME REMAINING</span>
+      <span id="countdown-val" class="global-val countdown-text">0:00</span>
+    </div>
+
+    <div class="global-card overtime-card">
+      <span class="global-label">STATUS</span>
+      <div class="bool-item overtime-item">
+        <span id="overtime-indicator" class="status-dot bool-off"></span>
+        <span class="bool-name">OVERTIME</span>
+      </div>
+    </div>
+
+    <div class="global-card ball-speed-card">
+      <span class="global-label">BALL SPEED</span>
+      <span id="ball-speed-val" class="global-val">0</span>
+    </div>
+
+    <div class="global-card ball-team-card">
+      <span class="global-label">BALL TEAM</span>
+      <span id="ball-team-val" class="global-val">0</span>
+    </div>
+
+    <!-- 🌟 Score Difference Card -->
+    <div class="global-card score-diff-card">
+      <span class="global-label">SCORE DIFF</span>
+      <div class="score-diff-wrapper">
+        <span id="score-diff-val" class="global-val score-diff-text">0</span>
+        <span id="match-score-val" class="score-match-sub">0 - 0</span>
+      </div>
+    </div>
+
+    <!-- 🌟 Team Colors Card -->
+    <div class="global-card team-colors-card">
+      <span class="global-label">TEAM COLORS</span>
+      <div class="colors-preview-group">
+        <div class="color-team-unit">
+          <span class="color-team-label">US</span>
+          <div class="color-swatches-pair">
+            <span id="my-color-primary" class="color-swatch" style="background-color: #1873FF;" title="Primary"></span>
+            <span id="my-color-secondary" class="color-swatch" style="background-color: #E5E5E5;" title="Secondary"></span>
+          </div>
+        </div>
+        <div class="color-divider"></div>
+        <div class="color-team-unit">
+          <span class="color-team-label">OPP</span>
+          <div class="color-swatches-pair">
+            <span id="opp-color-primary" class="color-swatch" style="background-color: #C26418;" title="Primary"></span>
+            <span id="opp-color-secondary" class="color-swatch" style="background-color: #E5E5E5;" title="Secondary"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🌟 2. Player Telemetry Section (3 Players x 10 Parameters = 30 Parameters) -->
+  <div class="players-telemetry-grid">
+    
+    <!-- Player 1 (Target / User) -->
+    <div class="player-telemetry-card" id="p1-card">
+      <div class="player-header">
+        <span class="player-tag tag-target">P1 (TARGET)</span>
+        <span id="p1-name-val" class="player-name-val">-</span>
+      </div>
+
+      <div class="metrics-row">
+        <div class="metric-cell speed-cell">
+          <span class="metric-label">SPEED</span>
+          <span id="p1-speed-val" class="metric-val">0</span>
+        </div>
+
+        <div id="p1-boost-cell" class="metric-cell boost-cell">
+          <div class="boost-header">
+            <span class="metric-label">BOOST</span>
+            <span id="p1-boost-val" class="metric-val boost-val">0</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div id="p1-boost-bar" class="boost-bar-fill bar-red"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="booleans-grid">
+        <div class="bool-item"><span id="p1-hascar-ind" class="status-dot bool-off"></span><span class="bool-name">HAS CAR</span></div>
+        <div class="bool-item"><span id="p1-boosting-ind" class="status-dot bool-off"></span><span class="bool-name">BOOSTING</span></div>
+        <div class="bool-item"><span id="p1-onground-ind" class="status-dot bool-off"></span><span class="bool-name">ON GROUND</span></div>
+        <div class="bool-item"><span id="p1-onwall-ind" class="status-dot bool-off"></span><span class="bool-name">ON WALL</span></div>
+        <div class="bool-item"><span id="p1-powersliding-ind" class="status-dot bool-off"></span><span class="bool-name">POWERSLIDE</span></div>
+        <div class="bool-item"><span id="p1-demolished-ind" class="status-dot bool-off"></span><span class="bool-name">DEMOLISHED</span></div>
+        <div class="bool-item"><span id="p1-supersonic-ind" class="status-dot bool-off"></span><span class="bool-name">SUPERSONIC</span></div>
+      </div>
+    </div>
+
+    <!-- Player 2 (Teammate 1) -->
+    <div class="player-telemetry-card" id="p2-card">
+      <div class="player-header">
+        <span class="player-tag tag-team">P2 (TEAM)</span>
+        <span id="p2-name-val" class="player-name-val">-</span>
+      </div>
+
+      <div class="metrics-row">
+        <div class="metric-cell speed-cell">
+          <span class="metric-label">SPEED</span>
+          <span id="p2-speed-val" class="metric-val">0</span>
+        </div>
+
+        <div id="p2-boost-cell" class="metric-cell boost-cell">
+          <div class="boost-header">
+            <span class="metric-label">BOOST</span>
+            <span id="p2-boost-val" class="metric-val boost-val">0</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div id="p2-boost-bar" class="boost-bar-fill bar-red"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="booleans-grid">
+        <div class="bool-item"><span id="p2-hascar-ind" class="status-dot bool-off"></span><span class="bool-name">HAS CAR</span></div>
+        <div class="bool-item"><span id="p2-boosting-ind" class="status-dot bool-off"></span><span class="bool-name">BOOSTING</span></div>
+        <div class="bool-item"><span id="p2-onground-ind" class="status-dot bool-off"></span><span class="bool-name">ON GROUND</span></div>
+        <div class="bool-item"><span id="p2-onwall-ind" class="status-dot bool-off"></span><span class="bool-name">ON WALL</span></div>
+        <div class="bool-item"><span id="p2-powersliding-ind" class="status-dot bool-off"></span><span class="bool-name">POWERSLIDE</span></div>
+        <div class="bool-item"><span id="p2-demolished-ind" class="status-dot bool-off"></span><span class="bool-name">DEMOLISHED</span></div>
+        <div class="bool-item"><span id="p2-supersonic-ind" class="status-dot bool-off"></span><span class="bool-name">SUPERSONIC</span></div>
+      </div>
+    </div>
+
+    <!-- Player 3 (Teammate 2) -->
+    <div class="player-telemetry-card" id="p3-card">
+      <div class="player-header">
+        <span class="player-tag tag-team">P3 (TEAM)</span>
+        <span id="p3-name-val" class="player-name-val">-</span>
+      </div>
+
+      <div class="metrics-row">
+        <div class="metric-cell speed-cell">
+          <span class="metric-label">SPEED</span>
+          <span id="p3-speed-val" class="metric-val">0</span>
+        </div>
+
+        <div id="p3-boost-cell" class="metric-cell boost-cell">
+          <div class="boost-header">
+            <span class="metric-label">BOOST</span>
+            <span id="p3-boost-val" class="metric-val boost-val">0</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div id="p3-boost-bar" class="boost-bar-fill bar-red"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="booleans-grid">
+        <div class="bool-item"><span id="p3-hascar-ind" class="status-dot bool-off"></span><span class="bool-name">HAS CAR</span></div>
+        <div class="bool-item"><span id="p3-boosting-ind" class="status-dot bool-off"></span><span class="bool-name">BOOSTING</span></div>
+        <div class="bool-item"><span id="p3-onground-ind" class="status-dot bool-off"></span><span class="bool-name">ON GROUND</span></div>
+        <div class="bool-item"><span id="p3-onwall-ind" class="status-dot bool-off"></span><span class="bool-name">ON WALL</span></div>
+        <div class="bool-item"><span id="p3-powersliding-ind" class="status-dot bool-off"></span><span class="bool-name">POWERSLIDE</span></div>
+        <div class="bool-item"><span id="p3-demolished-ind" class="status-dot bool-off"></span><span class="bool-name">DEMOLISHED</span></div>
+        <div class="bool-item"><span id="p3-supersonic-ind" class="status-dot bool-off"></span><span class="bool-name">SUPERSONIC</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,67 @@
+name: Manual Debug Build V0.3
+on:
+  workflow_dispatch:
+
+env:
+  CARGO_INCREMENTAL: 0 
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true 
+
+jobs:
+  build:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5 
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6 
+        with:
+          version: 10 
+
+      - name: Setup Node
+        uses: actions/setup-node@v6 
+        with:
+          node-version: lts/*
+          cache: 'pnpm'
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust Cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "src-tauri -> target"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Tauri App (Debug Mode)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pnpm tauri build --bundles nsis --config src-tauri/tauri.windows.conf.json --debug
+        
+      - name: Upload Portable EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: Portable-Binary
+          path: src-tauri/target/debug/*.exe
+
+      - name: Upload bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle
+          path: src-tauri/target/debug/bundle/**/*.exe
+
+      - name: Upload deps
+        uses: actions/upload-artifact@v4
+        with:
+          name: deps
+          path: src-tauri/target/debug/deps/**/*.exe
+
+      - name: Upload All Executables
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-build-outputs
+          path: src-tauri/target/debug/**/*.exe

@@ -1,0 +1,66 @@
+<script type="application/json" id="component-manifest">
+{
+  "id": "element-vertical-boost-bar",
+  "displayName": "Vertical Boost Progress Bar",
+  "tier": "element",
+  "category": "player",
+  "isProportional": false,
+  "supportsSpeedUnit": false,
+  "supportsAlignment": false,
+  "supportsGlobalStyle": false,
+  "defaultWidthVw": 1.8,
+  "defaultHeightVw": 14,
+  "minWidthVw": 0.4,
+  "minHeightVw": 4,
+  "baseWidthPx": 24,
+  "baseHeightPx": 224,
+  "customProperties": [
+    { "key": "enableBlink", "label": "Enable Danger Blink", "type": "boolean", "default": true },
+    { "key": "bgColor", "label": "Background Color", "type": "color", "default": "rgba(0, 0, 0, 0.65)" },
+    { "key": "borderRadius", "label": "Border Radius", "type": "number", "min": 0, "max": 20, "unit": "px", "default": 4 }
+  ]
+}
+</script>
+
+<template id="component-template">
+  <div class="el-v-boost-bar-box dyn-v-boost-box"><div class="el-v-boost-bar-fill dyn-v-boost-fill"></div></div>
+</template>
+
+<style>
+.el-v-boost-bar-box {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  background: rgba(0, 0, 0, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  border-radius: 4px;
+  position: relative;
+  container-type: size;
+}
+
+.el-v-boost-bar-fill {
+  width: 100%;
+  height: 0%;
+  transform-origin: bottom center;
+  background-color: #10b981;
+  transition: none !important;
+}
+
+@keyframes vDangerBlink {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.9);
+  }
+  50% {
+    opacity: 0.3;
+    box-shadow: 0 0 2px rgba(239, 68, 68, 0.2);
+  }
+}
+
+.el-v-boost-bar-fill.danger-blink {
+  animation: vDangerBlink var(--boost-blink-duration, 0.5s) infinite ease-in-out !important;
+}
+</style>

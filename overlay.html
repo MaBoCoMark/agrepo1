@@ -1,0 +1,12 @@
+<link rel="stylesheet" href="./src/styles/main.css">
+<link rel="stylesheet" href="./src/overlay/overlay.css">
+<body style="background: transparent; overflow: hidden; margin: 0; width: 100vw; height: 100vh; position: relative;" class="not-editing">
+    
+    <!-- Track 1 Container: Always underneath -->
+    <div id="reference-canvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></div>
+    
+    <!-- Track 2 Container: On top, handles HUD layouts -->
+    <div id="scene-canvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></div>
+
+    <script type="module" src="./src/overlay/core/overlay.ts"></script>
+</body>

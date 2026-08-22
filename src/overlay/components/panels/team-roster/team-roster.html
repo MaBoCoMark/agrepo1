@@ -1,0 +1,131 @@
+<script type="application/json" id="component-manifest">
+{
+  "id": "panel-team-roster",
+  "displayName": "Team 3-Player Roster Panel",
+  "tier": "panel",
+  "category": "player",
+  "isProportional": true,
+  "defaultWidthVw": 16,
+  "defaultHeightVw": 6.5,
+  "minWidthVw": 10,
+  "minHeightVw": 4.0,
+  "baseWidthPx": 256,
+  "baseHeightPx": 104
+}
+</script>
+
+<template id="component-template">
+  <div class="panel-team-roster-container">
+      <!-- P1 -->
+      <div class="roster-row">
+        <span class="roster-tag tag-p1">P1</span>
+        <span class="roster-name dyn-p1-name">Target</span>
+        <div class="roster-bar-bg"><div class="roster-bar-fill dyn-p1-fill bar-green"></div></div>
+        <span class="roster-boost-val dyn-p1-val">100</span>
+      </div>
+      <!-- P2 -->
+      <div class="roster-row">
+        <span class="roster-tag tag-team">P2</span>
+        <span class="roster-name dyn-p2-name">Teammate 1</span>
+        <div class="roster-bar-bg"><div class="roster-bar-fill dyn-p2-fill bar-yellow"></div></div>
+        <span class="roster-boost-val dyn-p2-val">50</span>
+      </div>
+      <!-- P3 -->
+      <div class="roster-row">
+        <span class="roster-tag tag-team">P3</span>
+        <span class="roster-name dyn-p3-name">Teammate 2</span>
+        <div class="roster-bar-bg"><div class="roster-bar-fill dyn-p3-fill bar-red"></div></div>
+        <span class="roster-boost-val dyn-p3-val">12</span>
+      </div>
+    </div>
+</template>
+
+<style>
+.panel-team-roster-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 6px;
+      padding: 6px 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 4px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+    }
+
+    .roster-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .roster-tag {
+      font-size: 9px;
+      font-weight: 800;
+      padding: 1px 4px;
+      border-radius: 2px;
+      color: #fff;
+    }
+    .tag-p1 { background: #dd6b20; }
+    .tag-team { background: #3182ce; }
+
+    .roster-name {
+      font-size: 11px;
+      font-weight: 700;
+      color: #f1f5f9;
+      width: 60px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .roster-bar-bg {
+      flex: 1;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .roster-bar-fill {
+      height: 100%;
+      width: 100%;
+      transform-origin: left center;
+      background-color: #10b981;
+      /* instantaneous */
+    }
+
+    .roster-boost-val {
+      font-size: 11px;
+      font-weight: 800;
+      width: 24px;
+      text-align: right;
+      color: #94a3b8;
+    }
+
+    .bar-red { background-color: #ef4444 !important; }
+    .bar-yellow { background-color: #f59e0b !important; }
+    .bar-green { background-color: #10b981 !important; }
+
+    
+
+    
+
+    
+  
+    
+
+    
+    .handle-nw { top: 0%; left: 0%; cursor: nwse-resize; }
+    .handle-n  { top: 0%; left: 50%; cursor: ns-resize; }
+    .handle-ne { top: 0%; left: 100%; cursor: nesw-resize; }
+    .handle-e  { top: 50%; left: 100%; cursor: ew-resize; }
+    .handle-se { top: 100%; left: 100%; cursor: nwse-resize; }
+    .handle-s  { top: 100%; left: 50%; cursor: ns-resize; }
+    .handle-sw { top: 100%; left: 0%; cursor: nesw-resize; }
+    .handle-w  { top: 50%; left: 0%; cursor: ew-resize; }
+</style>

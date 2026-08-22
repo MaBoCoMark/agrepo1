@@ -1,0 +1,76 @@
+name: Manual Windows Build V0.3
+on:
+  workflow_dispatch:
+
+env:
+  CARGO_INCREMENTAL: 0 
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true 
+
+
+jobs:
+  build:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        # Updated to v5 (or latest available) for Node 24 support
+        uses: actions/checkout@v5 
+
+      - name: Install pnpm
+        # Updated to v6 which natively runs on Node 24
+        uses: pnpm/action-setup@v6 
+        with:
+          version: 10 # pnpm v10 is the current 2026 standard
+
+      - name: Setup Node
+        # Update to v6 which supports Node 24 runtimes
+        uses: actions/setup-node@v6 
+        with:
+          node-version: lts/*
+          cache: 'pnpm'
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust Cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "src-tauri -> target"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Tauri App
+        # Updated version to match latest 2026 releases
+        uses: tauri-apps/tauri-action@v0.6.2 
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: --bundles nsis --config src-tauri/tauri.windows.conf.json
+          tagName: manual-build
+          releaseName: 'Manual Build'
+      - name: Upload Portable EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: Portable-Binary
+          path: src-tauri/target/release/*.exe
+
+      - name: Upload bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle
+          path: src-tauri/target/release/bundle/**/*.exe
+
+      - name: Upload deps
+        uses: actions/upload-artifact@v4
+        with:
+          name: deps
+          path: src-tauri/target/release/deps/**/*.exe
+      - name: Upload All Executables
+        # Artifacts v4+ are required for Node 24 runners
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-build-outputs
+          # The double asterisk (**) means "search all subdirectories recursively"
+          path: src-tauri/target/release/**/*.exe

@@ -1,0 +1,78 @@
+<script type="application/json" id="component-manifest">
+{
+  "id": "element-curved-boost-bar",
+  "displayName": "Curved Boost Progress Bar",
+  "tier": "element",
+  "category": "player",
+  "isProportional": true,
+  "supportsSpeedUnit": false,
+  "supportsAlignment": false,
+  "supportsGlobalStyle": false,
+  "defaultWidthVw": 10,
+  "defaultHeightVw": 10,
+  "minWidthVw": 3,
+  "minHeightVw": 3,
+  "baseWidthPx": 160,
+  "baseHeightPx": 160,
+  "customProperties": [
+    { "key": "thickness", "label": "Gauge Thickness", "type": "number", "min": 2, "max": 20, "default": 8 },
+    { "key": "gap", "label": "Arc Gap Angle", "type": "number", "min": 0, "max": 360, "unit": "deg", "default": 90 },
+    { "key": "orientation", "label": "Orientation", "type": "number", "min": 0, "max": 360, "unit": "deg", "default": 90 },
+    { "key": "trackColor", "label": "Background Track Color", "type": "color", "default": "rgba(255, 255, 255, 0.15)" },
+    { "key": "enableBlink", "label": "Enable Danger Blink", "type": "boolean", "default": true }
+  ]
+}
+</script>
+
+<template id="component-template">
+  <div class="curved-boost-container dyn-curved-container">
+    <svg viewBox="0 0 100 100">
+      <circle class="curved-bg-track dyn-curved-bg" cx="50" cy="50" fill="none" stroke="rgba(255, 255, 255, 0.15)" stroke-linecap="square" />
+      <circle class="curved-progress-bar dyn-curved-fill" cx="50" cy="50" fill="none" stroke="#10b981" stroke-linecap="square" />
+    </svg>
+  </div>
+</template>
+
+<style>
+.curved-boost-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  background: transparent;
+  container-type: size;
+}
+
+.curved-boost-container svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  display: block;
+}
+
+.curved-bg-track {
+  transition: none !important;
+}
+
+.curved-progress-bar {
+  transition: none !important;
+}
+
+@keyframes curvedDangerBlink {
+  0%, 100% {
+    opacity: 1;
+    filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.9));
+  }
+  50% {
+    opacity: 0.3;
+    filter: drop-shadow(0 0 2px rgba(239, 68, 68, 0.2));
+  }
+}
+
+.curved-progress-bar.danger-blink {
+  animation: curvedDangerBlink var(--boost-blink-duration, 0.5s) infinite ease-in-out !important;
+}
+</style>
