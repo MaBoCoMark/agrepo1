@@ -525,87 +525,93 @@ function tick() {
     }
 
     // --- P2 ---
-    if (latestData.p2Name !== previousData.p2Name) {
-      if (devDom.p2Name) devDom.p2Name.textContent = latestData.p2Name;
-      previousData.p2Name = latestData.p2Name;
-    }
-    if (latestData.p2Speed !== previousData.p2Speed) {
-      if (devDom.p2Speed) devDom.p2Speed.textContent = latestData.p2Speed.toString();
-      previousData.p2Speed = latestData.p2Speed;
-    }
-    if (latestData.p2Boost !== previousData.p2Boost) {
-      updateBoostUI(latestData.p2Boost, devDom.p2BoostVal, devDom.p2BoostBar, devDom.p2BoostCell);
-      previousData.p2Boost = latestData.p2Boost;
-    }
-    if (latestData.p2HasCar !== previousData.p2HasCar) {
-      updateBoolUI(latestData.p2HasCar, devDom.p2HasCar);
-      previousData.p2HasCar = latestData.p2HasCar;
-    }
-    if (latestData.p2Boosting !== previousData.p2Boosting) {
-      updateBoolUI(latestData.p2Boosting, devDom.p2Boosting);
-      previousData.p2Boosting = latestData.p2Boosting;
-    }
-    if (latestData.p2OnGround !== previousData.p2OnGround) {
-      updateBoolUI(latestData.p2OnGround, devDom.p2OnGround);
-      previousData.p2OnGround = latestData.p2OnGround;
-    }
-    if (latestData.p2OnWall !== previousData.p2OnWall) {
-      updateBoolUI(latestData.p2OnWall, devDom.p2OnWall);
-      previousData.p2OnWall = latestData.p2OnWall;
-    }
-    if (latestData.p2Powersliding !== previousData.p2Powersliding) {
-      updateBoolUI(latestData.p2Powersliding, devDom.p2Powersliding);
-      previousData.p2Powersliding = latestData.p2Powersliding;
-    }
-    if (latestData.p2Demolished !== previousData.p2Demolished) {
-      updateBoolUI(latestData.p2Demolished, devDom.p2Demolished);
-      previousData.p2Demolished = latestData.p2Demolished;
-    }
-    if (latestData.p2Supersonic !== previousData.p2Supersonic) {
-      updateBoolUI(latestData.p2Supersonic, devDom.p2Supersonic);
-      previousData.p2Supersonic = latestData.p2Supersonic;
+    if (latestData.p2HasCar)
+    {
+      if (latestData.p2Name !== previousData.p2Name) {
+        if (devDom.p2Name) devDom.p2Name.textContent = latestData.p2Name;
+        previousData.p2Name = latestData.p2Name;
+      }
+      if (latestData.p2Speed !== previousData.p2Speed) {
+        if (devDom.p2Speed) devDom.p2Speed.textContent = latestData.p2Speed.toString();
+        previousData.p2Speed = latestData.p2Speed;
+      }
+      if (latestData.p2Boost !== previousData.p2Boost) {
+        updateBoostUI(latestData.p2Boost, devDom.p2BoostVal, devDom.p2BoostBar, devDom.p2BoostCell);
+        previousData.p2Boost = latestData.p2Boost;
+      }
+      if (latestData.p2HasCar !== previousData.p2HasCar) {
+        updateBoolUI(latestData.p2HasCar, devDom.p2HasCar);
+        previousData.p2HasCar = latestData.p2HasCar;
+      }
+      if (latestData.p2Boosting !== previousData.p2Boosting) {
+        updateBoolUI(latestData.p2Boosting, devDom.p2Boosting);
+        previousData.p2Boosting = latestData.p2Boosting;
+      }
+      if (latestData.p2OnGround !== previousData.p2OnGround) {
+        updateBoolUI(latestData.p2OnGround, devDom.p2OnGround);
+        previousData.p2OnGround = latestData.p2OnGround;
+      }
+      if (latestData.p2OnWall !== previousData.p2OnWall) {
+        updateBoolUI(latestData.p2OnWall, devDom.p2OnWall);
+        previousData.p2OnWall = latestData.p2OnWall;
+      }
+      if (latestData.p2Powersliding !== previousData.p2Powersliding) {
+        updateBoolUI(latestData.p2Powersliding, devDom.p2Powersliding);
+        previousData.p2Powersliding = latestData.p2Powersliding;
+      }
+      if (latestData.p2Demolished !== previousData.p2Demolished) {
+        updateBoolUI(latestData.p2Demolished, devDom.p2Demolished);
+        previousData.p2Demolished = latestData.p2Demolished;
+      }
+      if (latestData.p2Supersonic !== previousData.p2Supersonic) {
+        updateBoolUI(latestData.p2Supersonic, devDom.p2Supersonic);
+        previousData.p2Supersonic = latestData.p2Supersonic;
+      }
     }
 
     // --- P3 ---
-    if (latestData.p3Name !== previousData.p3Name) {
-      if (devDom.p3Name) devDom.p3Name.textContent = latestData.p3Name;
-      previousData.p3Name = latestData.p3Name;
-    }
-    if (latestData.p3Speed !== previousData.p3Speed) {
-      if (devDom.p3Speed) devDom.p3Speed.textContent = latestData.p3Speed.toString();
-      previousData.p3Speed = latestData.p3Speed;
-    }
-    if (latestData.p3Boost !== previousData.p3Boost) {
-      updateBoostUI(latestData.p3Boost, devDom.p3BoostVal, devDom.p3BoostBar, devDom.p3BoostCell);
-      previousData.p3Boost = latestData.p3Boost;
-    }
-    if (latestData.p3HasCar !== previousData.p3HasCar) {
-      updateBoolUI(latestData.p3HasCar, devDom.p3HasCar);
-      previousData.p3HasCar = latestData.p3HasCar;
-    }
-    if (latestData.p3Boosting !== previousData.p3Boosting) {
-      updateBoolUI(latestData.p3Boosting, devDom.p3Boosting);
-      previousData.p3Boosting = latestData.p3Boosting;
-    }
-    if (latestData.p3OnGround !== previousData.p3OnGround) {
-      updateBoolUI(latestData.p3OnGround, devDom.p3OnGround);
-      previousData.p3OnGround = latestData.p3OnGround;
-    }
-    if (latestData.p3OnWall !== previousData.p3OnWall) {
-      updateBoolUI(latestData.p3OnWall, devDom.p3OnWall);
-      previousData.p3OnWall = latestData.p3OnWall;
-    }
-    if (latestData.p3Powersliding !== previousData.p3Powersliding) {
-      updateBoolUI(latestData.p3Powersliding, devDom.p3Powersliding);
-      previousData.p3Powersliding = latestData.p3Powersliding;
-    }
-    if (latestData.p3Demolished !== previousData.p3Demolished) {
-      updateBoolUI(latestData.p3Demolished, devDom.p3Demolished);
-      previousData.p3Demolished = latestData.p3Demolished;
-    }
-    if (latestData.p3Supersonic !== previousData.p3Supersonic) {
-      updateBoolUI(latestData.p3Supersonic, devDom.p3Supersonic);
-      previousData.p3Supersonic = latestData.p3Supersonic;
+    if (latestData.p3HasCar)
+    {
+      if (latestData.p3Name !== previousData.p3Name) {
+        if (devDom.p3Name) devDom.p3Name.textContent = latestData.p3Name;
+        previousData.p3Name = latestData.p3Name;
+      }
+      if (latestData.p3Speed !== previousData.p3Speed) {
+        if (devDom.p3Speed) devDom.p3Speed.textContent = latestData.p3Speed.toString();
+        previousData.p3Speed = latestData.p3Speed;
+      }
+      if (latestData.p3Boost !== previousData.p3Boost) {
+        updateBoostUI(latestData.p3Boost, devDom.p3BoostVal, devDom.p3BoostBar, devDom.p3BoostCell);
+        previousData.p3Boost = latestData.p3Boost;
+      }
+      if (latestData.p3HasCar !== previousData.p3HasCar) {
+        updateBoolUI(latestData.p3HasCar, devDom.p3HasCar);
+        previousData.p3HasCar = latestData.p3HasCar;
+      }
+      if (latestData.p3Boosting !== previousData.p3Boosting) {
+        updateBoolUI(latestData.p3Boosting, devDom.p3Boosting);
+        previousData.p3Boosting = latestData.p3Boosting;
+      }
+      if (latestData.p3OnGround !== previousData.p3OnGround) {
+        updateBoolUI(latestData.p3OnGround, devDom.p3OnGround);
+        previousData.p3OnGround = latestData.p3OnGround;
+      }
+      if (latestData.p3OnWall !== previousData.p3OnWall) {
+        updateBoolUI(latestData.p3OnWall, devDom.p3OnWall);
+        previousData.p3OnWall = latestData.p3OnWall;
+      }
+      if (latestData.p3Powersliding !== previousData.p3Powersliding) {
+        updateBoolUI(latestData.p3Powersliding, devDom.p3Powersliding);
+        previousData.p3Powersliding = latestData.p3Powersliding;
+      }
+      if (latestData.p3Demolished !== previousData.p3Demolished) {
+        updateBoolUI(latestData.p3Demolished, devDom.p3Demolished);
+        previousData.p3Demolished = latestData.p3Demolished;
+      }
+      if (latestData.p3Supersonic !== previousData.p3Supersonic) {
+        updateBoolUI(latestData.p3Supersonic, devDom.p3Supersonic);
+        previousData.p3Supersonic = latestData.p3Supersonic;
+      }
     }
   }
 
@@ -1637,6 +1643,3 @@ async function bootstrap() {
 }
 
 bootstrap();
-
-(window as any).__OVERLAY_ENTRY__ = true;
-console.log("Overlay system logic injection successful.");
