@@ -8,6 +8,7 @@ import { initRefSceneController } from './modules/ref-scene-controller';
 import { initCompetitiveDesigner } from './modules/competitive-designer';
 import { initBenchmarkTool } from './modules/benchmark-tool';
 import { initTelemetrySyncController } from './modules/telemetry-sync-controller';
+import { initBallHitController } from './modules/ball-hit-controller';
 import { ComponentInstance } from '../overlay/core/component-types';
 
 /**
@@ -25,6 +26,7 @@ import { ComponentInstance } from '../overlay/core/component-types';
  * - Component Catalog & Live Previewer modal
  * - Competitive Scene Visual Layout Designer & 8-point draggers
  * - Performance Benchmark Engine & Frametime Charting
+ * - Ball Hit 2D Pitch Mapping & Calibration Controller
  * ============================================================================
  */
 
@@ -65,4 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 10. Performance Benchmark Tool (10s RAF timing & Charting)
   initBenchmarkTool();
+
+  // 11. Ball Hit 2D Pitch Mapping & Calibration Controller
+  initBallHitController();
 });

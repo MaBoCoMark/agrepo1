@@ -1,14 +1,28 @@
 import { overlayState } from './telemetry-state';
+import {
+  ControlPoint,
+  CalibrationSettings,
+  HitPointRecord,
+  MappingStats,
+  DEFAULT_CONTROL_POINTS,
+  DEFAULT_CALIBRATION,
+  SAFETY_MARGINS,
+  isPointInsideSafetyBounds,
+  applyCalibration,
+  unapplyCalibration,
+  solvePitch16ControlPoints,
+  loadSavedCalibration,
+  saveCalibrationToStorage,
+  loadSavedControlPoints,
+  saveControlPointsToStorage,
+  generatePitchConfigJson
+} from './pitch-geometry';
 
 /**
- * ============================================================================\n * ⚾ Ball Hit Telemetry Tracker & Extreme Value Analyzer
- * ============================================================================\n *
- * Tracks the latest BallHit event details (players, speeds, coordinates)
- * and records session extremes (min/max X, Y, Z coordinates).
- *
- * NOTE: Recording and accumulation strictly occur only when the Ball Hit
- * Inspector scene is active (overlayState.currentActiveScene === 'ball-hit').
- * ============================================================================\n */
+ * ============================================================================
+ * 🎮 Ball Hit Inspector & 2D Pitch Mapping / Calibration Controller
+ * ============================================================================
+ */
 
 export interface BallHitLocation {
   X: number;
@@ -68,7 +82,9 @@ export interface LastBallHitSnapshot {
   z: number | null;
 }
 
-// Session Min / Max Extremes (Persisted for application lifecycle)
+export type BallHitOperationMode = 'mapping' | 'calibration';
+
+// Global Session State
 export const sessionExtremes: SessionExtremes = {
   minX: null,
   maxX: null,
@@ -78,7 +94,6 @@ export const sessionExtremes: SessionExtremes = {
   maxZ: null
 };
 
-// Snapshot of last received BallHit event
 export const lastBallHitSnapshot: LastBallHitSnapshot = {
   hasData: false,
   timestamp: '-',
@@ -94,22 +109,125 @@ export const lastBallHitSnapshot: LastBallHitSnapshot = {
 };
 
 export let sessionTotalHits = 0;
-export let isBallHitDirty = false;
+export let isBallHitDirty = true;
+export let isRecordingHits = true;
+export let currentOperationMode: BallHitOperationMode = 'mapping';
+
+export let hitHistoryBuffer: HitPointRecord[] = [];
+export const MAX_HIT_HISTORY = 3000;
+
+export let currentControlPoints: ControlPoint[] = loadSavedControlPoints();
+export let currentCalibration: CalibrationSettings = loadSavedCalibration();
+export let lastMappingStats: MappingStats | null = null;
+
+export let selectedVertexIndex: number | null = null;
+let isDraggingVertex = false;
 
 export function markBallHitDirty(): void {
   isBallHitDirty = true;
 }
 
+export function setOperationMode(mode: BallHitOperationMode): void {
+  currentOperationMode = mode;
+  isBallHitDirty = true;
+}
+
+export function setRecordingState(recording: boolean): void {
+  isRecordingHits = recording;
+  isBallHitDirty = true;
+}
+
+export function clearHitHistory(): void {
+  hitHistoryBuffer = [];
+  sessionTotalHits = 0;
+  sessionExtremes.minX = null;
+  sessionExtremes.maxX = null;
+  sessionExtremes.minY = null;
+  sessionExtremes.maxY = null;
+  sessionExtremes.minZ = null;
+  sessionExtremes.maxZ = null;
+  lastBallHitSnapshot.hasData = false;
+  lastMappingStats = null;
+  isBallHitDirty = true;
+}
+
+export function updateCalibration(settings: Partial<CalibrationSettings>): void {
+  currentCalibration = { ...currentCalibration, ...settings };
+  saveCalibrationToStorage(currentCalibration);
+  isBallHitDirty = true;
+}
+
+export function resetCalibration(): void {
+  currentCalibration = { ...DEFAULT_CALIBRATION };
+  saveCalibrationToStorage(currentCalibration);
+  isBallHitDirty = true;
+}
+
+export function updateControlPoints(points: ControlPoint[]): void {
+  if (Array.isArray(points) && points.length === 16) {
+    currentControlPoints = points;
+    saveControlPointsToStorage(currentControlPoints);
+    isBallHitDirty = true;
+  }
+}
+
+export function resetControlPointsToDefault(): void {
+  currentControlPoints = JSON.parse(JSON.stringify(DEFAULT_CONTROL_POINTS));
+  saveControlPointsToStorage(currentControlPoints);
+  isBallHitDirty = true;
+}
+
 /**
- * Parses and processes incoming BallHit websocket messages.
- * Only records data if the active scene is 'ball-hit'.
+ * Execute 16-point automatic boundary fitting algorithm.
+ */
+export function runAutoMappingAlgorithm(): MappingStats {
+  const result = solvePitch16ControlPoints(hitHistoryBuffer);
+  currentControlPoints = result.controlPoints;
+  lastMappingStats = result.stats;
+  saveControlPointsToStorage(currentControlPoints);
+  isBallHitDirty = true;
+  return result.stats;
+}
+
+/**
+ * Bulk import hits from JSON.
+ */
+export function importHitsFromJson(jsonString: string): number {
+  try {
+    const data = JSON.parse(jsonString);
+    let addedCount = 0;
+    const array = Array.isArray(data) ? data : (data.hits || data.points || []);
+    if (Array.isArray(array)) {
+      for (const item of array) {
+        const x = typeof item.x === 'number' ? item.x : (typeof item.X === 'number' ? item.X : (Array.isArray(item) ? item[0] : null));
+        const y = typeof item.y === 'number' ? item.y : (typeof item.Y === 'number' ? item.Y : (Array.isArray(item) ? item[1] : null));
+        const z = typeof item.z === 'number' ? item.z : (typeof item.Z === 'number' ? item.Z : (Array.isArray(item) ? item[2] : 50));
+        if (x !== null && y !== null && !isNaN(x) && !isNaN(y)) {
+          const isNoise = !isPointInsideSafetyBounds(x, y, z ?? 50);
+          hitHistoryBuffer.push({ x, y, z: z ?? 50, timestamp: Date.now(), isNoise });
+          addedCount++;
+        }
+      }
+      if (hitHistoryBuffer.length > MAX_HIT_HISTORY) {
+        hitHistoryBuffer = hitHistoryBuffer.slice(-MAX_HIT_HISTORY);
+      }
+      sessionTotalHits += addedCount;
+      isBallHitDirty = true;
+      return addedCount;
+    }
+  } catch (err) {
+    console.error('Failed to parse import hits JSON:', err);
+  }
+  return 0;
+}
+
+/**
+ * Parse incoming WebSocket BallHit packet.
  */
 export function processBallHitPacket(raw: BallHitWebSocketMessage): boolean {
-  // STRICT CONSTRAINT: Only accumulate data when on this specific page/scene
   if (overlayState.currentActiveScene !== 'ball-hit') {
     return false;
   }
-
   if (!raw) return false;
 
   let payloadData: BallHitPayloadData;
@@ -130,12 +248,10 @@ export function processBallHitPacket(raw: BallHitWebSocketMessage): boolean {
     return false;
   }
 
-  // Extract Ball info (support standard capitalizations and fallbacks)
   const ball: BallHitBall | undefined = payloadData.Ball || (payloadData as any).ball;
   const players: BallHitPlayer[] = payloadData.Players || (payloadData as any).players || [];
   const primaryPlayer = Array.isArray(players) && players.length > 0 ? players[0] : ((payloadData as any).Player || null);
 
-  // Extract speeds
   const preSpeed = typeof ball?.PreHitSpeed === 'number'
     ? ball.PreHitSpeed
     : (typeof (ball as any)?.preHitSpeed === 'number' ? (ball as any).preHitSpeed : 0);
@@ -144,13 +260,11 @@ export function processBallHitPacket(raw: BallHitWebSocketMessage): boolean {
     ? ball.PostHitSpeed
     : (typeof (ball as any)?.postHitSpeed === 'number' ? (ball as any).postHitSpeed : 0);
 
-  // Extract location coordinates
   const loc = ball?.Location || (ball as any)?.location;
   const x = loc ? (typeof loc.X === 'number' ? loc.X : (typeof (loc as any).x === 'number' ? (loc as any).x : null)) : null;
   const y = loc ? (typeof loc.Y === 'number' ? loc.Y : (typeof (loc as any).y === 'number' ? (loc as any).y : null)) : null;
   const z = loc ? (typeof loc.Z === 'number' ? loc.Z : (typeof (loc as any).z === 'number' ? (loc as any).z : null)) : null;
 
-  // Update session coordinate extremes
   if (x !== null && !isNaN(x)) {
     sessionExtremes.minX = sessionExtremes.minX === null ? x : Math.min(sessionExtremes.minX, x);
     sessionExtremes.maxX = sessionExtremes.maxX === null ? x : Math.max(sessionExtremes.maxX, x);
@@ -164,12 +278,10 @@ export function processBallHitPacket(raw: BallHitWebSocketMessage): boolean {
     sessionExtremes.maxZ = sessionExtremes.maxZ === null ? z : Math.max(sessionExtremes.maxZ, z);
   }
 
-  // Update session hit count and timestamp
   sessionTotalHits++;
   const d = new Date();
   const timeStr = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}.${d.getMilliseconds().toString().padStart(3, '0')}`;
 
-  // Update latest snapshot
   lastBallHitSnapshot.hasData = true;
   lastBallHitSnapshot.timestamp = timeStr;
   lastBallHitSnapshot.playerName = primaryPlayer?.Name || primaryPlayer?.name || 'Unknown';
@@ -182,13 +294,30 @@ export function processBallHitPacket(raw: BallHitWebSocketMessage): boolean {
   lastBallHitSnapshot.y = y;
   lastBallHitSnapshot.z = z;
 
+  // If recording is active, append to point cloud
+  if (isRecordingHits && x !== null && y !== null && !isNaN(x) && !isNaN(y)) {
+    const isNoise = !isPointInsideSafetyBounds(x, y, z ?? 0);
+    hitHistoryBuffer.push({
+      x,
+      y,
+      z: z ?? 0,
+      timestamp: Date.now(),
+      isNoise
+    });
+    if (hitHistoryBuffer.length > MAX_HIT_HISTORY) {
+      hitHistoryBuffer.shift();
+    }
+  }
+
   isBallHitDirty = true;
   return true;
 }
 
 /**
- * ============================================================================\n * 🚀 DOM Node Caching & High-Performance Frame Renderer
- * ============================================================================\n */
+ * ============================================================================
+ * 🚀 DOM Node Caching & Interactive Map Controller
+ * ============================================================================
+ */
 
 export interface BallHitDomNodes {
   root: HTMLElement | null;
@@ -197,6 +326,11 @@ export interface BallHitDomNodes {
   totalCount: HTMLElement | null;
   lastTime: HTMLElement | null;
   awaitingNotice: HTMLElement | null;
+
+  modeMappingBtn: HTMLElement | null;
+  modeCalibBtn: HTMLElement | null;
+  recordingToggleBtn: HTMLElement | null;
+  recordingBadge: HTMLElement | null;
 
   playerTeamBadge: HTMLElement | null;
   playerName: HTMLElement | null;
@@ -228,9 +362,28 @@ export interface BallHitDomNodes {
   midZ: HTMLElement | null;
   maxZ: HTMLElement | null;
   barZ: HTMLElement | null;
+
+  // Radar Canvas & Altitude Visualizer
+  pitchCanvas: HTMLCanvasElement | null;
+  altitudeIndicator: HTMLElement | null;
+  altitudeVal: HTMLElement | null;
+  altitudeBar: HTMLElement | null;
+
+  // Calibration Info & Quick Actions
+  calibOffsetTag: HTMLElement | null;
+  calibScaleTag: HTMLElement | null;
+  calibInvertTag: HTMLElement | null;
+  btnRunAutoMap: HTMLElement | null;
+  btnClearPoints: HTMLElement | null;
+  btnExportJson: HTMLElement | null;
+  btnImportJson: HTMLElement | null;
+  btnResetCalib: HTMLElement | null;
+  statsValidHits: HTMLElement | null;
+  statsNoiseHits: HTMLElement | null;
 }
 
 let ballHitDomNodes: BallHitDomNodes | null = null;
+let canvasInteractionBound = false;
 
 export function cacheBallHitNodes(): BallHitDomNodes {
   ballHitDomNodes = {
@@ -240,6 +393,11 @@ export function cacheBallHitNodes(): BallHitDomNodes {
     totalCount: document.getElementById('bh-total-count'),
     lastTime: document.getElementById('bh-last-time'),
     awaitingNotice: document.getElementById('bh-awaiting-notice'),
+
+    modeMappingBtn: document.getElementById('bh-btn-mode-mapping'),
+    modeCalibBtn: document.getElementById('bh-btn-mode-calibration'),
+    recordingToggleBtn: document.getElementById('bh-btn-toggle-record'),
+    recordingBadge: document.getElementById('bh-record-badge'),
 
     playerTeamBadge: document.getElementById('bh-player-team-badge'),
     playerName: document.getElementById('bh-player-name'),
@@ -270,8 +428,26 @@ export function cacheBallHitNodes(): BallHitDomNodes {
     minZ: document.getElementById('bh-min-z'),
     midZ: document.getElementById('bh-mid-z'),
     maxZ: document.getElementById('bh-max-z'),
-    barZ: document.getElementById('bh-bar-z')
+    barZ: document.getElementById('bh-bar-z'),
+
+    pitchCanvas: document.getElementById('bh-pitch-canvas') as HTMLCanvasElement | null,
+    altitudeIndicator: document.getElementById('bh-altitude-indicator'),
+    altitudeVal: document.getElementById('bh-altitude-val'),
+    altitudeBar: document.getElementById('bh-altitude-bar'),
+
+    calibOffsetTag: document.getElementById('bh-calib-offset-tag'),
+    calibScaleTag: document.getElementById('bh-calib-scale-tag'),
+    calibInvertTag: document.getElementById('bh-calib-invert-tag'),
+    btnRunAutoMap: document.getElementById('bh-btn-auto-map'),
+    btnClearPoints: document.getElementById('bh-btn-clear-points'),
+    btnExportJson: document.getElementById('bh-btn-export-json'),
+    btnImportJson: document.getElementById('bh-btn-import-json'),
+    btnResetCalib: document.getElementById('bh-btn-reset-calib'),
+    statsValidHits: document.getElementById('bh-stats-valid-hits'),
+    statsNoiseHits: document.getElementById('bh-stats-noise-hits')
   };
+
+  bindPitchCanvasEvents();
   return ballHitDomNodes;
 }
 
@@ -285,7 +461,330 @@ function formatNum(val: number | null, decimals = 2): string {
 }
 
 /**
- * Updates the Ball Hit inspector DOM without layout trashing or excessive string operations.
+ * Binds mouse and keyboard interactions for canvas and calibration.
+ */
+function bindPitchCanvasEvents(): void {
+  if (canvasInteractionBound) return;
+  const dom = ballHitDomNodes;
+  if (!dom?.pitchCanvas) return;
+
+  const canvas = dom.pitchCanvas;
+
+  canvas.addEventListener('mousedown', (e: MouseEvent) => {
+    if (currentOperationMode !== 'calibration') return;
+    const rect = canvas.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const clickY = e.clientY - rect.top;
+
+    // Check if clicked close to any vertex
+    const radius = 14;
+    selectedVertexIndex = null;
+
+    for (let i = 0; i < currentControlPoints.length; i++) {
+      const pt = currentControlPoints[i];
+      const screenPt = worldToCanvas(pt.x, pt.y, canvas.width, canvas.height, currentCalibration);
+      const dist = Math.hypot(screenPt.x - clickX, screenPt.y - clickY);
+      if (dist <= radius) {
+        selectedVertexIndex = i;
+        isDraggingVertex = true;
+        break;
+      }
+    }
+    isBallHitDirty = true;
+  });
+
+  window.addEventListener('mousemove', (e: MouseEvent) => {
+    if (!isDraggingVertex || selectedVertexIndex === null || !dom.pitchCanvas) return;
+    const rect = dom.pitchCanvas.getBoundingClientRect();
+    const mouseX = Math.max(0, Math.min(dom.pitchCanvas.width, e.clientX - rect.left));
+    const mouseY = Math.max(0, Math.min(dom.pitchCanvas.height, e.clientY - rect.top));
+
+    const worldPt = canvasToWorld(mouseX, mouseY, dom.pitchCanvas.width, dom.pitchCanvas.height, currentCalibration);
+    currentControlPoints[selectedVertexIndex].x = Math.round(worldPt.x * 10) / 10;
+    currentControlPoints[selectedVertexIndex].y = Math.round(worldPt.y * 10) / 10;
+    saveControlPointsToStorage(currentControlPoints);
+    isBallHitDirty = true;
+  });
+
+  window.addEventListener('mouseup', () => {
+    if (isDraggingVertex) {
+      isDraggingVertex = false;
+      isBallHitDirty = true;
+    }
+  });
+
+  // Mode Buttons
+  dom.modeMappingBtn?.addEventListener('click', () => {
+    setOperationMode('mapping');
+  });
+
+  dom.modeCalibBtn?.addEventListener('click', () => {
+    setOperationMode('calibration');
+  });
+
+  dom.recordingToggleBtn?.addEventListener('click', () => {
+    setRecordingState(!isRecordingHits);
+  });
+
+  dom.btnRunAutoMap?.addEventListener('click', () => {
+    runAutoMappingAlgorithm();
+  });
+
+  dom.btnClearPoints?.addEventListener('click', () => {
+    clearHitHistory();
+  });
+
+  dom.btnExportJson?.addEventListener('click', () => {
+    const config = generatePitchConfigJson(currentControlPoints, currentCalibration);
+    const jsonStr = JSON.stringify(config, null, 2);
+    void navigator.clipboard.writeText(jsonStr);
+    alert('✅ Pitch Configuration (16 Control Points) copied to clipboard!');
+  });
+
+  dom.btnImportJson?.addEventListener('click', () => {
+    const input = prompt('Paste Pitch Configuration JSON or Hit Data Points JSON:');
+    if (input) {
+      try {
+        const parsed = JSON.parse(input);
+        if (parsed.controlPoints && Array.isArray(parsed.controlPoints) && parsed.controlPoints.length === 16) {
+          updateControlPoints(parsed.controlPoints);
+          if (parsed.calibration) {
+            updateCalibration(parsed.calibration);
+          }
+          alert('✅ Successfully imported 16 Pitch Control Points & Calibration!');
+        } else {
+          const hitsCount = importHitsFromJson(input);
+          alert(`✅ Successfully imported ${hitsCount} hit telemetry records!`);
+        }
+      } catch (err) {
+        alert('❌ Invalid JSON format.');
+      }
+    }
+  });
+
+  dom.btnResetCalib?.addEventListener('click', () => {
+    resetCalibration();
+    resetControlPointsToDefault();
+  });
+
+  // WASD / Arrow Calibration Hotkeys
+  window.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (overlayState.currentActiveScene !== 'ball-hit') return;
+    if (currentOperationMode !== 'calibration') return;
+    const step = e.shiftKey ? 50 : 10;
+
+    if (e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp') {
+      updateCalibration({ offsetY: currentCalibration.offsetY + step });
+    } else if (e.key === 's' || e.key === 'S' || e.key === 'ArrowDown') {
+      updateCalibration({ offsetY: currentCalibration.offsetY - step });
+    } else if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') {
+      updateCalibration({ offsetX: currentCalibration.offsetX - step });
+    } else if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') {
+      updateCalibration({ offsetX: currentCalibration.offsetX + step });
+    } else if (e.key === 'q' || e.key === 'Q') {
+      updateCalibration({ scaleX: Math.max(0.2, currentCalibration.scaleX - 0.02), scaleY: Math.max(0.2, currentCalibration.scaleY - 0.02) });
+    } else if (e.key === 'e' || e.key === 'E') {
+      updateCalibration({ scaleX: currentCalibration.scaleX + 0.02, scaleY: currentCalibration.scaleY + 0.02 });
+    }
+  });
+
+  canvasInteractionBound = true;
+}
+
+/**
+ * Coordinate Conversion Helpers: World <-> Canvas
+ */
+export function worldToCanvas(
+  wx: number,
+  wy: number,
+  canvasW: number,
+  canvasH: number,
+  cal: CalibrationSettings
+): { x: number; y: number } {
+  const { cx, cy } = applyCalibration(wx, wy, cal);
+  // Safe margin coordinates: X in [-4500, 4500], Y in [-6000, 6000]
+  // Y in 2D canvas is inverted (top is 0, bottom is H)
+  const normX = (cx - SAFETY_MARGINS.x[0]) / (SAFETY_MARGINS.x[1] - SAFETY_MARGINS.x[0]);
+  const normY = (cy - SAFETY_MARGINS.y[0]) / (SAFETY_MARGINS.y[1] - SAFETY_MARGINS.y[0]);
+
+  const padding = 20;
+  const drawW = canvasW - padding * 2;
+  const drawH = canvasH - padding * 2;
+
+  const canvasX = padding + normX * drawW;
+  const canvasY = padding + (1 - normY) * drawH;
+  return { x: canvasX, y: canvasY };
+}
+
+export function canvasToWorld(
+  canvasX: number,
+  canvasY: number,
+  canvasW: number,
+  canvasH: number,
+  cal: CalibrationSettings
+): { x: number; y: number } {
+  const padding = 20;
+  const drawW = canvasW - padding * 2;
+  const drawH = canvasH - padding * 2;
+
+  const normX = (canvasX - padding) / drawW;
+  const normY = 1 - (canvasY - padding) / drawH;
+
+  const cx = SAFETY_MARGINS.x[0] + normX * (SAFETY_MARGINS.x[1] - SAFETY_MARGINS.x[0]);
+  const cy = SAFETY_MARGINS.y[0] + normY * (SAFETY_MARGINS.y[1] - SAFETY_MARGINS.y[0]);
+
+  const { wx, wy } = unapplyCalibration(cx, cy, cal);
+  return { x: wx, y: wy };
+}
+
+/**
+ * Render 2D Pitch Radar Canvas
+ */
+function drawPitchRadar(canvas: HTMLCanvasElement): void {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  const w = canvas.width;
+  const h = canvas.height;
+
+  ctx.clearRect(0, 0, w, h);
+
+  // 1. Radar Grid / Pitch Underlay
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+  ctx.lineWidth = 1;
+  const gridStep = 40;
+  for (let x = 0; x < w; x += gridStep) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, h);
+    ctx.stroke();
+  }
+  for (let y = 0; y < h; y += gridStep) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(w, y);
+    ctx.stroke();
+  }
+
+  // Pitch centerline and center circle
+  const centerScreen = worldToCanvas(0, 0, w, h, currentCalibration);
+  ctx.strokeStyle = 'rgba(0, 240, 255, 0.2)';
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(0, centerScreen.y);
+  ctx.lineTo(w, centerScreen.y);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(centerScreen.x, 0);
+  ctx.lineTo(centerScreen.x, h);
+  ctx.stroke();
+
+  ctx.setLineDash([]);
+  ctx.beginPath();
+  ctx.arc(centerScreen.x, centerScreen.y, 45 * currentCalibration.scaleX, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+
+  // 2. Render Historical Hit Points Cloud
+  if (hitHistoryBuffer.length > 0) {
+    ctx.save();
+    for (let i = 0; i < hitHistoryBuffer.length; i++) {
+      const pt = hitHistoryBuffer[i];
+      const screen = worldToCanvas(pt.x, pt.y, w, h, currentCalibration);
+      ctx.beginPath();
+      ctx.arc(screen.x, screen.y, pt.isNoise ? 2.5 : 3, 0, Math.PI * 2);
+      if (pt.isNoise) {
+        ctx.fillStyle = 'rgba(255, 51, 102, 0.35)';
+      } else {
+        const alpha = Math.min(0.85, 0.2 + (i / hitHistoryBuffer.length) * 0.65);
+        ctx.fillStyle = `rgba(0, 255, 136, ${alpha})`;
+      }
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // 3. Render 16 Control Points Wireframe Boundary (The Pitch Polygon Skeleton)
+  if (currentControlPoints.length === 16) {
+    ctx.save();
+    ctx.beginPath();
+    const firstScreen = worldToCanvas(currentControlPoints[0].x, currentControlPoints[0].y, w, h, currentCalibration);
+    ctx.moveTo(firstScreen.x, firstScreen.y);
+
+    for (let i = 1; i < currentControlPoints.length; i++) {
+      const sp = worldToCanvas(currentControlPoints[i].x, currentControlPoints[i].y, w, h, currentCalibration);
+      ctx.lineTo(sp.x, sp.y);
+    }
+    ctx.closePath();
+
+    // Polygon boundary glow & fill
+    ctx.strokeStyle = '#00f0ff';
+    ctx.lineWidth = 2.5;
+    ctx.shadowColor = 'rgba(0, 240, 255, 0.6)';
+    ctx.shadowBlur = 10;
+    ctx.fillStyle = 'rgba(0, 240, 255, 0.04)';
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+
+    // 4. Render Vertex Handles & Labels
+    ctx.save();
+    for (let i = 0; i < currentControlPoints.length; i++) {
+      const cp = currentControlPoints[i];
+      const sp = worldToCanvas(cp.x, cp.y, w, h, currentCalibration);
+      const isSelected = selectedVertexIndex === i;
+
+      // Handle circle
+      ctx.beginPath();
+      ctx.arc(sp.x, sp.y, isSelected ? 7 : 4.5, 0, Math.PI * 2);
+      ctx.fillStyle = isSelected ? '#ffd166' : '#ffffff';
+      ctx.shadowColor = isSelected ? '#ffd166' : '#00f0ff';
+      ctx.shadowBlur = isSelected ? 12 : 6;
+      ctx.fill();
+      ctx.strokeStyle = '#0a0e17';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Vertex Index Label
+      if (currentOperationMode === 'calibration' || isSelected) {
+        ctx.font = 'bold 9px monospace';
+        ctx.fillStyle = isSelected ? '#ffd166' : 'rgba(255, 255, 255, 0.75)';
+        ctx.fillText(cp.id, sp.x + 8, sp.y + 3);
+      }
+    }
+    ctx.restore();
+  }
+
+  // 5. Render Latest Ball Hit Ripple & Coordinates
+  if (lastBallHitSnapshot.hasData && lastBallHitSnapshot.x !== null && lastBallHitSnapshot.y !== null) {
+    const liveScreen = worldToCanvas(lastBallHitSnapshot.x, lastBallHitSnapshot.y, w, h, currentCalibration);
+    ctx.save();
+    // Expanding glowing beacon
+    const time = (Date.now() % 1200) / 1200;
+    const rippleRadius = 6 + time * 18;
+    const rippleAlpha = 1 - time;
+
+    ctx.beginPath();
+    ctx.arc(liveScreen.x, liveScreen.y, rippleRadius, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(255, 51, 102, ${rippleAlpha})`;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Core point
+    ctx.beginPath();
+    ctx.arc(liveScreen.x, liveScreen.y, 5, 0, Math.PI * 2);
+    ctx.fillStyle = '#ff3366';
+    ctx.shadowColor = '#ff3366';
+    ctx.shadowBlur = 14;
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+/**
+ * Updates the Ball Hit inspector DOM and Canvas.
  */
 export function renderBallHitScene(): void {
   if (!isBallHitDirty) return;
@@ -293,17 +792,51 @@ export function renderBallHitScene(): void {
   const dom = ballHitDomNodes || cacheBallHitNodes();
   if (!dom.root) return;
 
-  // 1. Session Counts & Timestamps
+  // 1. Session Counts & Status
   if (dom.totalCount) dom.totalCount.textContent = sessionTotalHits.toString();
   if (dom.lastTime) dom.lastTime.textContent = lastBallHitSnapshot.timestamp;
 
-  // 2. Awaiting notice banner toggle
-  if (dom.awaitingNotice) {
-    dom.awaitingNotice.style.display = lastBallHitSnapshot.hasData ? 'none' : 'flex';
+  // Mode buttons active class
+  if (dom.modeMappingBtn) {
+    dom.modeMappingBtn.className = currentOperationMode === 'mapping' ? 'bh-mode-pill active' : 'bh-mode-pill';
+  }
+  if (dom.modeCalibBtn) {
+    dom.modeCalibBtn.className = currentOperationMode === 'calibration' ? 'bh-mode-pill active' : 'bh-mode-pill';
   }
 
+  // Recording status badge
+  if (dom.recordingBadge) {
+    dom.recordingBadge.textContent = isRecordingHits ? 'RECORDING' : 'PAUSED';
+    dom.recordingBadge.className = isRecordingHits ? 'bh-rec-badge rec-active' : 'bh-rec-badge rec-paused';
+  }
+  if (dom.recordingToggleBtn) {
+    dom.recordingToggleBtn.textContent = isRecordingHits ? '⏸ Pause' : '▶ Record';
+  }
+
+  // Stats chips
+  const noiseHits = hitHistoryBuffer.filter((h) => h.isNoise).length;
+  const validHits = hitHistoryBuffer.length - noiseHits;
+  if (dom.statsValidHits) dom.statsValidHits.textContent = validHits.toString();
+  if (dom.statsNoiseHits) dom.statsNoiseHits.textContent = noiseHits.toString();
+
+  // Calibration tags
+  if (dom.calibOffsetTag) {
+    dom.calibOffsetTag.textContent = `Offset: (${currentCalibration.offsetX.toFixed(0)}, ${currentCalibration.offsetY.toFixed(0)})`;
+  }
+  if (dom.calibScaleTag) {
+    dom.calibScaleTag.textContent = `Scale: ${currentCalibration.scaleX.toFixed(2)}x / ${currentCalibration.scaleY.toFixed(2)}y`;
+  }
+  if (dom.calibInvertTag) {
+    dom.calibInvertTag.textContent = `Invert: X[${currentCalibration.invertX ? '✓' : '✗'}] Y[${currentCalibration.invertY ? '✓' : '✗'}]`;
+  }
+
+  // Awaiting notice
+  if (dom.awaitingNotice) {
+    dom.awaitingNotice.style.display = (lastBallHitSnapshot.hasData || hitHistoryBuffer.length > 0) ? 'none' : 'flex';
+  }
+
+  // 2. Player Attribution & Speeds
   if (lastBallHitSnapshot.hasData) {
-    // 3. Player Attribution
     if (dom.playerName) dom.playerName.textContent = lastBallHitSnapshot.playerName;
     if (dom.playerShortcut) dom.playerShortcut.textContent = String(lastBallHitSnapshot.shortcut);
     if (dom.playerTeamNum) dom.playerTeamNum.textContent = String(lastBallHitSnapshot.teamNum);
@@ -321,7 +854,6 @@ export function renderBallHitScene(): void {
       }
     }
 
-    // 4. Speeds & Delta
     if (dom.preSpeed) dom.preSpeed.textContent = formatNum(lastBallHitSnapshot.preHitSpeed);
     if (dom.postSpeed) dom.postSpeed.textContent = formatNum(lastBallHitSnapshot.postHitSpeed);
     if (dom.speedDelta) {
@@ -332,14 +864,19 @@ export function renderBallHitScene(): void {
         : 'bh-metric-val bh-val-delta delta-neg';
     }
 
-    // 5. Instantaneous Coordinates
     if (dom.locX) dom.locX.textContent = formatNum(lastBallHitSnapshot.x);
     if (dom.locY) dom.locY.textContent = formatNum(lastBallHitSnapshot.y);
     if (dom.locZ) dom.locZ.textContent = formatNum(lastBallHitSnapshot.z);
+
+    // Altitude indicator
+    if (dom.altitudeVal) dom.altitudeVal.textContent = formatNum(lastBallHitSnapshot.z, 1);
+    if (dom.altitudeBar && lastBallHitSnapshot.z !== null) {
+      const normZ = Math.max(0, Math.min(100, (lastBallHitSnapshot.z / 2000) * 100));
+      dom.altitudeBar.style.height = `${normZ}%`;
+    }
   }
 
-  // 6. Session Coordinate Extremes (Min / Max / Span / Relative Bar)
-  // --- Axis X ---
+  // 3. Extremes
   if (sessionExtremes.minX !== null && sessionExtremes.maxX !== null) {
     const spanX = sessionExtremes.maxX - sessionExtremes.minX;
     const midX = (sessionExtremes.minX + sessionExtremes.maxX) / 2;
@@ -353,7 +890,6 @@ export function renderBallHitScene(): void {
     }
   }
 
-  // --- Axis Y ---
   if (sessionExtremes.minY !== null && sessionExtremes.maxY !== null) {
     const spanY = sessionExtremes.maxY - sessionExtremes.minY;
     const midY = (sessionExtremes.minY + sessionExtremes.maxY) / 2;
@@ -367,7 +903,6 @@ export function renderBallHitScene(): void {
     }
   }
 
-  // --- Axis Z ---
   if (sessionExtremes.minZ !== null && sessionExtremes.maxZ !== null) {
     const spanZ = sessionExtremes.maxZ - sessionExtremes.minZ;
     const midZ = (sessionExtremes.minZ + sessionExtremes.maxZ) / 2;
@@ -379,6 +914,15 @@ export function renderBallHitScene(): void {
       const pctZ = spanZ > 0 ? Math.max(0, Math.min(100, ((lastBallHitSnapshot.z - sessionExtremes.minZ) / spanZ) * 100)) : 50;
       dom.barZ.style.left = `${pctZ}%`;
     }
+  }
+
+  // 4. Render Canvas
+  if (dom.pitchCanvas) {
+    if (dom.pitchCanvas.width !== dom.pitchCanvas.clientWidth || dom.pitchCanvas.height !== dom.pitchCanvas.clientHeight) {
+      dom.pitchCanvas.width = dom.pitchCanvas.clientWidth || 400;
+      dom.pitchCanvas.height = dom.pitchCanvas.clientHeight || 480;
+    }
+    drawPitchRadar(dom.pitchCanvas);
   }
 
   isBallHitDirty = false;

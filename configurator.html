@@ -935,6 +935,99 @@
     <hr>
   </div>
 
+  <!-- 🌟 Ball Hit 2D Pitch Mapping & Calibration Tuning Section -->
+  <div id="ball-hit-tuning-section" style="display: none;">
+    <div class="section-title" style="color: var(--primer-accent-fg);">
+      <span>🎮 2D Pitch Mapping & Calibration</span>
+    </div>
+
+    <!-- Mode Selector Card -->
+    <div class="primer-card">
+      <div style="font-size: 11px; font-weight: bold; color: var(--primer-accent-fg); margin-bottom: 6px;">
+        WORK MODE
+      </div>
+      <div style="display: flex; gap: 12px; margin-bottom: 8px;">
+        <label style="display: flex; align-items: center; cursor: pointer; font-size: 11px;">
+          <input type="radio" name="bh-cfg-mode" id="bh-cfg-mode-mapping" value="mapping" checked style="margin-right: 4px;">
+          📅 Auto Mapping Mode
+        </label>
+        <label style="display: flex; align-items: center; cursor: pointer; font-size: 11px;">
+          <input type="radio" name="bh-cfg-mode" id="bh-cfg-mode-calib" value="calibration" style="margin-right: 4px;">
+          🔍 Verification & Calibration
+        </label>
+      </div>
+
+      <!-- Quick Action Buttons -->
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-top: 6px;">
+        <button id="bh-cfg-btn-auto-map" class="btn btn-primary btn-sm">⚡ Run 16-Pt Auto-Fit</button>
+        <button id="bh-cfg-btn-toggle-rec" class="btn btn-secondary btn-sm">⏸ Pause Recording</button>
+        <button id="bh-cfg-btn-export-json" class="btn btn-secondary btn-sm">📋 Copy 16-Pts JSON</button>
+        <button id="bh-cfg-btn-import-json" class="btn btn-secondary btn-sm">📥 Import / Paste</button>
+        <button id="bh-cfg-btn-clear-hits" class="btn btn-danger btn-sm">🗑️ Clear Hit Cloud</button>
+        <button id="bh-cfg-btn-reset-calib" class="btn btn-secondary btn-sm">↺ Reset Calibration</button>
+      </div>
+    </div>
+
+    <!-- Calibration Controls Card -->
+    <div class="primer-card">
+      <div style="font-size: 11px; font-weight: bold; color: var(--primer-accent-fg); margin-bottom: 8px;">
+        CALIBRATION OFFSETS & SCALING
+      </div>
+
+      <!-- Offset X -->
+      <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 2px;">
+        <span style="color: var(--primer-fg-muted);">Offset X (uu):</span>
+        <span id="bh-cfg-offset-x-val" style="color: var(--primer-accent-fg); font-weight: bold;">0</span>
+      </div>
+      <input type="range" id="bh-cfg-offset-x-slider" min="-2000" max="2000" value="0" step="10" style="width: 100%; margin-bottom: 8px;">
+
+      <!-- Offset Y -->
+      <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 2px;">
+        <span style="color: var(--primer-fg-muted);">Offset Y (uu):</span>
+        <span id="bh-cfg-offset-y-val" style="color: var(--primer-accent-fg); font-weight: bold;">0</span>
+      </div>
+      <input type="range" id="bh-cfg-offset-y-slider" min="-2000" max="2000" value="0" step="10" style="width: 100%; margin-bottom: 8px;">
+
+      <!-- Scale X -->
+      <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 2px;">
+        <span style="color: var(--primer-fg-muted);">Scale X:</span>
+        <span id="bh-cfg-scale-x-val" style="color: var(--primer-accent-fg); font-weight: bold;">1.00x</span>
+      </div>
+      <input type="range" id="bh-cfg-scale-x-slider" min="20" max="250" value="100" step="1" style="width: 100%; margin-bottom: 8px;">
+
+      <!-- Scale Y -->
+      <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 2px;">
+        <span style="color: var(--primer-fg-muted);">Scale Y:</span>
+        <span id="bh-cfg-scale-y-val" style="color: var(--primer-accent-fg); font-weight: bold;">1.00x</span>
+      </div>
+      <input type="range" id="bh-cfg-scale-y-slider" min="20" max="250" value="100" step="1" style="width: 100%; margin-bottom: 8px;">
+
+      <!-- Invert Axis Toggles -->
+      <div style="display: flex; gap: 16px; margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--primer-border-default);">
+        <label style="display: flex; align-items: center; cursor: pointer; font-size: 11px;">
+          <input type="checkbox" id="bh-cfg-invert-x-check" style="margin-right: 6px;">
+          Invert X Axis
+        </label>
+        <label style="display: flex; align-items: center; cursor: pointer; font-size: 11px;">
+          <input type="checkbox" id="bh-cfg-invert-y-check" style="margin-right: 6px;">
+          Invert Y Axis
+        </label>
+      </div>
+    </div>
+
+    <!-- 16 Control Points Coordinates Drawer -->
+    <div class="primer-card">
+      <div style="font-size: 11px; font-weight: bold; color: var(--primer-accent-fg); margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+        <span>16 CONTROL POINTS SKELETON</span>
+        <span style="font-size: 10px; color: var(--primer-fg-muted);">World (X, Y)</span>
+      </div>
+      <div id="bh-cfg-points-table" style="display: flex; flex-direction: column; gap: 3px; max-height: 180px; overflow-y: auto; padding-right: 2px;">
+        <!-- Injected dynamically via JS -->
+      </div>
+    </div>
+    <hr>
+  </div>
+
   <!-- WebSocket Connection Panel -->
   <div class="section-title">WebSocket Connection</div>
   <div class="primer-card">

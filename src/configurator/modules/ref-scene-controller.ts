@@ -22,6 +22,7 @@ export function initRefSceneController(): void {
   const compDivider = document.getElementById('comp-divider');
   const devTuningSection = document.getElementById('dev-dashboard-tuning-section');
   const replayTuningSection = document.getElementById('replay-tuning-section');
+  const ballHitTuningSection = document.getElementById('ball-hit-tuning-section');
 
   const savedRef = 'empty';
 
@@ -29,27 +30,11 @@ export function initRefSceneController(): void {
     activeScene = sceneId;
     localStorage.setItem('saved_scene_mode', sceneId);
 
-    if (sceneId === 'competitive') {
-      if (compSection) compSection.style.display = 'block';
-      if (compDivider) compDivider.style.display = 'block';
-      if (devTuningSection) devTuningSection.style.display = 'none';
-      if (replayTuningSection) replayTuningSection.style.display = 'none';
-    } else if (sceneId === 'developer-dashboard' || sceneId === 'live-replay') {
-      if (compSection) compSection.style.display = 'none';
-      if (compDivider) compDivider.style.display = 'none';
-      if (devTuningSection) devTuningSection.style.display = 'block';
-      if (replayTuningSection) replayTuningSection.style.display = 'none';
-    } else if (sceneId === 'replay-viewer') {
-      if (compSection) compSection.style.display = 'none';
-      if (compDivider) compDivider.style.display = 'none';
-      if (devTuningSection) devTuningSection.style.display = 'none';
-      if (replayTuningSection) replayTuningSection.style.display = 'block';
-    } else {
-      if (compSection) compSection.style.display = 'none';
-      if (compDivider) compDivider.style.display = 'none';
-      if (devTuningSection) devTuningSection.style.display = 'none';
-      if (replayTuningSection) replayTuningSection.style.display = 'none';
-    }
+    if (compSection) compSection.style.display = sceneId === 'competitive' ? 'block' : 'none';
+    if (compDivider) compDivider.style.display = sceneId === 'competitive' ? 'block' : 'none';
+    if (devTuningSection) devTuningSection.style.display = (sceneId === 'developer-dashboard' || sceneId === 'live-replay') ? 'block' : 'none';
+    if (replayTuningSection) replayTuningSection.style.display = sceneId === 'replay-viewer' ? 'block' : 'none';
+    if (ballHitTuningSection) ballHitTuningSection.style.display = sceneId === 'ball-hit' ? 'block' : 'none';
 
     if (sceneId !== 'competitive') {
       const editCheck = document.getElementById('layout-editing-check') as HTMLInputElement | null;
@@ -65,7 +50,7 @@ export function initRefSceneController(): void {
 
   function updateSceneRadiosDisabledState(autoControl: boolean) {
     if (!sceneContainer) return;
-    const inputs = sceneContainer.querySelectorAll<HTMLInputElement>('input[type=\"radio\"]');
+    const inputs = sceneContainer.querySelectorAll<HTMLInputElement>('input[type="radio"]');
     inputs.forEach((input) => {
       input.disabled = autoControl;
       const label = input.parentElement;
@@ -78,7 +63,7 @@ export function initRefSceneController(): void {
 
   function updateActiveSceneRadio(sceneId: string) {
     if (!sceneContainer) return;
-    const targetInput = sceneContainer.querySelector<HTMLInputElement>(`input[value=\"${sceneId}\"]`);
+    const targetInput = sceneContainer.querySelector<HTMLInputElement>(`input[value="${sceneId}"]`);
     if (targetInput) {
       targetInput.checked = true;
     }
@@ -114,7 +99,7 @@ export function initRefSceneController(): void {
       label.style.display = 'block';
       label.style.cursor = 'pointer';
       label.style.margin = '3px 0';
-      label.innerHTML = `<input type=\"radio\" name=\"ref-group\" value=\"${item.id}\" ${item.id === savedRef ? 'checked' : ''} style=\"margin-right: 6px;\"> ${item.name}`;
+      label.innerHTML = `<input type="radio" name="ref-group" value="${item.id}" ${item.id === savedRef ? 'checked' : ''} style="margin-right: 6px;"> ${item.name}`;
       refContainer.appendChild(label);
       label.querySelector('input')?.addEventListener('change', () => {
         emitTo('overlay', 'change-ref-layer', item.id);
@@ -130,7 +115,7 @@ export function initRefSceneController(): void {
       label.style.display = 'block';
       label.style.cursor = 'pointer';
       label.style.margin = '3px 0';
-      label.innerHTML = `<input type=\"radio\" name=\"scene-group\" value=\"${item.id}\" ${item.id === activeScene ? 'checked' : ''} style=\"margin-right: 6px;\"> ${item.name}`;
+      label.innerHTML = `<input type="radio" name="scene-group" value="${item.id}" ${item.id === activeScene ? 'checked' : ''} style="margin-right: 6px;"> ${item.name}`;
       sceneContainer.appendChild(label);
       label.querySelector('input')?.addEventListener('change', () => {
         updateSceneVisibility(item.id);
@@ -144,7 +129,7 @@ export function initRefSceneController(): void {
   updateSceneRadiosDisabledState(isAutoSceneControlEnabled);
 
   // Listen for scene auto switch from overlay
-  listen<{ scene: string }>('scene-auto-switched', (event) => {
+  void listen<{ scene: string }>('scene-auto-switched', (event) => {
     const sId = event.payload.scene;
     updateActiveSceneRadio(sId);
     updateSceneVisibility(sId);

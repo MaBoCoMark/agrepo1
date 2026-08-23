@@ -1,4 +1,4 @@
-import { listen } from '@tauri-apps/api/event';
+import { listen, emitTo } from '@tauri-apps/api/event';
 import { ComponentInstance, GlobalLayoutSettings } from './component-types';
 import { saveCompetitiveLayout, saveGlobalLayoutSettings, loadGlobalLayoutSettings } from './layout-store';
 import { overlayState, setOverlayClickThrough } from './telemetry-state';
@@ -34,6 +34,20 @@ import {
 import { startBenchmark } from './benchmark-recorder';
 import { getCompetitiveDomCache, applyStaticComponentStyles } from './dom-cache';
 import { updateOverlayGlobalSettings, applyAutoHideNonExistingPlayers } from './competitive-renderer';
+import {
+  updateCalibration,
+  updateControlPoints,
+  setOperationMode,
+  setRecordingState,
+  clearHitHistory,
+  runAutoMappingAlgorithm,
+  importHitsFromJson,
+  currentControlPoints,
+  currentCalibration,
+  markBallHitDirty,
+  BallHitOperationMode
+} from './ball-hit-tracker';
+import { CalibrationSettings, ControlPoint } from './pitch-geometry';
 
 /**
  * ============================================================================
@@ -231,9 +245,53 @@ export async function setupOverlayEventListeners(): Promise<void> {
     startBenchmark();
   });
 
+  // 11. Ball Hit 2D Pitch Mapping & Calibration IPC Controls
+  await listen<{ calibration: CalibrationSettings }>('pitch-calibration-update', (e) => {
+    if (e.payload?.calibration) {
+      updateCalibration(e.payload.calibration);
+    }
+  });
+
+  await listen<{ controlPoints: ControlPoint[] }>('pitch-control-points-update', (e) => {
+    if (e.payload?.controlPoints) {
+      updateControlPoints(e.payload.controlPoints);
+    }
+  });
+
+  await listen<{ mode: BallHitOperationMode }>('pitch-change-mode', (e) => {
+    if (e.payload?.mode) {
+      setOperationMode(e.payload.mode);
+    }
+  });
+
+  await listen<{ recording: boolean }>('pitch-toggle-record', (e) => {
+    if (e.payload !== undefined) {
+      setRecordingState(Boolean(e.payload.recording));
+    }
+  });
+
+  await listen<void>('pitch-clear-data', () => {
+    clearHitHistory();
+  });
+
+  await listen<void>('pitch-auto-map', () => {
+    runAutoMappingAlgorithm();
+    void emitTo('configurator', 'pitch-data-updated-from-overlay', {
+      points: currentControlPoints,
+      calibration: currentCalibration
+    });
+  });
+
+  await listen<{ raw: string }>('pitch-import-data', (e) => {
+    if (e.payload?.raw) {
+      importHitsFromJson(e.payload.raw);
+    }
+  });
+
   // Window Resize & Initialization Events
   window.addEventListener('resize', () => {
     updateDimensions();
+    markBallHitDirty();
   });
 
   // Initial Sync to Configurator
