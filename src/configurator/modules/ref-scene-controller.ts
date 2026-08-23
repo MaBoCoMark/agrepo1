@@ -1,6 +1,7 @@
 import { emitTo, listen } from '@tauri-apps/api/event';
 import { getMergedManifest } from '../../overlay/core/config-loader';
 import { setOverlayClickThrough } from '../../overlay/core/telemetry-state';
+import { loadGlobalLayoutSettings, saveGlobalLayoutSettings } from '../../overlay/core/layout-store';
 
 /**
  * ============================================================================
@@ -64,7 +65,7 @@ export function initRefSceneController(): void {
 
   function updateSceneRadiosDisabledState(autoControl: boolean) {
     if (!sceneContainer) return;
-    const inputs = sceneContainer.querySelectorAll<HTMLInputElement>('input[type="radio"]');
+    const inputs = sceneContainer.querySelectorAll<HTMLInputElement>('input[type=\"radio\"]');
     inputs.forEach((input) => {
       input.disabled = autoControl;
       const label = input.parentElement;
@@ -77,7 +78,7 @@ export function initRefSceneController(): void {
 
   function updateActiveSceneRadio(sceneId: string) {
     if (!sceneContainer) return;
-    const targetInput = sceneContainer.querySelector<HTMLInputElement>(`input[value="${sceneId}"]`);
+    const targetInput = sceneContainer.querySelector<HTMLInputElement>(`input[value=\"${sceneId}\"]`);
     if (targetInput) {
       targetInput.checked = true;
     }
@@ -96,8 +97,13 @@ export function initRefSceneController(): void {
 
   // Auto Hide Non-Existing Checkbox
   if (autoHideCheck) {
+    const currentGlobal = loadGlobalLayoutSettings();
+    autoHideCheck.checked = currentGlobal.autoHideNonExistingPlayers !== false;
     autoHideCheck.addEventListener('change', () => {
-      // globalLayoutSettings updated via competitive designer / layout store
+      const globalSettings = loadGlobalLayoutSettings();
+      globalSettings.autoHideNonExistingPlayers = autoHideCheck.checked;
+      saveGlobalLayoutSettings(globalSettings);
+      emitTo('overlay', 'update-global-settings', { settings: globalSettings });
     });
   }
 
@@ -108,7 +114,7 @@ export function initRefSceneController(): void {
       label.style.display = 'block';
       label.style.cursor = 'pointer';
       label.style.margin = '3px 0';
-      label.innerHTML = `<input type="radio" name="ref-group" value="${item.id}" ${item.id === savedRef ? 'checked' : ''} style="margin-right: 6px;"> ${item.name}`;
+      label.innerHTML = `<input type=\"radio\" name=\"ref-group\" value=\"${item.id}\" ${item.id === savedRef ? 'checked' : ''} style=\"margin-right: 6px;\"> ${item.name}`;
       refContainer.appendChild(label);
       label.querySelector('input')?.addEventListener('change', () => {
         emitTo('overlay', 'change-ref-layer', item.id);
@@ -124,7 +130,7 @@ export function initRefSceneController(): void {
       label.style.display = 'block';
       label.style.cursor = 'pointer';
       label.style.margin = '3px 0';
-      label.innerHTML = `<input type="radio" name="scene-group" value="${item.id}" ${item.id === activeScene ? 'checked' : ''} style="margin-right: 6px;"> ${item.name}`;
+      label.innerHTML = `<input type=\"radio\" name=\"scene-group\" value=\"${item.id}\" ${item.id === activeScene ? 'checked' : ''} style=\"margin-right: 6px;\"> ${item.name}`;
       sceneContainer.appendChild(label);
       label.querySelector('input')?.addEventListener('change', () => {
         updateSceneVisibility(item.id);

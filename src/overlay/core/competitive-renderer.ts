@@ -27,14 +27,56 @@ import {
  *    }
  * 3. 0 layout reflows / forced layout computations (GPU scale transforms, cached text, tier checks).
  * 4. Zero memory allocations / GC pressure inside high-frequency render ticks.
+ * 5. Auto-hide non-existing players (P2 & P3) decoupled from high-frequency tick loop and
+ *    evaluated strictly on low-frequency data triggers.
  * ============================================================================
  */
 
 let globalSettings: GlobalLayoutSettings = loadGlobalLayoutSettings();
+let boundCachedInstances: CachedComponentInstance[] = [];
+
 export function getOverlayGlobalSettings(): GlobalLayoutSettings { return globalSettings; }
 
 export function updateOverlayGlobalSettings(settings: GlobalLayoutSettings): void {
   globalSettings = settings;
+}
+
+/**
+ * Evaluates visibility for non-existing player components (P2 and P3)
+ * strictly tied to low-frequency match/sync events.
+ */
+export function applyAutoHideNonExistingPlayers(
+  p2HasCar: boolean,
+  p3HasCar: boolean,
+  cachedInstances?: CachedComponentInstance[]
+): void {
+  const instances = cachedInstances || boundCachedInstances;
+  if (!instances || instances.length === 0) return;
+  const autoHide = globalSettings.autoHideNonExistingPlayers !== false;
+
+  for (let i = 0; i < instances.length; i++) {
+    const cached = instances[i];
+    const inst = cached.inst;
+    const p: TargetPlayer = inst.targetPlayer || 'p1';
+
+    if (inst.category === 'player' || inst.targetPlayer) {
+      if (p === 'p2') {
+        const show = !autoHide || p2HasCar;
+        const targetDisplay = show ? '' : 'none';
+        if (cached.lastDisplay !== targetDisplay) {
+          cached.container.style.display = targetDisplay;
+          cached.lastDisplay = targetDisplay;
+        }
+      } else if (p === 'p3') {
+        const show = !autoHide || p3HasCar;
+        const targetDisplay = show ? '' : 'none';
+        if (cached.lastDisplay !== targetDisplay) {
+          cached.container.style.display = targetDisplay;
+          cached.lastDisplay = targetDisplay;
+        }
+      }
+    }
+  }
 }
 
 // Inlined formatting helpers
@@ -199,6 +241,7 @@ export function bindCompetitiveDomCache(
   latestData: TelemetryBuffer
 ): void {
   globalSettings = settings;
+  boundCachedInstances = cachedInstances;
 
   // 1. Reset all listener arrays
   timeSecondsListeners = [];
@@ -244,7 +287,6 @@ export function bindCompetitiveDomCache(
   p3DemolishedListeners = [];
   p3SupersonicListeners = [];
 
-  const autoHide = settings.autoHideNonExistingPlayers !== false;
   const len = cachedInstances.length;
 
   for (let i = 0; i < len; i++) {
@@ -252,25 +294,6 @@ export function bindCompetitiveDomCache(
     const inst = cached.inst;
     const p: TargetPlayer = inst.targetPlayer || 'p1';
     const type = inst.componentType;
-
-    // Auto-hide non-existing players (P2 & P3)
-    if (autoHide && (inst.category === 'player' || inst.targetPlayer)) {
-      if (p === 'p2') {
-        p2HasCarListeners.push((hasCar) => {
-          if (cached.lastDisplay !== (hasCar ? '' : 'none')) {
-            cached.container.style.display = hasCar ? '' : 'none';
-            cached.lastDisplay = hasCar ? '' : 'none';
-          }
-        });
-      } else if (p === 'p3') {
-        p3HasCarListeners.push((hasCar) => {
-          if (cached.lastDisplay !== (hasCar ? '' : 'none')) {
-            cached.container.style.display = hasCar ? '' : 'none';
-            cached.lastDisplay = hasCar ? '' : 'none';
-          }
-        });
-      }
-    }
 
     // ------------------------------------------------------------------------
     // Component Handlers
@@ -1199,6 +1222,9 @@ export function bindCompetitiveDomCache(
       }
     }
   }
+
+  // Initial low-frequency evaluation for non-existing player components
+  applyAutoHideNonExistingPlayers(latestData.p2HasCar, latestData.p3HasCar, cachedInstances);
 }
 
 /**

@@ -3,6 +3,7 @@ import { latestData, overlayState } from './telemetry-state';
 import { switchSceneMode } from './scene-manager';
 import { processGoalScored, enterReplayView, willEndReplayView, immediateEndReplayView } from './replay-controller';
 import { DEFAULT_LOW_FREQ_TRIGGERS, DEFAULT_TIMELINE_EVENTS } from './rl-events';
+import { applyAutoHideNonExistingPlayers } from './competitive-renderer';
 
 /**
  * ============================================================================
@@ -247,6 +248,13 @@ export function processLowFrequencyData(data: RLStateData): void {
   latestData.p1Name = p1?.Name || (players.length > 0 ? 'P1' : '-');
   latestData.p2Name = teammates[0]?.Name || (players.length > 1 ? 'P2' : '-');
   latestData.p3Name = teammates[1]?.Name || (players.length > 2 ? 'P3' : '-');
+
+  // 4. Low-Frequency Car Detection & Auto-Hide Non-Existing Players Components
+  const p2HasCar = Boolean(teammates[0] && (teammates[0].bHasCar !== false));
+  const p3HasCar = Boolean(teammates[1] && (teammates[1].bHasCar !== false));
+  latestData.p2HasCar = p2HasCar;
+  latestData.p3HasCar = p3HasCar;
+  applyAutoHideNonExistingPlayers(p2HasCar, p3HasCar);
 }
 
 /**
