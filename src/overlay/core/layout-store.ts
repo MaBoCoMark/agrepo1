@@ -414,8 +414,6 @@ export function loadCompetitiveLayout(): ComponentInstance[] {
             if (inst.componentType === "element-boost-bar-no-blink") {
               inst.componentType = "element-boost-bar";
               inst.customProps = { ...inst.customProps, enableBlink: false };
-            } else if (inst.componentType === "element-boost-text-fixed") {
-              inst.componentType = "element-boost-text";
             }
             return inst;
           });
