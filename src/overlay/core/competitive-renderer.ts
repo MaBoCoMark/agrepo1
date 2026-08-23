@@ -34,6 +34,8 @@ import {
 
 let globalSettings: GlobalLayoutSettings = loadGlobalLayoutSettings();
 let boundCachedInstances: CachedComponentInstance[] = [];
+let currentP2Exists = true;
+let currentP3Exists = true;
 
 export function getOverlayGlobalSettings(): GlobalLayoutSettings { return globalSettings; }
 
@@ -46,10 +48,13 @@ export function updateOverlayGlobalSettings(settings: GlobalLayoutSettings): voi
  * strictly tied to low-frequency match/sync events.
  */
 export function applyAutoHideNonExistingPlayers(
-  p2HasCar: boolean,
-  p3HasCar: boolean,
+  p2Exists?: boolean,
+  p3Exists?: boolean,
   cachedInstances?: CachedComponentInstance[]
 ): void {
+  if (p2Exists !== undefined) currentP2Exists = p2Exists;
+  if (p3Exists !== undefined) currentP3Exists = p3Exists;
+
   const instances = cachedInstances || boundCachedInstances;
   if (!instances || instances.length === 0) return;
   const autoHide = globalSettings.autoHideNonExistingPlayers !== false;
@@ -61,14 +66,14 @@ export function applyAutoHideNonExistingPlayers(
 
     if (inst.category === 'player' || inst.targetPlayer) {
       if (p === 'p2') {
-        const show = !autoHide || p2HasCar;
+        const show = !autoHide || currentP2Exists;
         const targetDisplay = show ? '' : 'none';
         if (cached.lastDisplay !== targetDisplay) {
           cached.container.style.display = targetDisplay;
           cached.lastDisplay = targetDisplay;
         }
       } else if (p === 'p3') {
-        const show = !autoHide || p3HasCar;
+        const show = !autoHide || currentP3Exists;
         const targetDisplay = show ? '' : 'none';
         if (cached.lastDisplay !== targetDisplay) {
           cached.container.style.display = targetDisplay;
@@ -844,6 +849,7 @@ export function bindCompetitiveDomCache(
             const isFiltered = invertBool ? !rawVal : Boolean(rawVal);
             if (isFiltered !== cached.lastBoolState) {
               cached.lastBoolState = isFiltered;
+
               dotEl.className = `el-pure-dot dyn-dot ${isFiltered ? 'bool-on' : 'bool-off'}`;
 
               const activeColor = resolveColor(activeColorMode, customActiveColor, defaultActiveColor, latestData);
@@ -1224,7 +1230,7 @@ export function bindCompetitiveDomCache(
   }
 
   // Initial low-frequency evaluation for non-existing player components
-  applyAutoHideNonExistingPlayers(latestData.p2HasCar, latestData.p3HasCar, cachedInstances);
+  applyAutoHideNonExistingPlayers(undefined, undefined, cachedInstances);
 }
 
 /**
@@ -1242,159 +1248,165 @@ export function renderCompetitiveSceneSelective(
   previousData: TelemetryBuffer
 ): void {
   // 1. P1 Telemetry
-  if (previousData.p1Speed !== latestData.p1Speed) {
-    const v = latestData.p1Speed;
-    for (let i = 0; i < p1SpeedListeners.length; i++) p1SpeedListeners[i](v);
-    previousData.p1Speed = v;
-  }
-  if (previousData.p1Boost !== latestData.p1Boost) {
-    const v = latestData.p1Boost;
-    for (let i = 0; i < p1BoostListeners.length; i++) p1BoostListeners[i](v);
-    previousData.p1Boost = v;
+  if (previousData.p1HasCar !== latestData.p1HasCar) {
+    const v = latestData.p1HasCar;
+    for (let i = 0; i < p1HasCarListeners.length; i++) p1HasCarListeners[i](v);
+    previousData.p1HasCar = v;
   }
   if (previousData.p1Name !== latestData.p1Name) {
     const v = latestData.p1Name;
     for (let i = 0; i < p1NameListeners.length; i++) p1NameListeners[i](v);
     previousData.p1Name = v;
   }
-  if (previousData.p1HasCar !== latestData.p1HasCar) {
-    const v = latestData.p1HasCar;
-    for (let i = 0; i < p1HasCarListeners.length; i++) p1HasCarListeners[i](v);
-    previousData.p1HasCar = v;
-  }
-  if (previousData.p1Boosting !== latestData.p1Boosting) {
-    const v = latestData.p1Boosting;
-    for (let i = 0; i < p1BoostingListeners.length; i++) p1BoostingListeners[i](v);
-    previousData.p1Boosting = v;
-  }
-  if (previousData.p1OnGround !== latestData.p1OnGround) {
-    const v = latestData.p1OnGround;
-    for (let i = 0; i < p1OnGroundListeners.length; i++) p1OnGroundListeners[i](v);
-    previousData.p1OnGround = v;
-  }
-  if (previousData.p1OnWall !== latestData.p1OnWall) {
-    const v = latestData.p1OnWall;
-    for (let i = 0; i < p1OnWallListeners.length; i++) p1OnWallListeners[i](v);
-    previousData.p1OnWall = v;
-  }
-  if (previousData.p1Powersliding !== latestData.p1Powersliding) {
-    const v = latestData.p1Powersliding;
-    for (let i = 0; i < p1PowerslidingListeners.length; i++) p1PowerslidingListeners[i](v);
-    previousData.p1Powersliding = v;
-  }
-  if (previousData.p1Demolished !== latestData.p1Demolished) {
-    const v = latestData.p1Demolished;
-    for (let i = 0; i < p1DemolishedListeners.length; i++) p1DemolishedListeners[i](v);
-    previousData.p1Demolished = v;
-  }
-  if (previousData.p1Supersonic !== latestData.p1Supersonic) {
-    const v = latestData.p1Supersonic;
-    for (let i = 0; i < p1SupersonicListeners.length; i++) p1SupersonicListeners[i](v);
-    previousData.p1Supersonic = v;
+  if (latestData.p1HasCar) {
+    if (previousData.p1Speed !== latestData.p1Speed) {
+      const v = latestData.p1Speed;
+      for (let i = 0; i < p1SpeedListeners.length; i++) p1SpeedListeners[i](v);
+      previousData.p1Speed = v;
+    }
+    if (previousData.p1Boost !== latestData.p1Boost) {
+      const v = latestData.p1Boost;
+      for (let i = 0; i < p1BoostListeners.length; i++) p1BoostListeners[i](v);
+      previousData.p1Boost = v;
+    }
+    if (previousData.p1Boosting !== latestData.p1Boosting) {
+      const v = latestData.p1Boosting;
+      for (let i = 0; i < p1BoostingListeners.length; i++) p1BoostingListeners[i](v);
+      previousData.p1Boosting = v;
+    }
+    if (previousData.p1OnGround !== latestData.p1OnGround) {
+      const v = latestData.p1OnGround;
+      for (let i = 0; i < p1OnGroundListeners.length; i++) p1OnGroundListeners[i](v);
+      previousData.p1OnGround = v;
+    }
+    if (previousData.p1OnWall !== latestData.p1OnWall) {
+      const v = latestData.p1OnWall;
+      for (let i = 0; i < p1OnWallListeners.length; i++) p1OnWallListeners[i](v);
+      previousData.p1OnWall = v;
+    }
+    if (previousData.p1Powersliding !== latestData.p1Powersliding) {
+      const v = latestData.p1Powersliding;
+      for (let i = 0; i < p1PowerslidingListeners.length; i++) p1PowerslidingListeners[i](v);
+      previousData.p1Powersliding = v;
+    }
+    if (previousData.p1Demolished !== latestData.p1Demolished) {
+      const v = latestData.p1Demolished;
+      for (let i = 0; i < p1DemolishedListeners.length; i++) p1DemolishedListeners[i](v);
+      previousData.p1Demolished = v;
+    }
+    if (previousData.p1Supersonic !== latestData.p1Supersonic) {
+      const v = latestData.p1Supersonic;
+      for (let i = 0; i < p1SupersonicListeners.length; i++) p1SupersonicListeners[i](v);
+      previousData.p1Supersonic = v;
+    }
   }
 
-  // 2. P2 Telemetry
-  if (previousData.p2Speed !== latestData.p2Speed) {
-    const v = latestData.p2Speed;
-    for (let i = 0; i < p2SpeedListeners.length; i++) p2SpeedListeners[i](v);
-    previousData.p2Speed = v;
-  }
-  if (previousData.p2Boost !== latestData.p2Boost) {
-    const v = latestData.p2Boost;
-    for (let i = 0; i < p2BoostListeners.length; i++) p2BoostListeners[i](v);
-    previousData.p2Boost = v;
+  // 2. P2 Telemetry (Decoupled & Skipped if !latestData.p2HasCar)
+  if (previousData.p2HasCar !== latestData.p2HasCar) {
+    const v = latestData.p2HasCar;
+    for (let i = 0; i < p2HasCarListeners.length; i++) p2HasCarListeners[i](v);
+    previousData.p2HasCar = v;
   }
   if (previousData.p2Name !== latestData.p2Name) {
     const v = latestData.p2Name;
     for (let i = 0; i < p2NameListeners.length; i++) p2NameListeners[i](v);
     previousData.p2Name = v;
   }
-  if (previousData.p2HasCar !== latestData.p2HasCar) {
-    const v = latestData.p2HasCar;
-    for (let i = 0; i < p2HasCarListeners.length; i++) p2HasCarListeners[i](v);
-    previousData.p2HasCar = v;
-  }
-  if (previousData.p2Boosting !== latestData.p2Boosting) {
-    const v = latestData.p2Boosting;
-    for (let i = 0; i < p2BoostingListeners.length; i++) p2BoostingListeners[i](v);
-    previousData.p2Boosting = v;
-  }
-  if (previousData.p2OnGround !== latestData.p2OnGround) {
-    const v = latestData.p2OnGround;
-    for (let i = 0; i < p2OnGroundListeners.length; i++) p2OnGroundListeners[i](v);
-    previousData.p2OnGround = v;
-  }
-  if (previousData.p2OnWall !== latestData.p2OnWall) {
-    const v = latestData.p2OnWall;
-    for (let i = 0; i < p2OnWallListeners.length; i++) p2OnWallListeners[i](v);
-    previousData.p2OnWall = v;
-  }
-  if (previousData.p2Powersliding !== latestData.p2Powersliding) {
-    const v = latestData.p2Powersliding;
-    for (let i = 0; i < p2PowerslidingListeners.length; i++) p2PowerslidingListeners[i](v);
-    previousData.p2Powersliding = v;
-  }
-  if (previousData.p2Demolished !== latestData.p2Demolished) {
-    const v = latestData.p2Demolished;
-    for (let i = 0; i < p2DemolishedListeners.length; i++) p2DemolishedListeners[i](v);
-    previousData.p2Demolished = v;
-  }
-  if (previousData.p2Supersonic !== latestData.p2Supersonic) {
-    const v = latestData.p2Supersonic;
-    for (let i = 0; i < p2SupersonicListeners.length; i++) p2SupersonicListeners[i](v);
-    previousData.p2Supersonic = v;
+  if (latestData.p2HasCar) {
+    if (previousData.p2Speed !== latestData.p2Speed) {
+      const v = latestData.p2Speed;
+      for (let i = 0; i < p2SpeedListeners.length; i++) p2SpeedListeners[i](v);
+      previousData.p2Speed = v;
+    }
+    if (previousData.p2Boost !== latestData.p2Boost) {
+      const v = latestData.p2Boost;
+      for (let i = 0; i < p2BoostListeners.length; i++) p2BoostListeners[i](v);
+      previousData.p2Boost = v;
+    }
+    if (previousData.p2Boosting !== latestData.p2Boosting) {
+      const v = latestData.p2Boosting;
+      for (let i = 0; i < p2BoostingListeners.length; i++) p2BoostingListeners[i](v);
+      previousData.p2Boosting = v;
+    }
+    if (previousData.p2OnGround !== latestData.p2OnGround) {
+      const v = latestData.p2OnGround;
+      for (let i = 0; i < p2OnGroundListeners.length; i++) p2OnGroundListeners[i](v);
+      previousData.p2OnGround = v;
+    }
+    if (previousData.p2OnWall !== latestData.p2OnWall) {
+      const v = latestData.p2OnWall;
+      for (let i = 0; i < p2OnWallListeners.length; i++) p2OnWallListeners[i](v);
+      previousData.p2OnWall = v;
+    }
+    if (previousData.p2Powersliding !== latestData.p2Powersliding) {
+      const v = latestData.p2Powersliding;
+      for (let i = 0; i < p2PowerslidingListeners.length; i++) p2PowerslidingListeners[i](v);
+      previousData.p2Powersliding = v;
+    }
+    if (previousData.p2Demolished !== latestData.p2Demolished) {
+      const v = latestData.p2Demolished;
+      for (let i = 0; i < p2DemolishedListeners.length; i++) p2DemolishedListeners[i](v);
+      previousData.p2Demolished = v;
+    }
+    if (previousData.p2Supersonic !== latestData.p2Supersonic) {
+      const v = latestData.p2Supersonic;
+      for (let i = 0; i < p2SupersonicListeners.length; i++) p2SupersonicListeners[i](v);
+      previousData.p2Supersonic = v;
+    }
   }
 
-  // 3. P3 Telemetry
-  if (previousData.p3Speed !== latestData.p3Speed) {
-    const v = latestData.p3Speed;
-    for (let i = 0; i < p3SpeedListeners.length; i++) p3SpeedListeners[i](v);
-    previousData.p3Speed = v;
-  }
-  if (previousData.p3Boost !== latestData.p3Boost) {
-    const v = latestData.p3Boost;
-    for (let i = 0; i < p3BoostListeners.length; i++) p3BoostListeners[i](v);
-    previousData.p3Boost = v;
+  // 3. P3 Telemetry (Decoupled & Skipped if !latestData.p3HasCar)
+  if (previousData.p3HasCar !== latestData.p3HasCar) {
+    const v = latestData.p3HasCar;
+    for (let i = 0; i < p3HasCarListeners.length; i++) p3HasCarListeners[i](v);
+    previousData.p3HasCar = v;
   }
   if (previousData.p3Name !== latestData.p3Name) {
     const v = latestData.p3Name;
     for (let i = 0; i < p3NameListeners.length; i++) p3NameListeners[i](v);
     previousData.p3Name = v;
   }
-  if (previousData.p3HasCar !== latestData.p3HasCar) {
-    const v = latestData.p3HasCar;
-    for (let i = 0; i < p3HasCarListeners.length; i++) p3HasCarListeners[i](v);
-    previousData.p3HasCar = v;
-  }
-  if (previousData.p3Boosting !== latestData.p3Boosting) {
-    const v = latestData.p3Boosting;
-    for (let i = 0; i < p3BoostingListeners.length; i++) p3BoostingListeners[i](v);
-    previousData.p3Boosting = v;
-  }
-  if (previousData.p3OnGround !== latestData.p3OnGround) {
-    const v = latestData.p3OnGround;
-    for (let i = 0; i < p3OnGroundListeners.length; i++) p3OnGroundListeners[i](v);
-    previousData.p3OnGround = v;
-  }
-  if (previousData.p3OnWall !== latestData.p3OnWall) {
-    const v = latestData.p3OnWall;
-    for (let i = 0; i < p3OnWallListeners.length; i++) p3OnWallListeners[i](v);
-    previousData.p3OnWall = v;
-  }
-  if (previousData.p3Powersliding !== latestData.p3Powersliding) {
-    const v = latestData.p3Powersliding;
-    for (let i = 0; i < p3PowerslidingListeners.length; i++) p3PowerslidingListeners[i](v);
-    previousData.p3Powersliding = v;
-  }
-  if (previousData.p3Demolished !== latestData.p3Demolished) {
-    const v = latestData.p3Demolished;
-    for (let i = 0; i < p3DemolishedListeners.length; i++) p3DemolishedListeners[i](v);
-    previousData.p3Demolished = v;
-  }
-  if (previousData.p3Supersonic !== latestData.p3Supersonic) {
-    const v = latestData.p3Supersonic;
-    for (let i = 0; i < p3SupersonicListeners.length; i++) p3SupersonicListeners[i](v);
-    previousData.p3Supersonic = v;
+  if (latestData.p3HasCar) {
+    if (previousData.p3Speed !== latestData.p3Speed) {
+      const v = latestData.p3Speed;
+      for (let i = 0; i < p3SpeedListeners.length; i++) p3SpeedListeners[i](v);
+      previousData.p3Speed = v;
+    }
+    if (previousData.p3Boost !== latestData.p3Boost) {
+      const v = latestData.p3Boost;
+      for (let i = 0; i < p3BoostListeners.length; i++) p3BoostListeners[i](v);
+      previousData.p3Boost = v;
+    }
+    if (previousData.p3Boosting !== latestData.p3Boosting) {
+      const v = latestData.p3Boosting;
+      for (let i = 0; i < p3BoostingListeners.length; i++) p3BoostingListeners[i](v);
+      previousData.p3Boosting = v;
+    }
+    if (previousData.p3OnGround !== latestData.p3OnGround) {
+      const v = latestData.p3OnGround;
+      for (let i = 0; i < p3OnGroundListeners.length; i++) p3OnGroundListeners[i](v);
+      previousData.p3OnGround = v;
+    }
+    if (previousData.p3OnWall !== latestData.p3OnWall) {
+      const v = latestData.p3OnWall;
+      for (let i = 0; i < p3OnWallListeners.length; i++) p3OnWallListeners[i](v);
+      previousData.p3OnWall = v;
+    }
+    if (previousData.p3Powersliding !== latestData.p3Powersliding) {
+      const v = latestData.p3Powersliding;
+      for (let i = 0; i < p3PowerslidingListeners.length; i++) p3PowerslidingListeners[i](v);
+      previousData.p3Powersliding = v;
+    }
+    if (previousData.p3Demolished !== latestData.p3Demolished) {
+      const v = latestData.p3Demolished;
+      for (let i = 0; i < p3DemolishedListeners.length; i++) p3DemolishedListeners[i](v);
+      previousData.p3Demolished = v;
+    }
+    if (previousData.p3Supersonic !== latestData.p3Supersonic) {
+      const v = latestData.p3Supersonic;
+      for (let i = 0; i < p3SupersonicListeners.length; i++) p3SupersonicListeners[i](v);
+      previousData.p3Supersonic = v;
+    }
   }
 
   // 4. Global Match Time & Overtime

@@ -1,7 +1,7 @@
 import { listen } from '@tauri-apps/api/event';
 import { ComponentInstance, GlobalLayoutSettings } from './component-types';
 import { saveCompetitiveLayout, saveGlobalLayoutSettings, loadGlobalLayoutSettings } from './layout-store';
-import { overlayState, setOverlayClickThrough, latestData } from './telemetry-state';
+import { overlayState, setOverlayClickThrough } from './telemetry-state';
 import {
   switchRefMode,
   switchSceneMode,
@@ -183,7 +183,7 @@ export async function setupOverlayEventListeners(): Promise<void> {
     cachedInstances.forEach((cached) => {
       applyStaticComponentStyles(cached, globalSettings);
     });
-    applyAutoHideNonExistingPlayers(latestData.p2HasCar, latestData.p3HasCar, cachedInstances);
+    applyAutoHideNonExistingPlayers(undefined, undefined, cachedInstances);
   });
 
   // 7. WebSocket IPC Controls

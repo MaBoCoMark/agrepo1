@@ -183,8 +183,11 @@ export function evaluateAutoScene(): void {
 export function processLowFrequencyData(data: RLStateData): void {
   if (!data) return;
 
-  // 1. Identify Target Player & Team Numbers
   const players = data.Players || [];
+  // Guard against empty / incomplete packets wiping out cached roster
+  if (players.length === 0 && !data.Game) return;
+
+  // 1. Identify Target Player & Team Numbers
   let targetTeam: number | null = null;
   let targetName: string | null = null;
 
@@ -245,16 +248,16 @@ export function processLowFrequencyData(data: RLStateData): void {
   }
 
   // 3. Player Names
-  latestData.p1Name = p1?.Name || (players.length > 0 ? 'P1' : '-');
-  latestData.p2Name = teammates[0]?.Name || (players.length > 1 ? 'P2' : '-');
-  latestData.p3Name = teammates[1]?.Name || (players.length > 2 ? 'P3' : '-');
+  if (players.length > 0) {
+    latestData.p1Name = p1?.Name || 'P1';
+    latestData.p2Name = teammates[0]?.Name || (players.length > 1 ? 'P2' : '-');
+    latestData.p3Name = teammates[1]?.Name || (players.length > 2 ? 'P3' : '-');
 
-  // 4. Low-Frequency Car Detection & Auto-Hide Non-Existing Players Components
-  const p2HasCar = Boolean(teammates[0] && (teammates[0].bHasCar !== false));
-  const p3HasCar = Boolean(teammates[1] && (teammates[1].bHasCar !== false));
-  latestData.p2HasCar = p2HasCar;
-  latestData.p3HasCar = p3HasCar;
-  applyAutoHideNonExistingPlayers(p2HasCar, p3HasCar);
+    // 4. Low-Frequency Player Slot Existence & Auto-Hide Non-Existing Players Components
+    const p2Exists = Boolean(teammates[0]);
+    const p3Exists = Boolean(teammates[1]);
+    applyAutoHideNonExistingPlayers(p2Exists, p3Exists);
+  }
 }
 
 /**
@@ -264,8 +267,8 @@ export function processLowFrequencyData(data: RLStateData): void {
 export function processUpdateState(data: RLStateData): void {
   if (!data) return;
 
-  // Process low-frequency properties if triggered by an event
-  if (isLowFrequencySyncPending) {
+  // Process low-frequency properties if triggered by an event and players array is populated
+  if (isLowFrequencySyncPending && data.Players && data.Players.length > 0) {
     isLowFrequencySyncPending = false;
     processLowFrequencyData(data);
   }
@@ -326,8 +329,13 @@ export function processUpdateState(data: RLStateData): void {
     }
   }
 
+  // If packet does not contain Players, do not overwrite player telemetry!
+  if (!data.Players || data.Players.length === 0) {
+    return;
+  }
+
   // 2. High-Frequency Player Numbers & Booleans
-  const players = data.Players || [];
+  const players = data.Players;
   let targetTeam: number | null = null;
   let targetName: string | null = null;
 
@@ -523,7 +531,7 @@ export function handleIncomingMessage(raw: RLWebSocketMessage): void {
       } catch {
         return;
       }
-      if (!overlayState.isSimulating) {
+      if (!overlayState.isSimulating && data && typeof data === 'object' && ((data.Players && data.Players.length > 0) || data.Game)) {
         processUpdateState(data);
       }
       break;
