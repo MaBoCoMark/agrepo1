@@ -1,0 +1,224 @@
+<div id="ball-hit-root" class="ball-hit-container live-replay-container">
+  <!-- 🌟 Top Header: Scene Title & Live Status -->
+  <div class="ball-hit-header-bar">
+    <div class="ball-hit-header-left">
+      <div class="ball-hit-title-group">
+        <span class="ball-hit-badge">LIVE TELEMETRY</span>
+        <h1 class="ball-hit-title">BALL HIT INSPECTOR</h1>
+      </div>
+      <div class="ball-hit-status-pill">
+        <span id="bh-status-dot" class="status-dot bool-on pulsing-dot"></span>
+        <span id="bh-status-text" class="bh-status-label">ACTIVE MONITORING</span>
+      </div>
+    </div>
+
+    <div class="ball-hit-header-right">
+      <div class="bh-summary-chip">
+        <span class="bh-chip-label">RECORDED HITS</span>
+        <span id="bh-total-count" class="bh-chip-val">0</span>
+      </div>
+      <div class="bh-summary-chip">
+        <span class="bh-chip-label">LAST HIT TIME</span>
+        <span id="bh-last-time" class="bh-chip-val">-</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Awaiting Placeholder Notice (shown when 0 hits received yet) -->
+  <div id="bh-awaiting-notice" class="bh-awaiting-card">
+    <div class="bh-radar-spinner"></div>
+    <div class="bh-awaiting-content">
+      <div class="bh-awaiting-title">AWAITING BALL HIT EVENT...</div>
+      <div class="bh-awaiting-desc">
+        Listening on active WebSocket stream. BallHit telemetry will be captured and tracked while this page is open.
+      </div>
+    </div>
+  </div>
+
+  <!-- 🌟 Main 2-Column Content Grid -->
+  <div class="ball-hit-main-grid">
+    
+    <!-- LEFT PANEL: Latest Ball Hit Details (Excluding GUID) -->
+    <div class="bh-panel bh-latest-panel">
+      <div class="bh-panel-header">
+        <span class="bh-panel-icon">⚡</span>
+        <span class="bh-panel-title">LATEST BALL HIT DETAILS</span>
+        <span class="bh-panel-tag">EVENT SNAPSHOT</span>
+      </div>
+
+      <!-- Player Info Card -->
+      <div class="bh-card bh-player-card">
+        <div class="bh-card-title">HIT ATTRIBUTION</div>
+        <div class="bh-player-row">
+          <div class="bh-player-avatar-box">
+            <span id="bh-player-team-badge" class="bh-team-badge team-neutral">TEAM -</span>
+          </div>
+          <div class="bh-player-details">
+            <div class="bh-player-name-row">
+              <span class="bh-player-label">PLAYER:</span>
+              <span id="bh-player-name" class="bh-player-name-val">-</span>
+            </div>
+            <div class="bh-player-sub-row">
+              <span class="bh-sub-badge">SHORTCUT: <strong id="bh-player-shortcut">-</strong></span>
+              <span class="bh-sub-badge">TEAM NUM: <strong id="bh-player-team-num">-</strong></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ball Speed Card -->
+      <div class="bh-card bh-speed-card">
+        <div class="bh-card-title">BALL SPEED BEFORE / AFTER IMPACT</div>
+        <div class="bh-metrics-triple">
+          <div class="bh-metric-item">
+            <span class="bh-metric-label">PRE-HIT SPEED</span>
+            <div class="bh-metric-val-wrap">
+              <span id="bh-pre-speed" class="bh-metric-val">0.00</span>
+              <span class="bh-metric-unit">KPH</span>
+            </div>
+          </div>
+          <div class="bh-speed-arrow">➜</div>
+          <div class="bh-metric-item">
+            <span class="bh-metric-label">POST-HIT SPEED</span>
+            <div class="bh-metric-val-wrap">
+              <span id="bh-post-speed" class="bh-metric-val bh-val-highlight">0.00</span>
+              <span class="bh-metric-unit">KPH</span>
+            </div>
+          </div>
+          <div class="bh-metric-item">
+            <span class="bh-metric-label">SPEED DELTA</span>
+            <div class="bh-metric-val-wrap">
+              <span id="bh-speed-delta" class="bh-metric-val bh-val-delta">0.00</span>
+              <span class="bh-metric-unit">KPH</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Instantaneous Coordinates Card -->
+      <div class="bh-card bh-coords-card">
+        <div class="bh-card-title">HIT LOCATION COORDINATES</div>
+        <div class="bh-coords-grid">
+          <div class="bh-coord-box coord-x">
+            <div class="coord-axis-tag tag-cyan">X</div>
+            <div class="coord-val-wrap">
+              <span id="bh-loc-x" class="coord-val">-</span>
+              <span class="coord-unit">uu</span>
+            </div>
+          </div>
+          <div class="bh-coord-box coord-y">
+            <div class="coord-axis-tag tag-magenta">Y</div>
+            <div class="coord-val-wrap">
+              <span id="bh-loc-y" class="coord-val">-</span>
+              <span class="coord-unit">uu</span>
+            </div>
+          </div>
+          <div class="bh-coord-box coord-z">
+            <div class="coord-axis-tag tag-amber">Z</div>
+            <div class="coord-val-wrap">
+              <span id="bh-loc-z" class="coord-val">-</span>
+              <span class="coord-unit">uu</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT PANEL: Session Min / Max Extremes -->
+    <div class="bh-panel bh-session-panel">
+      <div class="bh-panel-header">
+        <span class="bh-panel-icon">📊</span>
+        <span class="bh-panel-title">SESSION COORDINATE BOUNDARIES (MIN / MAX)</span>
+        <span class="bh-panel-tag tag-session">SESSION ACCUMULATOR</span>
+      </div>
+
+      <div class="bh-ranges-list">
+        
+        <!-- X Axis Extremes -->
+        <div class="bh-range-card range-card-x">
+          <div class="range-card-header">
+            <div class="axis-pill pill-x">AXIS X</div>
+            <div class="range-delta-text">SPAN: <span id="bh-span-x">-</span> uu</div>
+          </div>
+          <div class="range-values-row">
+            <div class="range-val-box min-box">
+              <span class="range-bound-label">MIN X</span>
+              <span id="bh-min-x" class="range-bound-val">-</span>
+            </div>
+            <div class="range-mid-box">
+              <span class="range-bound-label">MID</span>
+              <span id="bh-mid-x" class="range-bound-sub">-</span>
+            </div>
+            <div class="range-val-box max-box">
+              <span class="range-bound-label">MAX X</span>
+              <span id="bh-max-x" class="range-bound-val">-</span>
+            </div>
+          </div>
+          <div class="range-bar-track">
+            <div id="bh-bar-x" class="range-bar-indicator bar-x" style="left: 50%;"></div>
+          </div>
+        </div>
+
+        <!-- Y Axis Extremes -->
+        <div class="bh-range-card range-card-y">
+          <div class="range-card-header">
+            <div class="axis-pill pill-y">AXIS Y</div>
+            <div class="range-delta-text">SPAN: <span id="bh-span-y">-</span> uu</div>
+          </div>
+          <div class="range-values-row">
+            <div class="range-val-box min-box">
+              <span class="range-bound-label">MIN Y</span>
+              <span id="bh-min-y" class="range-bound-val">-</span>
+            </div>
+            <div class="range-mid-box">
+              <span class="range-bound-label">MID</span>
+              <span id="bh-mid-y" class="range-bound-sub">-</span>
+            </div>
+            <div class="range-val-box max-box">
+              <span class="range-bound-label">MAX Y</span>
+              <span id="bh-max-y" class="range-bound-val">-</span>
+            </div>
+          </div>
+          <div class="range-bar-track">
+            <div id="bh-bar-y" class="range-bar-indicator bar-y" style="left: 50%;"></div>
+          </div>
+        </div>
+
+        <!-- Z Axis Extremes -->
+        <div class="bh-range-card range-card-z">
+          <div class="range-card-header">
+            <div class="axis-pill pill-z">AXIS Z</div>
+            <div class="range-delta-text">SPAN: <span id="bh-span-z">-</span> uu</div>
+          </div>
+          <div class="range-values-row">
+            <div class="range-val-box min-box">
+              <span class="range-bound-label">MIN Z</span>
+              <span id="bh-min-z" class="range-bound-val">-</span>
+            </div>
+            <div class="range-mid-box">
+              <span class="range-bound-label">MID</span>
+              <span id="bh-mid-z" class="range-bound-sub">-</span>
+            </div>
+            <div class="range-val-box max-box">
+              <span class="range-bound-label">MAX Z</span>
+              <span id="bh-max-z" class="range-bound-val">-</span>
+            </div>
+          </div>
+          <div class="range-bar-track">
+            <div id="bh-bar-z" class="range-bar-indicator bar-z" style="left: 50%;"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Scope note -->
+      <div class="bh-scope-footer">
+        <span class="bh-info-icon">ℹ️</span>
+        <span>Extremes accumulate while this page is open. Switching to other scenes pauses recording and ignores incoming hits.</span>
+      </div>
+
+    </div>
+
+  </div>
+</div>

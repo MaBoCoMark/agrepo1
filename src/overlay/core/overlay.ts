@@ -7,6 +7,7 @@ import { setupOverlayEventListeners } from './event-bridge';
 import { connectWebSocket } from './websocket-manager';
 import { renderDevDashboard } from './dev-dashboard-renderer';
 import { renderCompetitiveSceneSelective } from './competitive-renderer';
+import { renderBallHitScene } from './ball-hit-tracker';
 
 /**
  * ============================================================================
@@ -46,7 +47,12 @@ function tick(now: number): void {
     renderCompetitiveSceneSelective(latestData, previousData);
   }
 
-  // 5. Schedule next animation frame
+  // 5. Ball Hit Inspector Scene Renderer
+  if (overlayState.isBallHitVisible) {
+    renderBallHitScene();
+  }
+
+  // 6. Schedule next animation frame
   requestAnimationFrame(tick);
 }
 

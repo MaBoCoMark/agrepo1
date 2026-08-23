@@ -1,4 +1,6 @@
 import { TelemetryBuffer } from './component-types';
+import { overlayState } from './telemetry-state';
+import { processBallHitPacket } from './ball-hit-tracker';
 
 /**
  * ============================================================================
@@ -115,5 +117,36 @@ export function updateMockStream(latestData: TelemetryBuffer): void {
     latestData.p3OnGround = Math.random() > 0.2;
     latestData.p3OnWall = !latestData.p3OnGround && Math.random() > 0.7;
     latestData.p3Powersliding = Math.random() > 0.85;
+  }
+
+  // 9. Mock BallHit generation for Ball Hit Inspector scene
+  if (overlayState.currentActiveScene === 'ball-hit' && mockSimState.frameCount % 90 === 0) {
+    const mockX = -2000 + Math.random() * 4000;
+    const mockY = -4000 + Math.random() * 8000;
+    const mockZ = 20 + Math.random() * 1500;
+    const preSpd = Math.round((Math.random() * 40) * 100) / 100;
+    const postSpd = Math.round((preSpd + 30 + Math.random() * 70) * 100) / 100;
+    processBallHitPacket({
+      Event: 'BallHit',
+      Data: {
+        MatchGuid: 'SIM_MATCH_GUID',
+        Players: [
+          {
+            Name: Math.random() > 0.5 ? 'steamuser' : 'Fury',
+            Shortcut: Math.random() > 0.5 ? 1 : 2,
+            TeamNum: Math.random() > 0.5 ? 0 : 1
+          }
+        ],
+        Ball: {
+          PreHitSpeed: preSpd,
+          PostHitSpeed: postSpd,
+          Location: {
+            X: mockX,
+            Y: mockY,
+            Z: mockZ
+          }
+        }
+      }
+    });
   }
 }

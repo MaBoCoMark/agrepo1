@@ -31,3 +31,6 @@ scenes:
   - id: "developer-dashboard"
     name: "Developer Dashboard"
     file: "/src/overlay/scenes/scene-developer-dashboard.html"
+  - id: "ball-hit"
+    name: "Ball Hit Inspector"
+    file: "/src/overlay/scenes/scene-ball-hit.html"

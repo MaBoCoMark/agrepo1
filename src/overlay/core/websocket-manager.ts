@@ -1,3 +1,4 @@
+import { processBallHitPacket } from './ball-hit-tracker';
 import { emitTo } from '@tauri-apps/api/event';
 import { latestData, overlayState } from './telemetry-state';
 import { switchSceneMode } from './scene-manager';
@@ -462,6 +463,15 @@ export function handleIncomingMessage(raw: RLWebSocketMessage): void {
   }
 
   switch (eventName) {
+    case 'BallHit':
+    case 'ball_hit':
+    case 'Ball_Hit': {
+      overlayState.hasReceivedDataSinceConnected = true;
+      if (raw.Data !== undefined || (raw as any).Ball !== undefined) {
+        processBallHitPacket(raw);
+      }
+      break;
+    }
     case 'ClockUpdatedSeconds': {
       overlayState.hasReceivedDataSinceConnected = true;
       if (raw.Data !== undefined) {

@@ -6,6 +6,7 @@ import { DraggerController } from './dragger';
 import { overlayState, setOverlayClickThrough, resetPreviousData } from './telemetry-state';
 import { cacheDevDashboardNodes, buildCompetitiveDomCache } from './dom-cache';
 import { updateReplayViewerDOM, updateReplaySvgBorder, registerSceneSwitcher } from './replay-controller';
+import { cacheBallHitNodes, markBallHitDirty, renderBallHitScene } from './ball-hit-tracker';
 
 /**
  * ============================================================================
@@ -109,6 +110,7 @@ export async function loadLayers(): Promise<void> {
     }
 
     cacheDevDashboardNodes();
+    cacheBallHitNodes();
     updateReplayViewerDOM();
     updateReplaySvgBorder();
 
@@ -147,6 +149,7 @@ export function switchSceneMode(target: string, notifyConfigurator: boolean = fa
   });
   overlayState.isDevDashboardVisible = (target === 'developer-dashboard' || target === 'live-replay');
   overlayState.isCompetitiveVisible = (target === 'competitive');
+  overlayState.isBallHitVisible = (target === 'ball-hit');
 
   if (target !== 'competitive') {
     if (overlayState.isLayoutEditing) {
@@ -159,6 +162,11 @@ export function switchSceneMode(target: string, notifyConfigurator: boolean = fa
 
   if (overlayState.isDevDashboardVisible) {
     resetPreviousData();
+  }
+
+  if (overlayState.isBallHitVisible) {
+    markBallHitDirty();
+    renderBallHitScene();
   }
 
   if (target === 'replay-viewer') {

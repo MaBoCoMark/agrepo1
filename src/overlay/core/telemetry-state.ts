@@ -152,6 +152,7 @@ export interface OverlayState {
   isSimulating: boolean;
   isDevDashboardVisible: boolean;
   isCompetitiveVisible: boolean;
+  isBallHitVisible: boolean;
   isLayoutEditing: boolean;
   isAutoSceneControl: boolean;
   hasReceivedDataSinceConnected: boolean;
@@ -162,6 +163,7 @@ export const overlayState: OverlayState = {
   isSimulating: false,
   isDevDashboardVisible: false,
   isCompetitiveVisible: false,
+  isBallHitVisible: false,
   isLayoutEditing: false,
   isAutoSceneControl: true,
   hasReceivedDataSinceConnected: false,
