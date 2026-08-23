@@ -1,4 +1,4 @@
-import { processBallHitPacket } from './ball-hit-tracker';
+import { processBallHitPacket, processBoostPickupPacket } from './ball-hit-tracker';
 import { emitTo } from '@tauri-apps/api/event';
 import { latestData, overlayState } from './telemetry-state';
 import { switchSceneMode } from './scene-manager';
@@ -472,6 +472,17 @@ export function handleIncomingMessage(raw: RLWebSocketMessage): void {
       }
       break;
     }
+
+    case 'BoostPickup':
+    case 'boost_pickup':
+    case 'Boost_Pickup': {
+      overlayState.hasReceivedDataSinceConnected = true;
+      if (raw.Data !== undefined || (raw as any).Location !== undefined || (raw as any).BoostType !== undefined) {
+        processBoostPickupPacket(raw);
+      }
+      break;
+    }
+
     case 'ClockUpdatedSeconds': {
       overlayState.hasReceivedDataSinceConnected = true;
       if (raw.Data !== undefined) {

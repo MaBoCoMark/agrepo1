@@ -1,12 +1,54 @@
 import { TelemetryBuffer } from './component-types';
 import { overlayState } from './telemetry-state';
-import { processBallHitPacket } from './ball-hit-tracker';
+import { processBallHitPacket, processBoostPickupPacket } from './ball-hit-tracker';
 
 /**
  * ============================================================================
  * 🎮 Mock Telemetry Simulation Stream
  * ============================================================================
  */
+
+const KNOWN_BOOST_PADS = [
+  // 6 Big Boosts (100)
+  { x: -3072.0, y: -4096.0, z: 73.0, type: 'BoostType_Big', amount: 1.0 },
+  { x: 3072.0,  y: -4096.0, z: 73.0, type: 'BoostType_Big', amount: 1.0 },
+  { x: -3584.0, y: 0.0,     z: 73.0, type: 'BoostType_Big', amount: 1.0 },
+  { x: 3584.0,  y: 0.0,     z: 73.0, type: 'BoostType_Big', amount: 1.0 },
+  { x: -3072.0, y: 4096.0,  z: 73.0, type: 'BoostType_Big', amount: 1.0 },
+  { x: 3072.0,  y: 4096.0,  z: 73.0, type: 'BoostType_Big', amount: 1.0 },
+  // Small Pads (12%)
+  { x: 0.0,       y: -4240.0, z: 70.0, type: 'BoostType_Pad', amount: 0.12 },
+  { x: -1792.0,   y: -4184.0, z: 70.0, type: 'BoostType_Pad', amount: 0.12 },
+  { x: 1792.0,    y: -4184.0, z: 70.0, type: 'BoostType_Pad', amount: 0.12 },
+  { x: -940.0,    y: -3300.0, z: 70.0, type: 'BoostType_Pad', amount: 0.12 },
+  { x: 940.0,     y: -3300.0, z: 70.0, type: 'BoostType_Pad', amount: 0.12 },
+  { x: 0.0,       y: -2816.0, z: 70.0, type: 'BoostType_Pad', amount: 0.12 },
+  { x: -1792.0,   y: -2300.0, z: 70.0, type: 'BoostType_Pad', amount: 0.12 },
+  { x: 1792.0,    y: -2300.0, z: 70.0, type: 'BoostType_Pad', amount: 0.12 },
+  { x: -3072.0,   y: -1900.0, z: 70.0, type: 'BoostType_Pad', amount: 0.12 },
+  { x: 3072.0,    y: -1900.0, z: 70.0, type: 'BoostType_Pad', amount: 0.12 },
+  { x: -940.0,    y: -1024.0, z: 70.0, type: 'BoostType_Pad', amount: 0.12 },
+  { x: 940.0,     y: -1024.0, z: 70.0, type: 'BoostType_Pad', amount: 0.12 },
+  { x: 0.0,       y: -1024.0, z: 70.0, type: 'BoostType_Pad', amount: 0.12 },
+  { x: -2048.0,   y: 0.0,     z: 70.0, type: 'BoostType_Pad', amount: 0.12 },
+  { x: 2048.0,    y: 0.0,     z: 70.0, type: 'BoostType_Pad', amount: 0.12 },
+  { x: -1024.0,   y: 0.0,     z: 70.0, type: 'BoostType_Pad', amount: 0.12 },
+  { x: 1024.0,    y: 0.0,     z: 70.0, type: 'BoostType_Pad', amount: 0.12 },
+  { x: 0.0,       y: 0.0,     z: 70.0, type: 'BoostType_Pad', amount: 0.12 },
+  { x: -940.0,    y: 1024.0,  z: 70.0, type: 'BoostType_Pad', amount: 0.12 },
+  { x: 940.0,     y: 1024.0,  z: 70.0, type: 'BoostType_Pad', amount: 0.12 },
+  { x: 0.0,       y: 1024.0,  z: 70.0, type: 'BoostType_Pad', amount: 0.12 },
+  { x: -3072.0,   y: 1900.0,  z: 70.0, type: 'BoostType_Pad', amount: 0.12 },
+  { x: 3072.0,    y: 1900.0,  z: 70.0, type: 'BoostType_Pad', amount: 0.12 },
+  { x: -1792.0,   y: 2300.0,  z: 70.0, type: 'BoostType_Pad', amount: 0.12 },
+  { x: 1792.0,    y: 2300.0,  z: 70.0, type: 'BoostType_Pad', amount: 0.12 },
+  { x: 0.0,       y: 2816.0,  z: 70.0, type: 'BoostType_Pad', amount: 0.12 },
+  { x: -940.0,    y: 3300.0,  z: 70.0, type: 'BoostType_Pad', amount: 0.12 },
+  { x: 940.0,     y: 3300.0,  z: 70.0, type: 'BoostType_Pad', amount: 0.12 },
+  { x: -1792.0,   y: 4184.0,  z: 70.0, type: 'BoostType_Pad', amount: 0.12 },
+  { x: 1792.0,    y: 4184.0,  z: 70.0, type: 'BoostType_Pad', amount: 0.12 },
+  { x: 0.0,       y: 4240.0,  z: 70.0, type: 'BoostType_Pad', amount: 0.12 }
+];
 
 export const mockSimState = {
   timeRaw: 270.0,
@@ -144,19 +186,15 @@ export function updateMockStream(latestData: TelemetryBuffer): void {
       const t = Math.random();
       const quad = Math.floor(Math.random() * 4);
       if (quad === 0) {
-        // TR: (2950, 5120) to (4075, 4000)
         mockX = 2950 + t * (4075 - 2950) + (Math.random() * 20 - 10);
         mockY = 5120 - t * (5120 - 4000) + (Math.random() * 20 - 10);
       } else if (quad === 1) {
-        // TL: (-2950, 5120) to (-4075, 4000)
         mockX = -2950 - t * (4075 - 2950) + (Math.random() * 20 - 10);
         mockY = 5120 - t * (5120 - 4000) + (Math.random() * 20 - 10);
       } else if (quad === 2) {
-        // BR: (2950, -5120) to (4075, -4000)
         mockX = 2950 + t * (4075 - 2950) + (Math.random() * 20 - 10);
         mockY = -5120 + t * (5120 - 4000) + (Math.random() * 20 - 10);
       } else {
-        // BL: (-2950, -5120) to (-4075, -4000)
         mockX = -2950 - t * (4075 - 2950) + (Math.random() * 20 - 10);
         mockY = -5120 + t * (5120 - 4000) + (Math.random() * 20 - 10);
       }
@@ -173,7 +211,7 @@ export function updateMockStream(latestData: TelemetryBuffer): void {
     }
 
     const preSpd = Math.round((Math.random() * 40) * 100) / 100;
-    const postSpd = Math.round((preSpd + 30 + Math.random() * 70) * 100) / 100;
+    const postSpd = Math.round((Math.random() * 110) * 100) / 100;
     processBallHitPacket({
       Event: 'BallHit',
       Data: {
@@ -194,6 +232,30 @@ export function updateMockStream(latestData: TelemetryBuffer): void {
             Z: Math.round(mockZ * 10) / 10
           }
         }
+      }
+    });
+  }
+
+  // 10. Realistic Mock BoostPickup generation for Ball Hit & Boost Inspector
+  if (overlayState.currentActiveScene === 'ball-hit' && mockSimState.frameCount % 55 === 0) {
+    const pad = KNOWN_BOOST_PADS[Math.floor(Math.random() * KNOWN_BOOST_PADS.length)];
+    processBoostPickupPacket({
+      Event: 'BoostPickup',
+      Data: {
+        MatchGuid: 'SIM_MATCH_GUID',
+        Player: {
+          Name: Math.random() > 0.5 ? 'steamuser' : 'Fury',
+          Shortcut: Math.random() > 0.5 ? 1 : 5,
+          TeamNum: Math.random() > 0.5 ? 0 : 1
+        },
+        Location: {
+          X: pad.x + (Math.random() * 10 - 5),
+          Y: pad.y + (Math.random() * 10 - 5),
+          Z: pad.z
+        },
+        BoostAmount: pad.amount,
+        BoostType: pad.type,
+        bReplay: false
       }
     });
   }

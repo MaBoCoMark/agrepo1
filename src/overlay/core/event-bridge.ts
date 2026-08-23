@@ -1,4 +1,4 @@
-import { listen, emitTo } from '@tauri-apps/api/event';
+import { listen } from '@tauri-apps/api/event';
 import { ComponentInstance, GlobalLayoutSettings } from './component-types';
 import { saveCompetitiveLayout, saveGlobalLayoutSettings, loadGlobalLayoutSettings } from './layout-store';
 import { overlayState, setOverlayClickThrough } from './telemetry-state';
@@ -40,10 +40,10 @@ import {
   setOperationMode,
   setRecordingState,
   clearHitHistory,
-  runAutoMappingAlgorithm,
+  clearBoostHistory,
+  clearAllPitchData,
   importHitsFromJson,
-  currentControlPoints,
-  currentCalibration,
+  importBoostsFromJson,
   markBallHitDirty,
   BallHitOperationMode
 } from './ball-hit-tracker';
@@ -274,17 +274,26 @@ export async function setupOverlayEventListeners(): Promise<void> {
     clearHitHistory();
   });
 
-  await listen<void>('pitch-auto-map', () => {
-    runAutoMappingAlgorithm();
-    void emitTo('configurator', 'pitch-data-updated-from-overlay', {
-      points: currentControlPoints,
-      calibration: currentCalibration
-    });
+  await listen<void>('pitch-clear-boosts', () => {
+    clearBoostHistory();
+  });
+
+  await listen<void>('pitch-clear-all', () => {
+    clearAllPitchData();
   });
 
   await listen<{ raw: string }>('pitch-import-data', (e) => {
     if (e.payload?.raw) {
-      importHitsFromJson(e.payload.raw);
+      try {
+        const parsed = JSON.parse(e.payload.raw);
+        if (parsed.boosts || (Array.isArray(parsed) && parsed[0] && (parsed[0].boostType || parsed[0].BoostType))) {
+          importBoostsFromJson(e.payload.raw);
+        } else {
+          importHitsFromJson(e.payload.raw);
+        }
+      } catch {
+        importHitsFromJson(e.payload.raw);
+      }
     }
   });
 

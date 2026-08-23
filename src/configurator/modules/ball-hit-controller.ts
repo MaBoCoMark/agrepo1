@@ -27,10 +27,11 @@ export function initBallHitController(): void {
   const modeMappingRadio = document.getElementById('bh-cfg-mode-mapping') as HTMLInputElement | null;
   const modeCalibRadio = document.getElementById('bh-cfg-mode-calib') as HTMLInputElement | null;
 
-  const btnAutoMap = document.getElementById('bh-cfg-btn-auto-map');
   const btnToggleRec = document.getElementById('bh-cfg-btn-toggle-rec');
   const btnClearHits = document.getElementById('bh-cfg-btn-clear-hits');
+  const btnClearBoosts = document.getElementById('bh-cfg-btn-clear-boosts');
   const btnExportJson = document.getElementById('bh-cfg-btn-export-json');
+  const btnExportBoostJson = document.getElementById('bh-cfg-btn-export-boost-json');
   const btnImportJson = document.getElementById('bh-cfg-btn-import-json');
   const btnResetCalib = document.getElementById('bh-cfg-btn-reset-calib');
 
@@ -114,10 +115,6 @@ export function initBallHitController(): void {
   });
 
   // Action Buttons
-  btnAutoMap?.addEventListener('click', () => {
-    emitTo('overlay', 'pitch-auto-map');
-  });
-
   btnToggleRec?.addEventListener('click', () => {
     isRecording = !isRecording;
     emitTo('overlay', 'pitch-toggle-record', { recording: isRecording });
@@ -128,6 +125,10 @@ export function initBallHitController(): void {
     emitTo('overlay', 'pitch-clear-data');
   });
 
+  btnClearBoosts?.addEventListener('click', () => {
+    emitTo('overlay', 'pitch-clear-boosts');
+  });
+
   btnExportJson?.addEventListener('click', () => {
     const config = generatePitchConfigJson(controlPoints, calibration);
     const jsonStr = JSON.stringify(config, null, 2);
@@ -135,8 +136,12 @@ export function initBallHitController(): void {
     alert('✅ 16 Control Points Configuration JSON copied to clipboard!');
   });
 
+  btnExportBoostJson?.addEventListener('click', () => {
+    emitTo('overlay', 'pitch-export-boosts');
+  });
+
   btnImportJson?.addEventListener('click', () => {
-    const raw = prompt('Paste Pitch Configuration JSON (16 Control Points) or Hit Packets:');
+    const raw = prompt('Paste Pitch Configuration JSON (16 Control Points), Hit Packets, or Boost Data:');
     if (raw) {
       try {
         const parsed = JSON.parse(raw);
@@ -151,7 +156,7 @@ export function initBallHitController(): void {
           alert('✅ 16 Control Points successfully imported and synced!');
         } else {
           emitTo('overlay', 'pitch-import-data', { raw });
-          alert('✅ Raw data sent to overlay for point cloud mapping!');
+          alert('✅ Telemetry data sent to overlay for map plotting!');
         }
       } catch (err) {
         alert('❌ Invalid JSON data.');

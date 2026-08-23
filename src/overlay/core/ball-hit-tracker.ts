@@ -10,7 +10,6 @@ import {
   isPointInsideSafetyBounds,
   applyCalibration,
   unapplyCalibration,
-  solvePitch16ControlPoints,
   loadSavedCalibration,
   saveCalibrationToStorage,
   loadSavedControlPoints,
@@ -20,7 +19,7 @@ import {
 
 /**
  * ============================================================================
- * 🎮 Ball Hit Inspector & 2D Pitch Mapping / Calibration Controller
+ * 🎮 Ball Hit & Boost Pickup Inspector & 2D Pitch Mapping Controller
  * ============================================================================
  */
 
@@ -32,8 +31,8 @@ export interface BallHitLocation {
 
 export interface BallHitPlayer {
   Name?: string;
-  Shortcut?: number;
-  TeamNum?: number;
+  Shortcut?: number | string;
+  TeamNum?: number | string;
   [key: string]: any;
 }
 
@@ -59,6 +58,60 @@ export interface BallHitWebSocketMessage {
   [key: string]: any;
 }
 
+export interface BoostPickupLocation {
+  X?: number;
+  Y?: number;
+  Z?: number;
+  x?: number;
+  y?: number;
+  z?: number;
+}
+
+export interface BoostPickupPlayer {
+  Name?: string;
+  name?: string;
+  Shortcut?: number | string;
+  shortcut?: number | string;
+  TeamNum?: number | string;
+  teamNum?: number | string;
+  [key: string]: any;
+}
+
+export interface BoostPickupPayloadData {
+  MatchGuid?: string;
+  Player?: BoostPickupPlayer;
+  Location?: BoostPickupLocation;
+  BoostAmount?: number;
+  boostAmount?: number;
+  BoostType?: string;
+  boostType?: string;
+  bReplay?: boolean;
+  [key: string]: any;
+}
+
+export interface BoostPickupWebSocketMessage {
+  Event?: string;
+  Data?: string | BoostPickupPayloadData | any;
+  Location?: BoostPickupLocation;
+  BoostType?: string;
+  BoostAmount?: number;
+  Player?: BoostPickupPlayer;
+  [key: string]: any;
+}
+
+export interface BoostPickupRecord {
+  x: number;
+  y: number;
+  z: number;
+  boostType: string;
+  boostAmount?: number;
+  playerName?: string;
+  shortcut?: number | string;
+  teamNum?: number | string;
+  timestamp: number;
+  isNoise?: boolean;
+}
+
 export interface SessionExtremes {
   minX: number | null;
   maxX: number | null;
@@ -77,6 +130,19 @@ export interface LastBallHitSnapshot {
   preHitSpeed: number;
   postHitSpeed: number;
   speedDelta: number;
+  x: number | null;
+  y: number | null;
+  z: number | null;
+}
+
+export interface LastBoostPickupSnapshot {
+  hasData: boolean;
+  timestamp: string;
+  playerName: string;
+  shortcut: number | string;
+  teamNum: number | string;
+  boostType: string;
+  boostAmount: number;
   x: number | null;
   y: number | null;
   z: number | null;
@@ -108,13 +174,30 @@ export const lastBallHitSnapshot: LastBallHitSnapshot = {
   z: null
 };
 
+export const lastBoostPickupSnapshot: LastBoostPickupSnapshot = {
+  hasData: false,
+  timestamp: '-',
+  playerName: '-',
+  shortcut: '-',
+  teamNum: '-',
+  boostType: '-',
+  boostAmount: 0,
+  x: null,
+  y: null,
+  z: null
+};
+
 export let sessionTotalHits = 0;
+export let sessionTotalBoosts = 0;
 export let isBallHitDirty = true;
 export let isRecordingHits = true;
 export let currentOperationMode: BallHitOperationMode = 'mapping';
 
 export let hitHistoryBuffer: HitPointRecord[] = [];
 export const MAX_HIT_HISTORY = 3000;
+
+export let boostPickupHistoryBuffer: BoostPickupRecord[] = [];
+export const MAX_BOOST_HISTORY = 3000;
 
 export let currentControlPoints: ControlPoint[] = loadSavedControlPoints();
 export let currentCalibration: CalibrationSettings = loadSavedCalibration();
@@ -151,6 +234,18 @@ export function clearHitHistory(): void {
   isBallHitDirty = true;
 }
 
+export function clearBoostHistory(): void {
+  boostPickupHistoryBuffer = [];
+  sessionTotalBoosts = 0;
+  lastBoostPickupSnapshot.hasData = false;
+  isBallHitDirty = true;
+}
+
+export function clearAllPitchData(): void {
+  clearHitHistory();
+  clearBoostHistory();
+}
+
 export function updateCalibration(settings: Partial<CalibrationSettings>): void {
   currentCalibration = { ...currentCalibration, ...settings };
   saveCalibrationToStorage(currentCalibration);
@@ -175,18 +270,6 @@ export function resetControlPointsToDefault(): void {
   currentControlPoints = JSON.parse(JSON.stringify(DEFAULT_CONTROL_POINTS));
   saveControlPointsToStorage(currentControlPoints);
   isBallHitDirty = true;
-}
-
-/**
- * Execute 16-point automatic boundary fitting algorithm.
- */
-export function runAutoMappingAlgorithm(): MappingStats {
-  const result = solvePitch16ControlPoints(hitHistoryBuffer);
-  currentControlPoints = result.controlPoints;
-  lastMappingStats = result.stats;
-  saveControlPointsToStorage(currentControlPoints);
-  isBallHitDirty = true;
-  return result.stats;
 }
 
 /**
@@ -219,6 +302,60 @@ export function importHitsFromJson(jsonString: string): number {
     console.error('Failed to parse import hits JSON:', err);
   }
   return 0;
+}
+
+/**
+ * Bulk import boost pickups from JSON.
+ */
+export function importBoostsFromJson(jsonString: string): number {
+  try {
+    const data = JSON.parse(jsonString);
+    let addedCount = 0;
+    const array = Array.isArray(data) ? data : (data.boosts || data.boostPickups || []);
+    if (Array.isArray(array)) {
+      for (const item of array) {
+        const x = typeof item.x === 'number' ? item.x : (typeof item.X === 'number' ? item.X : (Array.isArray(item) ? item[0] : null));
+        const y = typeof item.y === 'number' ? item.y : (typeof item.Y === 'number' ? item.Y : (Array.isArray(item) ? item[1] : null));
+        const z = typeof item.z === 'number' ? item.z : (typeof item.Z === 'number' ? item.Z : (Array.isArray(item) ? item[2] : 60));
+        const boostType = item.boostType || item.BoostType || (item.boostAmount > 0.25 ? 'BoostType_Big' : 'BoostType_Pad');
+        if (x !== null && y !== null && !isNaN(x) && !isNaN(y)) {
+          const isNoise = !isPointInsideSafetyBounds(x, y, z ?? 60);
+          boostPickupHistoryBuffer.push({
+            x,
+            y,
+            z: z ?? 60,
+            boostType,
+            boostAmount: typeof item.boostAmount === 'number' ? item.boostAmount : (typeof item.BoostAmount === 'number' ? item.BoostAmount : undefined),
+            timestamp: Date.now(),
+            isNoise
+          });
+          addedCount++;
+        }
+      }
+      if (boostPickupHistoryBuffer.length > MAX_BOOST_HISTORY) {
+        boostPickupHistoryBuffer = boostPickupHistoryBuffer.slice(-MAX_BOOST_HISTORY);
+      }
+      sessionTotalBoosts += addedCount;
+      isBallHitDirty = true;
+      return addedCount;
+    }
+  } catch (err) {
+    console.error('Failed to parse import boosts JSON:', err);
+  }
+  return 0;
+}
+
+/**
+ * Export recorded boost pickups as JSON containing { x, y, z, boostType }.
+ */
+export function exportBoostPickupsJson(): string {
+  const exportList = boostPickupHistoryBuffer.map((b) => ({
+    x: Math.round(b.x * 100) / 100,
+    y: Math.round(b.y * 100) / 100,
+    z: Math.round(b.z * 100) / 100,
+    boostType: b.boostType
+  }));
+  return JSON.stringify(exportList, null, 2);
 }
 
 /**
@@ -314,6 +451,104 @@ export function processBallHitPacket(raw: BallHitWebSocketMessage): boolean {
 }
 
 /**
+ * Parse incoming WebSocket BoostPickup packet.
+ * Payload schema example:
+ * {
+ *   "Event": "BoostPickup",
+ *   "Data": "{\"MatchGuid\":\"\",\"Player\":{\"Name\":\"steamuser\",\"Shortcut\":1,\"TeamNum\":0},\"Location\":{\"X\":-1792.0,\"Y\":-4184.0,\"Z\":61.7},\"BoostAmount\":0.12,\"BoostType\":\"BoostType_Pad\",\"bReplay\":true}"
+ * }
+ */
+export function processBoostPickupPacket(raw: BoostPickupWebSocketMessage): boolean {
+  if (overlayState.currentActiveScene !== 'ball-hit') {
+    return false;
+  }
+  if (!raw) return false;
+
+  let payloadData: BoostPickupPayloadData;
+  try {
+    if (typeof raw === 'string') {
+      payloadData = JSON.parse(raw);
+    } else if (raw.Data !== undefined) {
+      payloadData = typeof raw.Data === 'string' ? JSON.parse(raw.Data) : raw.Data;
+    } else {
+      payloadData = raw;
+    }
+  } catch (err) {
+    console.error('Failed to parse BoostPickup payload Data string:', err);
+    return false;
+  }
+
+  if (!payloadData || typeof payloadData !== 'object') {
+    return false;
+  }
+
+  const loc = payloadData.Location || (payloadData as any).location || (raw as any).Location;
+  const x = loc ? (typeof loc.X === 'number' ? loc.X : (typeof (loc as any).x === 'number' ? (loc as any).x : null)) : null;
+  const y = loc ? (typeof loc.Y === 'number' ? loc.Y : (typeof (loc as any).y === 'number' ? (loc as any).y : null)) : null;
+  const z = loc ? (typeof loc.Z === 'number' ? loc.Z : (typeof (loc as any).z === 'number' ? (loc as any).z : null)) : null;
+
+  const boostType = payloadData.BoostType || (payloadData as any).boostType || (raw as any).BoostType || 'BoostType_Pad';
+  const boostAmount = typeof payloadData.BoostAmount === 'number'
+    ? payloadData.BoostAmount
+    : (typeof (payloadData as any).boostAmount === 'number' ? (payloadData as any).boostAmount : 0);
+
+  const player = payloadData.Player || (payloadData as any).player;
+  const playerName = player?.Name || player?.name || 'Unknown';
+  const shortcut = player?.Shortcut ?? player?.shortcut ?? '-';
+  const teamNum = player?.TeamNum ?? player?.teamNum ?? '-';
+
+  if (x !== null && !isNaN(x)) {
+    sessionExtremes.minX = sessionExtremes.minX === null ? x : Math.min(sessionExtremes.minX, x);
+    sessionExtremes.maxX = sessionExtremes.maxX === null ? x : Math.max(sessionExtremes.maxX, x);
+  }
+  if (y !== null && !isNaN(y)) {
+    sessionExtremes.minY = sessionExtremes.minY === null ? y : Math.min(sessionExtremes.minY, y);
+    sessionExtremes.maxY = sessionExtremes.maxY === null ? y : Math.max(sessionExtremes.maxY, y);
+  }
+  if (z !== null && !isNaN(z)) {
+    sessionExtremes.minZ = sessionExtremes.minZ === null ? z : Math.min(sessionExtremes.minZ, z);
+    sessionExtremes.maxZ = sessionExtremes.maxZ === null ? z : Math.max(sessionExtremes.maxZ, z);
+  }
+
+  sessionTotalBoosts++;
+  const d = new Date();
+  const timeStr = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}.${d.getMilliseconds().toString().padStart(3, '0')}`;
+
+  lastBoostPickupSnapshot.hasData = true;
+  lastBoostPickupSnapshot.timestamp = timeStr;
+  lastBoostPickupSnapshot.playerName = playerName;
+  lastBoostPickupSnapshot.shortcut = shortcut;
+  lastBoostPickupSnapshot.teamNum = teamNum;
+  lastBoostPickupSnapshot.boostType = boostType;
+  lastBoostPickupSnapshot.boostAmount = boostAmount;
+  lastBoostPickupSnapshot.x = x;
+  lastBoostPickupSnapshot.y = y;
+  lastBoostPickupSnapshot.z = z;
+
+  if (isRecordingHits && x !== null && y !== null && !isNaN(x) && !isNaN(y)) {
+    const isNoise = !isPointInsideSafetyBounds(x, y, z ?? 60);
+    boostPickupHistoryBuffer.push({
+      x,
+      y,
+      z: z ?? 60,
+      boostType,
+      boostAmount,
+      playerName,
+      shortcut,
+      teamNum,
+      timestamp: Date.now(),
+      isNoise
+    });
+    if (boostPickupHistoryBuffer.length > MAX_BOOST_HISTORY) {
+      boostPickupHistoryBuffer.shift();
+    }
+  }
+
+  isBallHitDirty = true;
+  return true;
+}
+
+/**
  * ============================================================================
  * 🚀 DOM Node Caching & Interactive Map Controller
  * ============================================================================
@@ -324,6 +559,7 @@ export interface BallHitDomNodes {
   statusDot: HTMLElement | null;
   statusText: HTMLElement | null;
   totalCount: HTMLElement | null;
+  totalBoosts: HTMLElement | null;
   lastTime: HTMLElement | null;
   awaitingNotice: HTMLElement | null;
 
@@ -373,9 +609,10 @@ export interface BallHitDomNodes {
   calibOffsetTag: HTMLElement | null;
   calibScaleTag: HTMLElement | null;
   calibInvertTag: HTMLElement | null;
-  btnRunAutoMap: HTMLElement | null;
   btnClearPoints: HTMLElement | null;
+  btnClearBoosts: HTMLElement | null;
   btnExportJson: HTMLElement | null;
+  btnExportBoostJson: HTMLElement | null;
   btnImportJson: HTMLElement | null;
   btnResetCalib: HTMLElement | null;
   statsValidHits: HTMLElement | null;
@@ -391,6 +628,7 @@ export function cacheBallHitNodes(): BallHitDomNodes {
     statusDot: document.getElementById('bh-status-dot'),
     statusText: document.getElementById('bh-status-text'),
     totalCount: document.getElementById('bh-total-count'),
+    totalBoosts: document.getElementById('bh-total-boosts'),
     lastTime: document.getElementById('bh-last-time'),
     awaitingNotice: document.getElementById('bh-awaiting-notice'),
 
@@ -438,9 +676,10 @@ export function cacheBallHitNodes(): BallHitDomNodes {
     calibOffsetTag: document.getElementById('bh-calib-offset-tag'),
     calibScaleTag: document.getElementById('bh-calib-scale-tag'),
     calibInvertTag: document.getElementById('bh-calib-invert-tag'),
-    btnRunAutoMap: document.getElementById('bh-btn-auto-map'),
     btnClearPoints: document.getElementById('bh-btn-clear-points'),
+    btnClearBoosts: document.getElementById('bh-btn-clear-boosts'),
     btnExportJson: document.getElementById('bh-btn-export-json'),
+    btnExportBoostJson: document.getElementById('bh-btn-export-boost-json'),
     btnImportJson: document.getElementById('bh-btn-import-json'),
     btnResetCalib: document.getElementById('bh-btn-reset-calib'),
     statsValidHits: document.getElementById('bh-stats-valid-hits'),
@@ -526,12 +765,12 @@ function bindPitchCanvasEvents(): void {
     setRecordingState(!isRecordingHits);
   });
 
-  dom.btnRunAutoMap?.addEventListener('click', () => {
-    runAutoMappingAlgorithm();
-  });
-
   dom.btnClearPoints?.addEventListener('click', () => {
     clearHitHistory();
+  });
+
+  dom.btnClearBoosts?.addEventListener('click', () => {
+    clearBoostHistory();
   });
 
   dom.btnExportJson?.addEventListener('click', () => {
@@ -541,8 +780,14 @@ function bindPitchCanvasEvents(): void {
     alert('✅ Pitch Configuration (16 Control Points) copied to clipboard!');
   });
 
+  dom.btnExportBoostJson?.addEventListener('click', () => {
+    const boostJson = exportBoostPickupsJson();
+    void navigator.clipboard.writeText(boostJson);
+    alert(`✅ Exported ${boostPickupHistoryBuffer.length} Boost Pickups to clipboard!`);
+  });
+
   dom.btnImportJson?.addEventListener('click', () => {
-    const input = prompt('Paste Pitch Configuration JSON or Hit Data Points JSON:');
+    const input = prompt('Paste Pitch Config JSON, Hit Points JSON, or Boost Pickups JSON:');
     if (input) {
       try {
         const parsed = JSON.parse(input);
@@ -552,6 +797,9 @@ function bindPitchCanvasEvents(): void {
             updateCalibration(parsed.calibration);
           }
           alert('✅ Successfully imported 16 Pitch Control Points & Calibration!');
+        } else if (parsed.boosts || (Array.isArray(parsed) && parsed[0] && (parsed[0].boostType || parsed[0].BoostType))) {
+          const count = importBoostsFromJson(input);
+          alert(`✅ Successfully imported ${count} boost pickup records!`);
         } else {
           const hitsCount = importHitsFromJson(input);
           alert(`✅ Successfully imported ${hitsCount} hit telemetry records!`);
@@ -687,7 +935,7 @@ function drawPitchRadar(canvas: HTMLCanvasElement): void {
   ctx.stroke();
   ctx.restore();
 
-  // 2. Render Historical Hit Points Cloud
+  // 2. Render Historical Hit Points Cloud (Ball Hits)
   if (hitHistoryBuffer.length > 0) {
     ctx.save();
     for (let i = 0; i < hitHistoryBuffer.length; i++) {
@@ -706,7 +954,40 @@ function drawPitchRadar(canvas: HTMLCanvasElement): void {
     ctx.restore();
   }
 
-  // 3. Render 16 Control Points Wireframe Boundary (The Pitch Polygon Skeleton)
+  // 3. Render Historical Boost Pickups Point Cloud (Separately styled)
+  if (boostPickupHistoryBuffer.length > 0) {
+    ctx.save();
+    for (let i = 0; i < boostPickupHistoryBuffer.length; i++) {
+      const bp = boostPickupHistoryBuffer[i];
+      const screen = worldToCanvas(bp.x, bp.y, w, h, currentCalibration);
+      const isBig = bp.boostType.toLowerCase().includes('big') ||
+                    bp.boostType.toLowerCase().includes('pill') ||
+                    (bp.boostAmount !== undefined && bp.boostAmount > 0.25);
+
+      ctx.beginPath();
+      if (isBig) {
+        // Big Boost: 100 boost pill (Golden/amber glowing ring & circle)
+        ctx.arc(screen.x, screen.y, 5.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#f59e0b';
+        ctx.shadowColor = '#fbbf24';
+        ctx.shadowBlur = 8;
+        ctx.fill();
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = '#ffd700';
+        ctx.stroke();
+      } else {
+        // Small Boost Pad: 12% pad (Warm yellow circular dot)
+        ctx.arc(screen.x, screen.y, 3.2, 0, Math.PI * 2);
+        ctx.fillStyle = '#fbbf24';
+        ctx.shadowColor = '#eab308';
+        ctx.shadowBlur = 4;
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+
+  // 4. Render 16 Control Points Wireframe Boundary (The Pitch Polygon Skeleton)
   if (currentControlPoints.length === 16) {
     ctx.save();
     ctx.beginPath();
@@ -729,7 +1010,7 @@ function drawPitchRadar(canvas: HTMLCanvasElement): void {
     ctx.stroke();
     ctx.restore();
 
-    // 4. Render Vertex Handles & Labels
+    // 5. Render Vertex Handles & Labels
     ctx.save();
     for (let i = 0; i < currentControlPoints.length; i++) {
       const cp = currentControlPoints[i];
@@ -757,28 +1038,44 @@ function drawPitchRadar(canvas: HTMLCanvasElement): void {
     ctx.restore();
   }
 
-  // 5. Render Latest Ball Hit Ripple & Coordinates
+  // 6. Render Latest Ball Hit Ripple & Speed-Scaled Outer Circle
   if (lastBallHitSnapshot.hasData && lastBallHitSnapshot.x !== null && lastBallHitSnapshot.y !== null) {
     const liveScreen = worldToCanvas(lastBallHitSnapshot.x, lastBallHitSnapshot.y, w, h, currentCalibration);
     ctx.save();
-    // Expanding glowing beacon
-    const time = (Date.now() % 1200) / 1200;
-    const rippleRadius = 6 + time * 18;
-    const rippleAlpha = 1 - time;
 
-    ctx.beginPath();
-    ctx.arc(liveScreen.x, liveScreen.y, rippleRadius, 0, Math.PI * 2);
-    ctx.strokeStyle = `rgba(255, 51, 102, ${rippleAlpha})`;
-    ctx.lineWidth = 2;
-    ctx.stroke();
+    // Dynamic Outer Red Circle based on postHitSpeed (0 - 110 scale)
+    // When speed is 0 or less, the outer ring is not displayed (radius is 0).
+    const postSpeed = typeof lastBallHitSnapshot.postHitSpeed === 'number' ? lastBallHitSnapshot.postHitSpeed : 0;
+    const clampedSpeed = Math.max(0, Math.min(110, postSpeed));
 
-    // Core point
+    if (clampedSpeed > 0) {
+      const maxRingRadius = 36;
+      const ringRadius = (clampedSpeed / 110) * maxRingRadius;
+
+      ctx.beginPath();
+      ctx.arc(liveScreen.x, liveScreen.y, ringRadius, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255, 51, 102, 0.9)';
+      ctx.lineWidth = 2;
+      ctx.shadowColor = '#ff3366';
+      ctx.shadowBlur = 8;
+      ctx.stroke();
+
+      // Translucent inner fill inside speed ring
+      ctx.fillStyle = 'rgba(255, 51, 102, 0.12)';
+      ctx.fill();
+    }
+
+    // Core Red Hit Point
     ctx.beginPath();
     ctx.arc(liveScreen.x, liveScreen.y, 5, 0, Math.PI * 2);
     ctx.fillStyle = '#ff3366';
     ctx.shadowColor = '#ff3366';
     ctx.shadowBlur = 14;
     ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
     ctx.restore();
   }
 }
@@ -794,6 +1091,7 @@ export function renderBallHitScene(): void {
 
   // 1. Session Counts & Status
   if (dom.totalCount) dom.totalCount.textContent = sessionTotalHits.toString();
+  if (dom.totalBoosts) dom.totalBoosts.textContent = sessionTotalBoosts.toString();
   if (dom.lastTime) dom.lastTime.textContent = lastBallHitSnapshot.timestamp;
 
   // Mode buttons active class
@@ -832,7 +1130,7 @@ export function renderBallHitScene(): void {
 
   // Awaiting notice
   if (dom.awaitingNotice) {
-    dom.awaitingNotice.style.display = (lastBallHitSnapshot.hasData || hitHistoryBuffer.length > 0) ? 'none' : 'flex';
+    dom.awaitingNotice.style.display = (lastBallHitSnapshot.hasData || hitHistoryBuffer.length > 0 || boostPickupHistoryBuffer.length > 0) ? 'none' : 'flex';
   }
 
   // 2. Player Attribution & Speeds

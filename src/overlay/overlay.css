@@ -1585,6 +1585,8 @@ body.layout-editing .comp-container:hover {
 .dot-cyan { background: #00f0ff; box-shadow: 0 0 6px #00f0ff; }
 .dot-green { background: #00ff88; box-shadow: 0 0 6px #00ff88; }
 .dot-red { background: #ff3366; box-shadow: 0 0 6px #ff3366; }
+.dot-yellow { background: #fbbf24; box-shadow: 0 0 6px #fbbf24; }
+.dot-amber { background: #f59e0b; box-shadow: 0 0 6px #ffd700; }
 .dot-gold { background: #ffd166; box-shadow: 0 0 6px #ffd166; }
 
 .bh-corner-tag {
