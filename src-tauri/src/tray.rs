@@ -7,6 +7,14 @@ use tauri::{
 pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
     let show_config = MenuItemBuilder::with_id("show_config", "Open Configurator").build(app)?;
     let quit = MenuItemBuilder::with_id("quit", "Exit").build(app)?;
+
+    #[cfg(debug_assertions)]
+    let open_devtools = MenuItemBuilder::with_id("open_devtools", "Open Overlay DevTools").build(app)?;
+
+    #[cfg(debug_assertions)]
+    let menu = MenuBuilder::new(app).items(&[&show_config, &open_devtools, &quit]).build()?;
+
+    #[cfg(not(debug_assertions))]
     let menu = MenuBuilder::new(app).items(&[&show_config, &quit]).build()?;
 
     let _tray = TrayIconBuilder::with_id("main-tray")
@@ -48,6 +56,12 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
                             }
                         }
                     }
+                }
+            }
+            #[cfg(debug_assertions)]
+            "open_devtools" => {
+                if let Some(window) = app.get_webview_window("overlay") {
+                    window.open_devtools();
                 }
             }
             "quit" => app.exit(0),
