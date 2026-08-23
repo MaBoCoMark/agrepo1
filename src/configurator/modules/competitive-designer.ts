@@ -200,12 +200,33 @@ export function initCompetitiveDesigner(
     }
 
     if (addBtn) addBtn.disabled = false;
-    filteredMetas.forEach((meta) => {
-      const opt = document.createElement('option');
-      opt.value = meta.id;
-      opt.textContent = `[${meta.tier.toUpperCase()}] ${meta.displayName}`;
-      addSelect.appendChild(opt);
-    });
+
+    const playerMetas = filteredMetas.filter((m) => m.category === 'player');
+    const globalMetas = filteredMetas.filter((m) => m.category !== 'player');
+
+    if (playerMetas.length > 0) {
+      const playerGroup = document.createElement('optgroup');
+      playerGroup.label = 'Player Relative (玩家相关)';
+      playerMetas.forEach((meta) => {
+        const opt = document.createElement('option');
+        opt.value = meta.id;
+        opt.textContent = `[${meta.tier.toUpperCase()}] ${meta.displayName}`;
+        playerGroup.appendChild(opt);
+      });
+      addSelect.appendChild(playerGroup);
+    }
+
+    if (globalMetas.length > 0) {
+      const globalGroup = document.createElement('optgroup');
+      globalGroup.label = 'Global Stats (全局数据)';
+      globalMetas.forEach((meta) => {
+        const opt = document.createElement('option');
+        opt.value = meta.id;
+        opt.textContent = `[${meta.tier.toUpperCase()}] ${meta.displayName}`;
+        globalGroup.appendChild(opt);
+      });
+      addSelect.appendChild(globalGroup);
+    }
 
     updateDynamicFieldVisibility();
   }
@@ -601,85 +622,85 @@ export function initCompetitiveDesigner(
       const isAlign = meta.supportsAlignment === true || inst.componentType.includes('text');
 
       const tierBadge = meta.tier === 'element'
-        ? '<span class="comp-type-tag" style="background: #8250df;">ELEMENT</span>'
+        ? '<span class=\"comp-type-tag\" style=\"background: #8250df;\">ELEMENT</span>'
         : meta.tier === 'panel'
-        ? '<span class="comp-type-tag" style="background: #0969da;">PANEL</span>'
-        : '<span class="comp-type-tag" style="background: #1f883d;">WIDGET</span>';
+        ? '<span class=\"comp-type-tag\" style=\"background: #0969da;\">PANEL</span>'
+        : '<span class=\"comp-type-tag\" style=\"background: #1f883d;\">WIDGET</span>';
 
       const playerBadge = isPlayer
-        ? `<span class="comp-type-tag" style="background: #bc4c00;">${(inst.targetPlayer || 'p1').toUpperCase()}</span>`
-        : '<span class="comp-type-tag" style="background: #656d76;">GLOBAL</span>';
+        ? `<span class=\"comp-type-tag\" style=\"background: #bc4c00;\">${(inst.targetPlayer || 'p1').toUpperCase()}</span>`
+        : '<span class=\"comp-type-tag\" style=\"background: #656d76;\">GLOBAL</span>';
 
       const isFirst = index === 0;
       const isLast = index === competitiveLayout.length - 1;
 
       card.innerHTML = `
-        <div class="comp-card-header">
-          <div class="comp-card-title">
+        <div class=\"comp-card-header\">
+          <div class=\"comp-card-title\">
             ${tierBadge}
             ${playerBadge}
-            <span class="layer-badge" title="Layer Stacking Order">#${index + 1}</span>
+            <span class=\"layer-badge\" title=\"Layer Stacking Order\">#${index + 1}</span>
             <span>${meta.displayName || inst.componentType}</span>
           </div>
           
-          <div style="display: flex; align-items: center; gap: 4px;">
-            <div class="layer-btn-group">
-              <button class="layer-btn btn-top" title="Top" ${isLast ? 'disabled' : ''}>⏫</button>
-              <button class="layer-btn btn-up" title="Up" ${isLast ? 'disabled' : ''}>🔼</button>
-              <button class="layer-btn btn-down" title="Down" ${isFirst ? 'disabled' : ''}>🔽</button>
-              <button class="layer-btn btn-bottom" title="Bottom" ${isFirst ? 'disabled' : ''}>⏬</button>
+          <div style=\"display: flex; align-items: center; gap: 4px;\">
+            <div class=\"layer-btn-group\">
+              <button class=\"layer-btn btn-top\" title=\"Top\" ${isLast ? 'disabled' : ''}>⏫</button>
+              <button class=\"layer-btn btn-up\" title=\"Up\" ${isLast ? 'disabled' : ''}>🔼</button>
+              <button class=\"layer-btn btn-down\" title=\"Down\" ${isFirst ? 'disabled' : ''}>🔽</button>
+              <button class=\"layer-btn btn-bottom\" title=\"Bottom\" ${isFirst ? 'disabled' : ''}>⏬</button>
             </div>
-            <button class="btn btn-secondary btn-sm toggle-advanced-btn" style="padding: 2px 6px; font-size: 10px;">⚙️ Advanced</button>
-            <button class="btn btn-danger btn-sm delete-btn" style="padding: 1px 6px; font-size: 10px;" title="Delete">✕</button>
+            <button class=\"btn btn-secondary btn-sm toggle-advanced-btn\" style=\"padding: 2px 6px; font-size: 10px;\">⚙️ Advanced</button>
+            <button class=\"btn btn-danger btn-sm delete-btn\" style=\"padding: 1px 6px; font-size: 10px;\" title=\"Delete\">✕</button>
           </div>
         </div>
 
         ${
           isPlayer
             ? `
-          <div style="display: flex; align-items: center; gap: 6px; margin-top: 6px;">
-            <span class="control-label">Target Player:</span>
-            <select class="select-field player-select" style="padding: 2px 4px; font-size: 10px; flex: 1;">
-              <option value="p1" ${inst.targetPlayer === 'p1' ? 'selected' : ''}>P1 (Target)</option>
-              <option value="p2" ${inst.targetPlayer === 'p2' ? 'selected' : ''}>P2 (Team 1)</option>
-              <option value="p3" ${inst.targetPlayer === 'p3' ? 'selected' : ''}>P3 (Team 2)</option>
+          <div style=\"display: flex; align-items: center; gap: 6px; margin-top: 6px;\">
+            <span class=\"control-label\">Target Player:</span>
+            <select class=\"select-field player-select\" style=\"padding: 2px 4px; font-size: 10px; flex: 1;\">
+              <option value=\"p1\" ${inst.targetPlayer === 'p1' ? 'selected' : ''}>P1 (Target)</option>
+              <option value=\"p2\" ${inst.targetPlayer === 'p2' ? 'selected' : ''}>P2 (Team 1)</option>
+              <option value=\"p3\" ${inst.targetPlayer === 'p3' ? 'selected' : ''}>P3 (Team 2)</option>
             </select>
           </div>
         `
             : ''
         }
 
-        <div class="advanced-drawer" id="advanced-drawer-${inst.instanceId}">
-          <div class="control-row" style="margin-bottom: 6px;">
-            <label style="font-size: 11px; color: var(--primer-accent-fg); cursor: pointer; font-weight: bold;">
-              <input type="checkbox" class="follow-global-check" ${inst.followGlobal ? 'checked' : ''} style="cursor: pointer; margin-right: 4px;">
+        <div class=\"advanced-drawer\" id=\"advanced-drawer-${inst.instanceId}\">
+          <div class=\"control-row\" style=\"margin-bottom: 6px;\">
+            <label style=\"font-size: 11px; color: var(--primer-accent-fg); cursor: pointer; font-weight: bold;\">
+              <input type=\"checkbox\" class=\"follow-global-check\" ${inst.followGlobal ? 'checked' : ''} style=\"cursor: pointer; margin-right: 4px;\">
               Follow Global Style
             </label>
           </div>
 
-          <div class="control-row">
-            <span class="control-label">Snap Anchor:</span>
-            <select class="select-field anchor-select" style="padding: 2px 4px; font-size: 10px;">
-              <option value="top-left" ${inst.anchor === 'top-left' ? 'selected' : ''}>Top-Left</option>
-              <option value="top-center" ${inst.anchor === 'top-center' ? 'selected' : ''}>Top-Center</option>
-              <option value="top-right" ${inst.anchor === 'top-right' ? 'selected' : ''}>Top-Right</option>
-              <option value="center-left" ${inst.anchor === 'center-left' ? 'selected' : ''}>Center-Left</option>
-              <option value="center" ${inst.anchor === 'center' ? 'selected' : ''}>Center</option>
-              <option value="center-right" ${inst.anchor === 'center-right' ? 'selected' : ''}>Center-Right</option>
-              <option value="bottom-left" ${inst.anchor === 'bottom-left' ? 'selected' : ''}>Bottom-Left</option>
-              <option value="bottom-center" ${inst.anchor === 'bottom-center' ? 'selected' : ''}>Bottom-Center</option>
-              <option value="bottom-right" ${inst.anchor === 'bottom-right' ? 'selected' : ''}>Bottom-Right</option>
+          <div class=\"control-row\">
+            <span class=\"control-label\">Snap Anchor:</span>
+            <select class=\"select-field anchor-select\" style=\"padding: 2px 4px; font-size: 10px;\">
+              <option value=\"top-left\" ${inst.anchor === 'top-left' ? 'selected' : ''}>Top-Left</option>
+              <option value=\"top-center\" ${inst.anchor === 'top-center' ? 'selected' : ''}>Top-Center</option>
+              <option value=\"top-right\" ${inst.anchor === 'top-right' ? 'selected' : ''}>Top-Right</option>
+              <option value=\"center-left\" ${inst.anchor === 'center-left' ? 'selected' : ''}>Center-Left</option>
+              <option value=\"center\" ${inst.anchor === 'center' ? 'selected' : ''}>Center</option>
+              <option value=\"center-right\" ${inst.anchor === 'center-right' ? 'selected' : ''}>Center-Right</option>
+              <option value=\"bottom-left\" ${inst.anchor === 'bottom-left' ? 'selected' : ''}>Bottom-Left</option>
+              <option value=\"bottom-center\" ${inst.anchor === 'bottom-center' ? 'selected' : ''}>Bottom-Center</option>
+              <option value=\"bottom-right\" ${inst.anchor === 'bottom-right' ? 'selected' : ''}>Bottom-Right</option>
             </select>
           </div>
 
           ${
             isSpeed
               ? `
-            <div class="control-row">
-              <span class="control-label">Speed Unit:</span>
-              <select class="select-field speed-unit-select" style="padding: 2px 4px; font-size: 10px;">
-                <option value="kph" ${inst.speedUnit !== 'uu/s' ? 'selected' : ''}>km/h</option>
-                <option value="uu/s" ${inst.speedUnit === 'uu/s' ? 'selected' : ''}>uu/s</option>
+            <div class=\"control-row\">
+              <span class=\"control-label\">Speed Unit:</span>
+              <select class=\"select-field speed-unit-select\" style=\"padding: 2px 4px; font-size: 10px;\">
+                <option value=\"kph\" ${inst.speedUnit !== 'uu/s' ? 'selected' : ''}>km/h</option>
+                <option value=\"uu/s\" ${inst.speedUnit === 'uu/s' ? 'selected' : ''}>uu/s</option>
               </select>
             </div>
           `
@@ -689,26 +710,26 @@ export function initCompetitiveDesigner(
           ${
             isAlign
               ? `
-            <div class="control-row">
-              <span class="control-label">Alignment:</span>
-              <select class="select-field align-select" style="padding: 2px 4px; font-size: 10px;">
-                <option value="left" ${inst.textAlign === 'left' ? 'selected' : ''}>Left</option>
-                <option value="center" ${inst.textAlign === 'center' ? 'selected' : ''}>Center</option>
-                <option value="right" ${inst.textAlign === 'right' || (!inst.textAlign && inst.componentType.includes('right')) ? 'selected' : ''}>Right</option>
+            <div class=\"control-row\">
+              <span class=\"control-label\">Alignment:</span>
+              <select class=\"select-field align-select\" style=\"padding: 2px 4px; font-size: 10px;\">
+                <option value=\"left\" ${inst.textAlign === 'left' ? 'selected' : ''}>Left</option>
+                <option value=\"center\" ${inst.textAlign === 'center' ? 'selected' : ''}>Center</option>
+                <option value=\"right\" ${inst.textAlign === 'right' || (!inst.textAlign && inst.componentType.includes('right')) ? 'selected' : ''}>Right</option>
               </select>
             </div>
           `
               : ''
           }
 
-          <div class="control-row">
-            <label style="font-size: 11px; color: var(--primer-fg-default); cursor: pointer; font-weight: 600;">
-              <input type="checkbox" class="aspect-check" ${inst.followAspectRatio ? 'checked' : ''} style="cursor: pointer; margin-right: 4px;">
+          <div class=\"control-row\">
+            <label style=\"font-size: 11px; color: var(--primer-fg-default); cursor: pointer; font-weight: 600;\">
+              <input type=\"checkbox\" class=\"aspect-check\" ${inst.followAspectRatio ? 'checked' : ''} style=\"cursor: pointer; margin-right: 4px;\">
               Lock Aspect Ratio
             </label>
           </div>
 
-          <div class="custom-props-box" id="props-box-${inst.instanceId}">
+          <div class=\"custom-props-box\" id=\"props-box-${inst.instanceId}\">
           </div>
         </div>
       `;

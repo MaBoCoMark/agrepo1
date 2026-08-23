@@ -222,7 +222,7 @@ export function applyTextStyles(
   fallbackTextColor?: string
 ) {
   const textElements = container.querySelectorAll<HTMLElement>(
-    ".dyn-val, .hud-val, .score-diff-val, .dyn-score-text, .dyn-time-val, .dyn-ball-val, .dyn-speed-val, .dyn-boost-val, .dyn-name, .dyn-p1-name, .dyn-p2-name, .dyn-p3-name, .dyn-p1-val, .dyn-p2-val, .dyn-p3-val, .hud-label, .dyn-label, .dyn-sub-val, .widget-boost-val, .hud-player-name, .hud-bool-text, .panel-sub-label, .panel-sub-val, .dyn-ot-val, .roster-name, .roster-boost-val, .metric-label, .metric-val, .dyn-diff-val, .hud-val-countdown, .dyn-player-label, .dyn-ball-team-val, .team-score-p1, .team-score-p2, .time-clock, .dyn-p-name, .dyn-p-speed, .dyn-p-boost-val, .roster-p1-name, .roster-p2-name, .roster-p3-name, .roster-p1-boost, .roster-p2-boost, .roster-p3-boost"
+    ".dyn-val, .hud-val, .score-diff-val, .dyn-score-text, .dyn-time-val, .dyn-ball-val, .dyn-speed-val, .dyn-boost-val, .dyn-name, .dyn-p1-name, .dyn-p2-name, .dyn-p3-name, .dyn-p1-val, .dyn-p2-val, .dyn-p3-val, .hud-label, .dyn-label, .dyn-sub-val, .widget-boost-val, .hud-player-name, .hud-bool-text, .panel-sub-label, .panel-sub-val, .dyn-ot-val, .roster-name, .roster-boost-val, .metric-label, .metric-val, .dyn-diff-val, .hud-val-countdown, .dyn-player-label, .dyn-ball-team-val, .team-score-p1, .team-score-p2, .time-clock, .dyn-p-name, .dyn-p-speed, .dyn-p-boost-val, .roster-p1-name, .roster-p2-name, .roster-p3-name, .roster-p1-boost, .roster-p2-boost, .roster-p3-boost, .digit-roller, .reel-strip > span, .digit-colon"
   );
   const boxElements = container.querySelectorAll<HTMLElement>(
     ".dyn-text-box, .el-custom-text-box, .hud-card, .el-system-time-box, .widget-boost-combo-card, .panel-match-header-container, .player-telemetry-panel, .panel-team-roster-container, .panel-sub-card, .el-global-text-indicator-box, .el-ball-speed-box, .el-ball-team-box, .el-boost-alert-box, .el-boost-text-fixed-box, .el-boost-text-box, .el-match-score-box, .el-num-box, .el-name-text-box, .el-score-diff-box, .el-speed-text-box, .el-static-box, .el-time-text-box, .time-hud-card, .status-hud-card"
@@ -369,7 +369,24 @@ export function updateComponentInstanceDom(
     case "element-boost-text-fixed": {
       const valEl = container.querySelector<HTMLElement>(".dyn-val");
       if (valEl) {
-        valEl.textContent = boost.toString();
+        const slots = Array.from(container.querySelectorAll<HTMLElement>(".digit-slot"));
+        if (slots.length >= 3) {
+          const b = Math.max(0, Math.min(100, Math.round(boost)));
+          const d100 = Math.floor(b / 100);
+          const d10 = Math.floor((b % 100) / 10);
+          const d1 = b % 10;
+          const strip0 = slots[0].querySelector<HTMLElement>(".reel-strip");
+          const strip1 = slots[1].querySelector<HTMLElement>(".reel-strip");
+          const strip2 = slots[2].querySelector<HTMLElement>(".reel-strip");
+          if (strip0) strip0.style.transform = `translateY(-${d100 * 10}%)`;
+          if (strip1) strip1.style.transform = `translateY(-${d10 * 10}%)`;
+          if (strip2) strip2.style.transform = `translateY(-${d1 * 10}%)`;
+          slots[0].style.opacity = b >= 100 ? "1" : "0";
+          slots[1].style.opacity = b >= 10 ? "1" : "0";
+          slots[2].style.opacity = "1";
+        } else {
+          valEl.textContent = boost.toString();
+        }
         let fallbackColor = inst.customProps?.colorHigh || "#10b981"; // green
         let blink = false;
         if (boost < 12) {
@@ -394,7 +411,29 @@ export function updateComponentInstanceDom(
     case "element-speed-text": {
       const valEl = container.querySelector<HTMLElement>(".dyn-val");
       if (valEl) {
-        valEl.textContent = formatSpeed(speed, inst.speedUnit);
+        const slots = Array.from(container.querySelectorAll<HTMLElement>(".digit-slot"));
+        if (slots.length >= 4) {
+          const spdNum = inst.speedUnit === "uu/s" ? toRealUuSpeed(speed) : (speed > 150 ? speed * 0.036 : speed);
+          const s = Math.max(0, Math.min(9999, Math.round(spdNum)));
+          const d1000 = Math.floor(s / 1000);
+          const d100 = Math.floor((s % 1000) / 100);
+          const d10 = Math.floor((s % 100) / 10);
+          const d1 = s % 10;
+          const strip0 = slots[0].querySelector<HTMLElement>(".reel-strip");
+          const strip1 = slots[1].querySelector<HTMLElement>(".reel-strip");
+          const strip2 = slots[2].querySelector<HTMLElement>(".reel-strip");
+          const strip3 = slots[3].querySelector<HTMLElement>(".reel-strip");
+          if (strip0) strip0.style.transform = `translateY(-${d1000 * 10}%)`;
+          if (strip1) strip1.style.transform = `translateY(-${d100 * 10}%)`;
+          if (strip2) strip2.style.transform = `translateY(-${d10 * 10}%)`;
+          if (strip3) strip3.style.transform = `translateY(-${d1 * 10}%)`;
+          slots[0].style.opacity = s >= 1000 ? "1" : "0";
+          slots[1].style.opacity = s >= 100 ? "1" : "0";
+          slots[2].style.opacity = s >= 10 ? "1" : "0";
+          slots[3].style.opacity = "1";
+        } else {
+          valEl.textContent = formatSpeed(speed, inst.speedUnit);
+        }
         applyTextStyles(container, inst, telemetry, undefined);
       }
       break;
@@ -412,7 +451,30 @@ export function updateComponentInstanceDom(
     case "element-time-text": {
       const valEl = container.querySelector<HTMLElement>(".dyn-val");
       if (valEl) {
-        valEl.textContent = formatMinutesSeconds(telemetry.timeSeconds);
+        const slots = Array.from(container.querySelectorAll<HTMLElement>(".digit-slot"));
+        if (slots.length >= 4) {
+          const absSec = Math.max(0, Math.min(3599, Math.abs(Math.trunc(telemetry.timeSeconds))));
+          const m = Math.floor(absSec / 60);
+          const s = absSec % 60;
+          const m1 = Math.floor(m / 10);
+          const m2 = m % 10;
+          const s1 = Math.floor(s / 10);
+          const s2 = s % 10;
+          const strip0 = slots[0].querySelector<HTMLElement>(".reel-strip");
+          const strip1 = slots[1].querySelector<HTMLElement>(".reel-strip");
+          const strip2 = slots[2].querySelector<HTMLElement>(".reel-strip");
+          const strip3 = slots[3].querySelector<HTMLElement>(".reel-strip");
+          if (strip0) strip0.style.transform = `translateY(-${m1 * 10}%)`;
+          if (strip1) strip1.style.transform = `translateY(-${m2 * 10}%)`;
+          if (strip2) strip2.style.transform = `translateY(-${s1 * 10}%)`;
+          if (strip3) strip3.style.transform = `translateY(-${s2 * 10}%)`;
+          slots[0].style.opacity = m >= 10 ? "1" : "0";
+          slots[1].style.opacity = "1";
+          slots[2].style.opacity = "1";
+          slots[3].style.opacity = "1";
+        } else {
+          valEl.textContent = formatMinutesSeconds(telemetry.timeSeconds);
+        }
         applyTextStyles(container, inst, telemetry, undefined);
       }
       break;
@@ -434,7 +496,29 @@ export function updateComponentInstanceDom(
     case "element-ball-speed-text": {
       const valEl = container.querySelector<HTMLElement>(".dyn-val");
       if (valEl) {
-        valEl.textContent = formatSpeed(telemetry.ballSpeed, inst.speedUnit);
+        const slots = Array.from(container.querySelectorAll<HTMLElement>(".digit-slot"));
+        if (slots.length >= 4) {
+          const spdNum = inst.speedUnit === "uu/s" ? toRealUuSpeed(telemetry.ballSpeed) : (telemetry.ballSpeed > 150 ? telemetry.ballSpeed * 0.036 : telemetry.ballSpeed);
+          const s = Math.max(0, Math.min(9999, Math.round(spdNum)));
+          const d1000 = Math.floor(s / 1000);
+          const d100 = Math.floor((s % 1000) / 100);
+          const d10 = Math.floor((s % 100) / 10);
+          const d1 = s % 10;
+          const strip0 = slots[0].querySelector<HTMLElement>(".reel-strip");
+          const strip1 = slots[1].querySelector<HTMLElement>(".reel-strip");
+          const strip2 = slots[2].querySelector<HTMLElement>(".reel-strip");
+          const strip3 = slots[3].querySelector<HTMLElement>(".reel-strip");
+          if (strip0) strip0.style.transform = `translateY(-${d1000 * 10}%)`;
+          if (strip1) strip1.style.transform = `translateY(-${d100 * 10}%)`;
+          if (strip2) strip2.style.transform = `translateY(-${d10 * 10}%)`;
+          if (strip3) strip3.style.transform = `translateY(-${d1 * 10}%)`;
+          slots[0].style.opacity = s >= 1000 ? "1" : "0";
+          slots[1].style.opacity = s >= 100 ? "1" : "0";
+          slots[2].style.opacity = s >= 10 ? "1" : "0";
+          slots[3].style.opacity = "1";
+        } else {
+          valEl.textContent = formatSpeed(telemetry.ballSpeed, inst.speedUnit);
+        }
         applyTextStyles(container, inst, telemetry, undefined);
       }
       break;

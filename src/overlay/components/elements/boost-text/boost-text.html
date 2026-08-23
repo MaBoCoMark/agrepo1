@@ -21,7 +21,13 @@
 </script>
 
 <template id="component-template">
-  <div class="el-boost-text-box align-right dyn-text-box"><span class="dyn-val">100</span></div>
+  <div class="el-boost-text-box align-right dyn-text-box">
+    <div class="dyn-val digit-roller">
+      <span class="digit-slot slot-h" data-slot="h"><span class="reel-strip"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span></span></span>
+      <span class="digit-slot slot-t" data-slot="t"><span class="reel-strip"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span></span></span>
+      <span class="digit-slot slot-u" data-slot="u"><span class="reel-strip"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span></span></span>
+    </div>
+  </div>
 </template>
 
 <style>
@@ -43,6 +49,44 @@
   font-weight: 800;
   font-size: calc(min(70cqh, 45cqw));
   color: #10b981;
+}
+
+.digit-roller {
+  display: inline-flex;
+  align-items: center;
+  height: 1em;
+  line-height: 1;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: normal;
+}
+.digit-slot {
+  display: inline-block;
+  height: 1em;
+  line-height: 1;
+  overflow: hidden;
+  position: relative;
+  width: 0.62em;
+  text-align: center;
+  flex-shrink: 0;
+  will-change: opacity;
+}
+.reel-strip {
+  display: flex;
+  flex-direction: column;
+  transform: translateY(0%);
+  will-change: transform;
+}
+.reel-strip > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 1em;
+  line-height: 1;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  -webkit-text-stroke: inherit;
+  paint-order: inherit;
 }
 
 @keyframes textDangerBlink {

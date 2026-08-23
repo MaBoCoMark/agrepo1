@@ -5,7 +5,7 @@ import {
   ColorSource,
   TargetPlayer
 } from './component-types';
-import { CachedComponentInstance } from './dom-cache';
+import { CachedComponentInstance, updateReelSlot } from './dom-cache';
 import { loadGlobalLayoutSettings } from './layout-store';
 import {
   toRealUuSpeed,
@@ -25,7 +25,7 @@ import {
  *      listeners.forEach(fn => fn(latestData.prop));
  *      previousData.prop = latestData.prop;
  *    }
- * 3. 0 layout reflows / forced layout computations (GPU scale transforms, cached text, tier checks).
+ * 3. 0 layout reflows / forced layout computations (GPU scale transforms, digit slot transforms, cached text, tier checks).
  * 4. Zero memory allocations / GC pressure inside high-frequency render ticks.
  * 5. Auto-hide non-existing players (P2 & P3) decoupled from high-frequency tick loop and
  *    evaluated strictly on low-frequency data triggers.
@@ -304,7 +304,7 @@ export function bindCompetitiveDomCache(
     // Component Handlers
     // ------------------------------------------------------------------------
     switch (type) {
-      // 1. Boost Text
+      // 1. Boost Text (Digit Slot Transform Reel - 0 DOM Layout)
       case 'element-boost-text':
       case 'element-boost-text-fixed': {
         const valEl = cached.valEl;
@@ -314,31 +314,72 @@ export function bindCompetitiveDomCache(
           const colorLow = inst.customProps?.colorLow || '#ef4444';
           const canBlink = inst.customProps?.enableBlink !== false && type !== 'element-boost-text-fixed';
           const tierState = cached.boostTierState;
+          const reel = cached.digitReel;
 
           addBoostListener(p, (boost: number) => {
-            const str = boost.toString();
-            if (str !== cached.lastTextContent) {
-              valEl.textContent = str;
-              cached.lastTextContent = str;
-
-              let color = colorHigh;
-              let blink = false;
-              if (boost < 12) {
-                color = colorLow;
-                blink = canBlink;
-              } else if (boost < 30) {
-                color = colorLow;
-              } else if (boost < 60) {
-                color = colorMid;
+            if (reel && reel.slots.length >= 3) {
+              const b = Math.max(0, Math.min(100, Math.round(boost)));
+              const d100 = Math.floor(b / 100);
+              const d10 = Math.floor((b % 100) / 10);
+              const d1 = b % 10;
+              updateReelSlot(reel.slots[0], d100, b >= 100 ? '1' : '0');
+              updateReelSlot(reel.slots[1], d10, b >= 10 ? '1' : '0');
+              updateReelSlot(reel.slots[2], d1, '1');
+            } else {
+              const str = boost.toString();
+              if (str !== cached.lastTextContent) {
+                valEl.textContent = str;
+                cached.lastTextContent = str;
               }
+            }
 
-              if (blink !== tierState.lastBlink) {
-                valEl.classList.toggle('danger-blink', blink);
-                tierState.lastBlink = blink;
-              }
-              if (color !== cached.lastColor) {
-                valEl.style.color = color;
-                cached.lastColor = color;
+            let color = colorHigh;
+            let blink = false;
+            if (boost < 12) {
+              color = colorLow;
+              blink = canBlink;
+            } else if (boost < 30) {
+              color = colorLow;
+            } else if (boost < 60) {
+              color = colorMid;
+            }
+
+            if (blink !== tierState.lastBlink) {
+              valEl.classList.toggle('danger-blink', blink);
+              tierState.lastBlink = blink;
+            }
+            if (type !== 'element-boost-text-fixed' && color !== cached.lastColor) {
+              valEl.style.color = color;
+              cached.lastColor = color;
+            }
+          });
+        }
+        break;
+      }
+
+      // 2. Speed Text (Digit Slot Transform Reel - 0 DOM Layout)
+      case 'element-speed-text': {
+        const valEl = cached.valEl;
+        if (valEl) {
+          const unit = inst.speedUnit;
+          const reel = cached.digitReel;
+          addSpeedListener(p, (speed: number) => {
+            if (reel && reel.slots.length >= 4) {
+              const spdNum = unit === 'uu/s' ? toRealUuSpeed(speed) : (speed > 150 ? speed * 0.036 : speed);
+              const s = Math.max(0, Math.min(9999, Math.round(spdNum)));
+              const d1000 = Math.floor(s / 1000);
+              const d100 = Math.floor((s % 1000) / 100);
+              const d10 = Math.floor((s % 100) / 10);
+              const d1 = s % 10;
+              updateReelSlot(reel.slots[0], d1000, s >= 1000 ? '1' : '0');
+              updateReelSlot(reel.slots[1], d100, s >= 100 ? '1' : '0');
+              updateReelSlot(reel.slots[2], d10, s >= 10 ? '1' : '0');
+              updateReelSlot(reel.slots[3], d1, '1');
+            } else {
+              const str = fmtSpeed(speed, unit);
+              if (str !== cached.lastTextContent) {
+                valEl.textContent = str;
+                cached.lastTextContent = str;
               }
             }
           });
@@ -346,8 +387,6 @@ export function bindCompetitiveDomCache(
         break;
       }
 
-      // 2. Speed Text
-      case 'element-speed-text':
       case 'player-speed':
       case 'widget-player-speed': {
         const valEl = cached.valEl;
@@ -380,8 +419,36 @@ export function bindCompetitiveDomCache(
         break;
       }
 
-      // 4. Time Text & System Time
-      case 'element-time-text':
+      // 4. Time Text & System Time (Digit Slot Transform Reel - 0 DOM Layout)
+      case 'element-time-text': {
+        const valEl = cached.valEl;
+        if (valEl) {
+          const reel = cached.digitReel;
+          timeSecondsListeners.push((sec: number) => {
+            if (reel && reel.slots.length >= 4) {
+              const absSec = Math.max(0, Math.min(3599, Math.abs(Math.trunc(sec))));
+              const m = Math.floor(absSec / 60);
+              const s = absSec % 60;
+              const m1 = Math.floor(m / 10);
+              const m2 = m % 10;
+              const s1 = Math.floor(s / 10);
+              const s2 = s % 10;
+              updateReelSlot(reel.slots[0], m1, m >= 10 ? '1' : '0');
+              updateReelSlot(reel.slots[1], m2, '1');
+              updateReelSlot(reel.slots[2], s1, '1');
+              updateReelSlot(reel.slots[3], s2, '1');
+            } else {
+              const str = fmtMinSec(sec);
+              if (str !== cached.lastTextContent) {
+                valEl.textContent = str;
+                cached.lastTextContent = str;
+              }
+            }
+          });
+        }
+        break;
+      }
+
       case 'time-remaining':
       case 'widget-time-remaining': {
         const valEl = cached.valEl;
@@ -415,8 +482,36 @@ export function bindCompetitiveDomCache(
         break;
       }
 
-      // 5. Ball Speed Text
-      case 'element-ball-speed-text':
+      // 5. Ball Speed Text (Digit Slot Transform Reel - 0 DOM Layout)
+      case 'element-ball-speed-text': {
+        const valEl = cached.valEl;
+        if (valEl) {
+          const unit = inst.speedUnit;
+          const reel = cached.digitReel;
+          ballSpeedListeners.push((ballSpeed: number) => {
+            if (reel && reel.slots.length >= 4) {
+              const spdNum = unit === 'uu/s' ? toRealUuSpeed(ballSpeed) : (ballSpeed > 150 ? ballSpeed * 0.036 : ballSpeed);
+              const s = Math.max(0, Math.min(9999, Math.round(spdNum)));
+              const d1000 = Math.floor(s / 1000);
+              const d100 = Math.floor((s % 1000) / 100);
+              const d10 = Math.floor((s % 100) / 10);
+              const d1 = s % 10;
+              updateReelSlot(reel.slots[0], d1000, s >= 1000 ? '1' : '0');
+              updateReelSlot(reel.slots[1], d100, s >= 100 ? '1' : '0');
+              updateReelSlot(reel.slots[2], d10, s >= 10 ? '1' : '0');
+              updateReelSlot(reel.slots[3], d1, '1');
+            } else {
+              const str = fmtSpeed(ballSpeed, unit);
+              if (str !== cached.lastTextContent) {
+                valEl.textContent = str;
+                cached.lastTextContent = str;
+              }
+            }
+          });
+        }
+        break;
+      }
+
       case 'ball-speed':
       case 'widget-ball-speed': {
         const valEl = cached.valEl;

@@ -712,3 +712,59 @@ body.layout-editing .comp-container:hover {
   will-change: transform;
   transform: translateZ(0);
 }
+
+/* ============================================================
+   🌟 DIGIT REEL / TRANSFORM ROLLER (0 DOM Layout GPU Reel)
+   ============================================================ */
+.digit-roller {
+  display: inline-flex;
+  align-items: center;
+  height: 1em;
+  line-height: 1;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: normal;
+}
+
+.digit-slot {
+  display: inline-block;
+  height: 1em;
+  line-height: 1;
+  overflow: hidden;
+  position: relative;
+  width: 0.62em;
+  text-align: center;
+  flex-shrink: 0;
+  will-change: opacity;
+}
+
+.reel-strip {
+  display: flex;
+  flex-direction: column;
+  transform: translateY(0%);
+  will-change: transform;
+}
+
+.reel-strip > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 1em;
+  line-height: 1;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  -webkit-text-stroke: inherit;
+  paint-order: inherit;
+}
+
+.digit-colon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 1em;
+  line-height: 1;
+  width: 0.35em;
+  flex-shrink: 0;
+  -webkit-text-stroke: inherit;
+  paint-order: inherit;
+}

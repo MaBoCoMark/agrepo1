@@ -18,6 +18,32 @@ import { resetPreviousData, latestData } from './telemetry-state';
  * ============================================================================
  */
 
+export interface CachedDigitSlot {
+  slotEl: HTMLElement;
+  stripEl: HTMLElement;
+  lastDigit: number;
+  lastOpacity: string;
+}
+
+export interface CachedDigitReel {
+  slots: CachedDigitSlot[];
+}
+
+export function updateReelSlot(
+  slot: CachedDigitSlot,
+  digit: number,
+  opacity: string = '1'
+): void {
+  if (digit !== slot.lastDigit) {
+    slot.stripEl.style.transform = `translateY(-${digit * 10}%)`;
+    slot.lastDigit = digit;
+  }
+  if (opacity !== slot.lastOpacity) {
+    slot.slotEl.style.opacity = opacity;
+    slot.lastOpacity = opacity;
+  }
+}
+
 export interface DevDashboardDomNodes {
   countdown: HTMLElement | null;
   overtime: HTMLElement | null;
@@ -88,6 +114,9 @@ export interface CachedComponentInstance {
   fillEl: HTMLElement | null;
   bgEl: SVGCircleElement | null;
   dotEl: HTMLElement | null;
+
+  // Cached Digit Slot Reel references for 0 Layout DOM updates
+  digitReel: CachedDigitReel | null;
 
   // Cached lists for text styling
   textElements: HTMLElement[];
@@ -369,7 +398,7 @@ export function buildCompetitiveDomCache(
     const meta = COMPONENT_METAS[inst.componentType];
     const isProportional = meta ? meta.isProportional : false;
     container.innerHTML = `
-      <div class="comp-inner ${isProportional ? 'comp-proportional' : 'comp-flexible'}">
+      <div class=\"comp-inner ${isProportional ? 'comp-proportional' : 'comp-flexible'}\">
         ${createComponentInnerHtml(inst)}
       </div>
     `;
@@ -390,7 +419,7 @@ export function buildCompetitiveDomCache(
     // Query and cache all internal node references ONCE
     const textElements = Array.from(
       container.querySelectorAll<HTMLElement>(
-        '.dyn-val, .hud-val, .score-diff-val, .dyn-score-text, .dyn-time-val, .dyn-ball-val, .dyn-speed-val, .dyn-boost-val, .dyn-name, .dyn-p1-name, .dyn-p2-name, .dyn-p3-name, .dyn-p1-val, .dyn-p2-val, .dyn-p3-val, .hud-label, .dyn-label, .dyn-sub-val, .widget-boost-val, .hud-player-name, .hud-bool-text, .panel-sub-label, .panel-sub-val, .dyn-ot-val, .roster-name, .roster-boost-val, .metric-label, .metric-val, .dyn-diff-val, .hud-val-countdown, .dyn-player-label, .dyn-ball-team-val, .team-score-p1, .team-score-p2, .time-clock, .dyn-p-name, .dyn-p-speed, .dyn-p-boost-val, .roster-p1-name, .roster-p2-name, .roster-p3-name, .roster-p1-boost, .roster-p2-boost, .roster-p3-boost'
+        '.dyn-val, .hud-val, .score-diff-val, .dyn-score-text, .dyn-time-val, .dyn-ball-val, .dyn-speed-val, .dyn-boost-val, .dyn-name, .dyn-p1-name, .dyn-p2-name, .dyn-p3-name, .dyn-p1-val, .dyn-p2-val, .dyn-p3-val, .hud-label, .dyn-label, .dyn-sub-val, .widget-boost-val, .hud-player-name, .hud-bool-text, .panel-sub-label, .panel-sub-val, .dyn-ot-val, .roster-name, .roster-boost-val, .metric-label, .metric-val, .dyn-diff-val, .hud-val-countdown, .dyn-player-label, .dyn-ball-team-val, .team-score-p1, .team-score-p2, .time-clock, .dyn-p-name, .dyn-p-speed, .dyn-p-boost-val, .roster-p1-name, .roster-p2-name, .roster-p3-name, .roster-p1-boost, .roster-p2-boost, .roster-p3-boost, .digit-roller, .reel-strip > span, .digit-colon'
       )
     );
 
@@ -399,6 +428,27 @@ export function buildCompetitiveDomCache(
         '.dyn-text-box, .el-custom-text-box, .hud-card, .el-system-time-box, .widget-boost-combo-card, .panel-match-header-container, .player-telemetry-panel, .panel-team-roster-container, .panel-sub-card, .el-global-text-indicator-box, .el-ball-speed-box, .el-ball-team-box, .el-boost-alert-box, .el-boost-text-fixed-box, .el-boost-text-box, .el-match-score-box, .el-num-box, .el-name-text-box, .el-score-diff-box, .el-speed-text-box, .el-static-box, .el-time-text-box, .time-hud-card, .status-hud-card, .el-boost-bar-box, .dyn-boost-box, .hud-boost-bar-container, .el-v-boost-bar-box, .dyn-v-boost-box, .el-speed-bar-box, .dyn-speed-box, .el-v-speed-bar-box, .dyn-v-speed-box, .curved-boost-container, .dyn-curved-container, .curved-speed-container, .dyn-curved-speed-container, .el-color-box, .dyn-color-box'
       )
     );
+
+    // Cache digit reel slots if component uses digit roller
+    let digitReel: CachedDigitReel | null = null;
+    const slotElements = container.querySelectorAll<HTMLElement>('.digit-slot');
+    if (slotElements.length > 0) {
+      const slots: CachedDigitSlot[] = [];
+      slotElements.forEach((slotEl) => {
+        const stripEl = slotEl.querySelector<HTMLElement>('.reel-strip');
+        if (stripEl) {
+          slots.push({
+            slotEl,
+            stripEl,
+            lastDigit: -1,
+            lastOpacity: ''
+          });
+        }
+      });
+      if (slots.length > 0) {
+        digitReel = { slots };
+      }
+    }
 
     const cachedInstance: CachedComponentInstance = {
       instanceId: inst.instanceId,
@@ -412,6 +462,7 @@ export function buildCompetitiveDomCache(
       fillEl: container.querySelector<HTMLElement>('.dyn-boost-fill, .el-boost-bar-fill, .hud-boost-bar-fill, .dyn-speed-fill, .el-speed-bar-fill, .dyn-v-boost-fill, .el-v-boost-bar-fill, .dyn-v-speed-fill, .el-v-speed-bar-fill, .widget-bar-fill, .dyn-curved-fill, .curved-progress-bar'),
       bgEl: container.querySelector<SVGCircleElement>('.dyn-curved-bg, .curved-bg-track'),
       dotEl: container.querySelector<HTMLElement>('.dyn-dot, .status-dot, .el-pure-dot'),
+      digitReel,
       textElements,
       boxElements,
 
