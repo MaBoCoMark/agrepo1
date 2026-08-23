@@ -29,7 +29,7 @@ import {
 } from './replay-controller';
 import { startBenchmark } from './benchmark-recorder';
 import { getCompetitiveDomCache, applyStaticComponentStyles } from './dom-cache';
-import { updateOverlayGlobalSettings } from './overlay';
+import { updateOverlayGlobalSettings } from './competitive-renderer';
 
 /**
  * ============================================================================

@@ -101,6 +101,53 @@ export const latestData: TelemetryBuffer = {
   p3Supersonic: false
 };
 
+export function resetPreviousData(): void {
+  previousData.timeSeconds = -1;
+  previousData.bOvertime = false;
+  previousData.ballSpeed = -1;
+  previousData.ballTeamNum = -1;
+  previousData.myScore = -1;
+  previousData.oppScore = -1;
+  previousData.scoreDiff = -999;
+  previousData.myPrimaryColor = '';
+  previousData.mySecondaryColor = '';
+  previousData.oppPrimaryColor = '';
+  previousData.oppSecondaryColor = '';
+
+  previousData.p1Name = '';
+  previousData.p1Speed = -1;
+  previousData.p1Boost = -1;
+  previousData.p1HasCar = false;
+  previousData.p1Boosting = false;
+  previousData.p1OnGround = false;
+  previousData.p1OnWall = false;
+  previousData.p1Powersliding = false;
+  previousData.p1Demolished = false;
+  previousData.p1Supersonic = false;
+
+  previousData.p2Name = '';
+  previousData.p2Speed = -1;
+  previousData.p2Boost = -1;
+  previousData.p2HasCar = false;
+  previousData.p2Boosting = false;
+  previousData.p2OnGround = false;
+  previousData.p2OnWall = false;
+  previousData.p2Powersliding = false;
+  previousData.p2Demolished = false;
+  previousData.p2Supersonic = false;
+
+  previousData.p3Name = '';
+  previousData.p3Speed = -1;
+  previousData.p3Boost = -1;
+  previousData.p3HasCar = false;
+  previousData.p3Boosting = false;
+  previousData.p3OnGround = false;
+  previousData.p3OnWall = false;
+  previousData.p3Powersliding = false;
+  previousData.p3Demolished = false;
+  previousData.p3Supersonic = false;
+}
+
 export interface OverlayState {
   isSimulating: boolean;
   isDevDashboardVisible: boolean;

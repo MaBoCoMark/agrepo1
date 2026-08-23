@@ -4,6 +4,8 @@ import { getScreenHeightVw, calculateElementTopLeft, loadGlobalLayoutSettings } 
 import { DraggerController } from './dragger';
 import { resolveEffectiveColor } from './team-colors';
 import { BoostTierState, createInitialBoostTierState } from './boost-meter';
+import { bindCompetitiveDomCache } from './competitive-renderer';
+import { resetPreviousData, latestData } from './telemetry-state';
 
 /**
  * ============================================================================
@@ -470,6 +472,11 @@ export function buildCompetitiveDomCache(
   }
 
   competitiveCachedInstances = newCache;
+
+  // Bind reactive listeners to properties
+  bindCompetitiveDomCache(newCache, globalSettings, latestData);
+  resetPreviousData();
+
   return newCache;
 }
 

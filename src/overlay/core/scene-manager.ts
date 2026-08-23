@@ -3,7 +3,7 @@ import { getMergedManifest } from './config-loader';
 import { ComponentInstance } from './component-types';
 import { loadCompetitiveLayout, saveCompetitiveLayout } from './layout-store';
 import { DraggerController } from './dragger';
-import { overlayState, setOverlayClickThrough } from './telemetry-state';
+import { overlayState, setOverlayClickThrough, resetPreviousData } from './telemetry-state';
 import { cacheDevDashboardNodes, buildCompetitiveDomCache } from './dom-cache';
 import { updateReplayViewerDOM, updateReplaySvgBorder, registerSceneSwitcher } from './replay-controller';
 
@@ -157,6 +157,10 @@ export function switchSceneMode(target: string, notifyConfigurator: boolean = fa
     }
   }
 
+  if (overlayState.isDevDashboardVisible) {
+    resetPreviousData();
+  }
+
   if (target === 'replay-viewer') {
     updateReplayViewerDOM();
     updateReplaySvgBorder();
@@ -177,9 +181,16 @@ export function updateDimensions(): void {
   const lHeight = window.innerHeight;
   spawnedRefs.forEach((layer, id) => {
     if (layer.style.display !== 'none') {
-      if (id === '1080p') { layer.style.width = `${1920 / scale}px`; layer.style.height = `${1080 / scale}px`; }
-      else if (id === '1440p') { layer.style.width = `${2560 / scale}px`; layer.style.height = `${1440 / scale}px`; }
-      else if (id === '1600p') { layer.style.width = `${2560 / scale}px`; layer.style.height = `${1600 / scale}px`; }
+      if (id === '1080p') {
+        layer.style.width = `${1920 / scale}px`;
+        layer.style.height = `${1080 / scale}px`;
+      } else if (id === '1440p') {
+        layer.style.width = `${2560 / scale}px`;
+        layer.style.height = `${1440 / scale}px`;
+      } else if (id === '1600p') {
+        layer.style.width = `${2560 / scale}px`;
+        layer.style.height = `${1600 / scale}px`;
+      }
     }
   });
 
