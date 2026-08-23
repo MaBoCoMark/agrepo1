@@ -7,6 +7,7 @@ import { initCatalogModal } from './modules/catalog-modal';
 import { initRefSceneController } from './modules/ref-scene-controller';
 import { initCompetitiveDesigner } from './modules/competitive-designer';
 import { initBenchmarkTool } from './modules/benchmark-tool';
+import { initTelemetrySyncController } from './modules/telemetry-sync-controller';
 import { ComponentInstance } from '../overlay/core/component-types';
 
 /**
@@ -20,6 +21,7 @@ import { ComponentInstance } from '../overlay/core/component-types';
  * - Reference & Scene layer switcher
  * - WebSocket connection & Mock simulation stream
  * - Packet Inspector & Event filter manager
+ * - Low-Frequency Telemetry Triggers & Timeline Console Logger
  * - Component Catalog & Live Previewer modal
  * - Competitive Scene Visual Layout Designer & 8-point draggers
  * - Performance Benchmark Engine & Frametime Charting
@@ -42,22 +44,25 @@ document.addEventListener('DOMContentLoaded', () => {
   // 5. Packet Inspector
   initPacketInspector();
 
-  // 6. Reference & Scene Layer Switcher & Tuning Sliders
+  // 6. Low-Frequency Telemetry Triggers & Timeline Console Logger
+  initTelemetrySyncController();
+
+  // 7. Reference & Scene Layer Switcher & Tuning Sliders
   initRefSceneController();
 
   // Shared callback ref for inserting components from Catalog Modal into Competitive Designer
   const onInsertCallbackRef: { fn: ((inst: ComponentInstance) => void) | null } = { fn: null };
 
-  // 7. Competitive Visual Layout Designer
+  // 8. Competitive Visual Layout Designer
   initCompetitiveDesigner(onInsertCallbackRef);
 
-  // 8. Built-in Component Catalog Modal & Previewer
+  // 9. Built-in Component Catalog Modal & Previewer
   initCatalogModal((inst) => {
     if (onInsertCallbackRef.fn) {
       onInsertCallbackRef.fn(inst);
     }
   });
 
-  // 9. Performance Benchmark Tool (10s RAF timing & Charting)
+  // 10. Performance Benchmark Tool (10s RAF timing & Charting)
   initBenchmarkTool();
 });

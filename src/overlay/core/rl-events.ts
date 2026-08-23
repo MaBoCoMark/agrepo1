@@ -36,3 +36,18 @@ export const ALL_ROCKET_LEAGUE_EVENTS: RLEventDefinition[] = [
 export const RL_EVENT_TYPES: string[] = ALL_ROCKET_LEAGUE_EVENTS.map((e) => e.key);
 
 export const DEFAULT_ACTIVE_EVENTS: string[] = ['UpdateState'];
+
+export const DEFAULT_LOW_FREQ_TRIGGERS: string[] = [
+  'MatchCreated',
+  'MatchInitialized',
+  'RoundStarted',
+  'CountdownBegin',
+  'PlayerJoined',
+  'PlayerLeft',
+  'GoalScored',
+  'PodiumStart',
+  'MatchEnded',
+  'MatchDestroyed'
+];
+
+export const DEFAULT_TIMELINE_EVENTS: string[] = ALL_ROCKET_LEAGUE_EVENTS.map((e) => e.key);

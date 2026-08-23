@@ -18,6 +18,10 @@ import {
   setCaptureRequested,
   setCaptureTargetEvents,
   setAutoRetryDisabled,
+  setTimelineCaptureState,
+  setTimelineCaptureEvents,
+  setLowFreqTriggerEvents,
+  requestLowFrequencySync,
   notifyWsStatus,
   initMockData
 } from './websocket-manager';
@@ -203,7 +207,25 @@ export async function setupOverlayEventListeners(): Promise<void> {
     setAutoRetryDisabled(e.payload.disabled);
   });
 
-  // 8. Performance Benchmark IPC Trigger
+  // 8. Timeline Console Logger IPC Controls
+  await listen<{ enabled: boolean; events?: string[] }>('toggle-timeline-capture', (e) => {
+    setTimelineCaptureState(e.payload.enabled, e.payload.events);
+  });
+
+  await listen<{ events: string[] }>('set-timeline-capture-events', (e) => {
+    setTimelineCaptureEvents(e.payload.events);
+  });
+
+  // 9. Low-Frequency Telemetry Trigger IPC Controls
+  await listen<{ events: string[] }>('set-low-freq-triggers', (e) => {
+    setLowFreqTriggerEvents(e.payload.events);
+  });
+
+  await listen<void>('request-low-freq-sync', () => {
+    requestLowFrequencySync();
+  });
+
+  // 10. Performance Benchmark IPC Trigger
   await listen<void>('start-performance-benchmark', () => {
     startBenchmark();
   });

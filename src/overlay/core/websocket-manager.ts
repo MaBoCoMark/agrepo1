@@ -2,10 +2,11 @@ import { emitTo } from '@tauri-apps/api/event';
 import { latestData, overlayState } from './telemetry-state';
 import { switchSceneMode } from './scene-manager';
 import { processGoalScored, enterReplayView, willEndReplayView, immediateEndReplayView } from './replay-controller';
+import { DEFAULT_LOW_FREQ_TRIGGERS, DEFAULT_TIMELINE_EVENTS } from './rl-events';
 
 /**
  * ============================================================================
- * 📥 WebSocket Manager & Event Router
+ * 📥 WebSocket Manager & High-Performance Event Router
  * ============================================================================
  */
 
@@ -78,8 +79,19 @@ export let wsHost = '127.0.0.1';
 export let wsPort = '52950';
 export let isManualDisconnected = false;
 export let isAutoRetryDisabled = false;
+
+// 1. Packet Inspector capture state
 export let isCaptureRequested = false;
 export let captureTargetEvents: string[] = ['UpdateState'];
+
+// 2. Timeline Console Logger state (Defaults to OFF, never persisted)
+export let isTimelineCaptureEnabled = false;
+export let timelineCaptureEvents: string[] = [...DEFAULT_TIMELINE_EVENTS];
+
+// 3. Low-Frequency Telemetry Synchronization state
+export let isLowFrequencySyncPending = true;
+export let lowFreqTriggerEvents: string[] = [...DEFAULT_LOW_FREQ_TRIGGERS];
+
 let ws: WebSocket | null = null;
 let retryTimer: any = null;
 export let wsStatus: 'connected' | 'connecting' | 'disconnected' = 'disconnected';
@@ -106,6 +118,29 @@ export function setCaptureTargetEvents(events: string[]): void {
   if (events && events.length > 0) {
     captureTargetEvents = events;
   }
+}
+
+export function setTimelineCaptureState(enabled: boolean, events?: string[]): void {
+  isTimelineCaptureEnabled = enabled;
+  if (events && events.length > 0) {
+    timelineCaptureEvents = events;
+  }
+}
+
+export function setTimelineCaptureEvents(events: string[]): void {
+  if (events && events.length > 0) {
+    timelineCaptureEvents = events;
+  }
+}
+
+export function setLowFreqTriggerEvents(events: string[]): void {
+  if (events && events.length > 0) {
+    lowFreqTriggerEvents = events;
+  }
+}
+
+export function requestLowFrequencySync(): void {
+  isLowFrequencySyncPending = true;
 }
 
 export function setAutoRetryDisabled(disabled: boolean): void {
@@ -139,52 +174,22 @@ export function evaluateAutoScene(): void {
   }
 }
 
-export function processUpdateState(data: RLStateData): void {
+/**
+ * Parses low-frequency data: Player Names, Team Colors, Team Objects.
+ * Triggered exclusively by Match lifecycle events (MatchInitialized, PlayerJoined, GoalScored, etc.)
+ * rather than 120Hz-360Hz high-frequency telemetry loops.
+ */
+export function processLowFrequencyData(data: RLStateData): void {
   if (!data) return;
 
-  // 1. Global parameters
-  if (data.Game) {
-    if (data.Game.TimeSeconds !== undefined) {
-      latestData.timeSeconds = Math.trunc(data.Game.TimeSeconds);
-    }
-    if (data.Game.bOvertime !== undefined) {
-      latestData.bOvertime = Boolean(data.Game.bOvertime);
-    }
-    if (data.Game.Ball) {
-      if (data.Game.Ball.Speed !== undefined) {
-        latestData.ballSpeed = Math.trunc(data.Game.Ball.Speed);
-      }
-      if (data.Game.Ball.TeamNum !== undefined) {
-        latestData.ballTeamNum = Number(data.Game.Ball.TeamNum);
-      }
-    }
-  }
-
-  // 2. Identify target player & team
+  // 1. Identify Target Player & Team Numbers
   const players = data.Players || [];
   let targetTeam: number | null = null;
   let targetName: string | null = null;
 
-  const hasTarget = Boolean(data.Game?.bHasTarget || (data.Game?.Target && data.Game.Target.Name));
-  const hasWinner = Boolean(data.Game?.bHasWinner);
-
   if (data.Game?.Target) {
     targetName = data.Game.Target.Name || null;
     targetTeam = data.Game.Target.TeamNum !== undefined ? data.Game.Target.TeamNum : null;
-  }
-
-  // Automatic Scene Control
-  if (overlayState.isAutoSceneControl) {
-    if (hasWinner) {
-      if (overlayState.currentActiveScene !== 'empty') {
-        immediateEndReplayView();
-        switchSceneMode('empty', true);
-      }
-    } else if (overlayState.currentActiveScene !== 'replay-viewer' && hasTarget) {
-      if (overlayState.currentActiveScene !== 'competitive') {
-        switchSceneMode('competitive', true);
-      }
-    }
   }
 
   let p1: RLPlayerRaw | null = null;
@@ -211,7 +216,7 @@ export function processUpdateState(data: RLStateData): void {
     }
   }
 
-  // 3. Teams and score
+  // 2. Team Colors
   if (data.Game?.Teams && Array.isArray(data.Game.Teams) && data.Game.Teams.length > 0) {
     const effectiveTargetTeam = targetTeam !== null ? targetTeam : (p1?.TeamNum !== undefined ? p1.TeamNum : 0);
     let myTeamObj = data.Game.Teams.find((t) => t.TeamNum === effectiveTargetTeam);
@@ -219,13 +224,6 @@ export function processUpdateState(data: RLStateData): void {
 
     if (!myTeamObj && data.Game.Teams[0]) myTeamObj = data.Game.Teams[0];
     if (!oppTeamObj && data.Game.Teams[1]) oppTeamObj = data.Game.Teams[1];
-
-    const myScore = myTeamObj?.Score ?? 0;
-    const oppScore = oppTeamObj?.Score ?? 0;
-
-    latestData.myScore = myScore;
-    latestData.oppScore = oppScore;
-    latestData.scoreDiff = myScore - oppScore;
 
     if (myTeamObj?.ColorPrimary) {
       const hex = myTeamObj.ColorPrimary.startsWith('#') ? myTeamObj.ColorPrimary : `#${myTeamObj.ColorPrimary}`;
@@ -245,9 +243,116 @@ export function processUpdateState(data: RLStateData): void {
     }
   }
 
-  // P1
+  // 3. Player Names
+  latestData.p1Name = p1?.Name || (players.length > 0 ? 'P1' : '-');
+  latestData.p2Name = teammates[0]?.Name || (players.length > 1 ? 'P2' : '-');
+  latestData.p3Name = teammates[1]?.Name || (players.length > 2 ? 'P3' : '-');
+}
+
+/**
+ * High-Frequency Telemetry Parser (120Hz - 360Hz hot path)
+ * Only parses numerical/boolean physics & speeds.
+ */
+export function processUpdateState(data: RLStateData): void {
+  if (!data) return;
+
+  // Process low-frequency properties if triggered by an event
+  if (isLowFrequencySyncPending) {
+    isLowFrequencySyncPending = false;
+    processLowFrequencyData(data);
+  }
+
+  // 1. High-frequency Game & Ball parameters
+  if (data.Game) {
+    if (data.Game.TimeSeconds !== undefined) {
+      latestData.timeSeconds = Math.trunc(data.Game.TimeSeconds);
+    }
+    if (data.Game.bOvertime !== undefined) {
+      latestData.bOvertime = Boolean(data.Game.bOvertime);
+    }
+    if (data.Game.Ball) {
+      if (data.Game.Ball.Speed !== undefined) {
+        latestData.ballSpeed = Math.trunc(data.Game.Ball.Speed);
+      }
+      if (data.Game.Ball.TeamNum !== undefined) {
+        latestData.ballTeamNum = Number(data.Game.Ball.TeamNum);
+      }
+    }
+
+    // Match Scores
+    if (data.Game.Teams && Array.isArray(data.Game.Teams) && data.Game.Teams.length > 0) {
+      let targetTeam: number | null = null;
+      if (data.Game.Target && data.Game.Target.TeamNum !== undefined) {
+        targetTeam = data.Game.Target.TeamNum;
+      }
+      const effectiveTargetTeam = targetTeam !== null ? targetTeam : 0;
+      let myTeamObj = data.Game.Teams.find((t) => t.TeamNum === effectiveTargetTeam);
+      let oppTeamObj = data.Game.Teams.find((t) => t.TeamNum !== effectiveTargetTeam);
+
+      if (!myTeamObj && data.Game.Teams[0]) myTeamObj = data.Game.Teams[0];
+      if (!oppTeamObj && data.Game.Teams[1]) oppTeamObj = data.Game.Teams[1];
+
+      const myScore = myTeamObj?.Score ?? 0;
+      const oppScore = oppTeamObj?.Score ?? 0;
+
+      latestData.myScore = myScore;
+      latestData.oppScore = oppScore;
+      latestData.scoreDiff = myScore - oppScore;
+    }
+  }
+
+  // Automatic Scene Control
+  const hasTarget = Boolean(data.Game?.bHasTarget || (data.Game?.Target && data.Game.Target.Name));
+  const hasWinner = Boolean(data.Game?.bHasWinner);
+
+  if (overlayState.isAutoSceneControl) {
+    if (hasWinner) {
+      if (overlayState.currentActiveScene !== 'empty') {
+        immediateEndReplayView();
+        switchSceneMode('empty', true);
+      }
+    } else if (overlayState.currentActiveScene !== 'replay-viewer' && hasTarget) {
+      if (overlayState.currentActiveScene !== 'competitive') {
+        switchSceneMode('competitive', true);
+      }
+    }
+  }
+
+  // 2. High-Frequency Player Numbers & Booleans
+  const players = data.Players || [];
+  let targetTeam: number | null = null;
+  let targetName: string | null = null;
+
+  if (data.Game?.Target) {
+    targetName = data.Game.Target.Name || null;
+    targetTeam = data.Game.Target.TeamNum !== undefined ? data.Game.Target.TeamNum : null;
+  }
+
+  let p1: RLPlayerRaw | null = null;
+  const teammates: RLPlayerRaw[] = [];
+
+  if (targetName && targetTeam !== null) {
+    for (let i = 0; i < players.length; i++) {
+      const p = players[i];
+      if (p.TeamNum === targetTeam) {
+        if (p.Name === targetName && !p1) {
+          p1 = p;
+        } else {
+          teammates.push(p);
+        }
+      }
+    }
+  } else if (players.length > 0) {
+    p1 = players[0];
+    for (let i = 1; i < players.length; i++) {
+      if (players[i].TeamNum === p1.TeamNum) {
+        teammates.push(players[i]);
+      }
+    }
+  }
+
+  // P1 Fast Numerical/Boolean State
   if (p1) {
-    latestData.p1Name = p1.Name || 'P1';
     latestData.p1Speed = Math.trunc(p1.Speed || 0);
     latestData.p1Boost = Math.max(0, Math.min(100, Math.round(p1.Boost || 0)));
     latestData.p1HasCar = Boolean(p1.bHasCar);
@@ -258,7 +363,6 @@ export function processUpdateState(data: RLStateData): void {
     latestData.p1Demolished = Boolean(p1.bDemolished);
     latestData.p1Supersonic = Boolean(p1.bSupersonic);
   } else {
-    latestData.p1Name = '-';
     latestData.p1Speed = 0;
     latestData.p1Boost = 0;
     latestData.p1HasCar = false;
@@ -270,10 +374,9 @@ export function processUpdateState(data: RLStateData): void {
     latestData.p1Supersonic = false;
   }
 
-  // P2
+  // P2 Fast Numerical/Boolean State
   const p2 = teammates[0] || null;
   if (p2) {
-    latestData.p2Name = p2.Name || 'P2';
     latestData.p2Speed = Math.trunc(p2.Speed || 0);
     latestData.p2Boost = Math.max(0, Math.min(100, Math.round(p2.Boost || 0)));
     latestData.p2HasCar = Boolean(p2.bHasCar);
@@ -284,7 +387,6 @@ export function processUpdateState(data: RLStateData): void {
     latestData.p2Demolished = Boolean(p2.bDemolished);
     latestData.p2Supersonic = Boolean(p2.bSupersonic);
   } else {
-    latestData.p2Name = '-';
     latestData.p2Speed = 0;
     latestData.p2Boost = 0;
     latestData.p2HasCar = false;
@@ -296,10 +398,9 @@ export function processUpdateState(data: RLStateData): void {
     latestData.p2Supersonic = false;
   }
 
-  // P3
+  // P3 Fast Numerical/Boolean State
   const p3 = teammates[1] || null;
   if (p3) {
-    latestData.p3Name = p3.Name || 'P3';
     latestData.p3Speed = Math.trunc(p3.Speed || 0);
     latestData.p3Boost = Math.max(0, Math.min(100, Math.round(p3.Boost || 0)));
     latestData.p3HasCar = Boolean(p3.bHasCar);
@@ -310,7 +411,6 @@ export function processUpdateState(data: RLStateData): void {
     latestData.p3Demolished = Boolean(p3.bDemolished);
     latestData.p3Supersonic = Boolean(p3.bSupersonic);
   } else {
-    latestData.p3Name = '-';
     latestData.p3Speed = 0;
     latestData.p3Boost = 0;
     latestData.p3HasCar = false;
@@ -324,15 +424,39 @@ export function processUpdateState(data: RLStateData): void {
 }
 
 export function handleIncomingMessage(raw: RLWebSocketMessage): void {
-  if (isCaptureRequested && raw.Event && (captureTargetEvents.includes(raw.Event) || captureTargetEvents.includes('*'))) {
+  const eventName = raw.Event;
+
+  // 1. Timeline Capture Console Logger (Browser Console collapses consecutive identical lines)
+  if (isTimelineCaptureEnabled && eventName && (timelineCaptureEvents.includes(eventName) || timelineCaptureEvents.includes('*'))) {
+    console.log(eventName);
+  }
+
+  // 2. Packet Inspector Capture
+  if (isCaptureRequested && eventName && (captureTargetEvents.includes(eventName) || captureTargetEvents.includes('*'))) {
     isCaptureRequested = false;
     emitTo('configurator', 'packet-captured', {
-      event: raw.Event,
+      event: eventName,
       packet: JSON.stringify(raw, null, 2)
     });
   }
 
-  switch (raw.Event) {
+  // 3. Check if incoming event triggers low-frequency property sync
+  if (eventName && lowFreqTriggerEvents.includes(eventName)) {
+    isLowFrequencySyncPending = true;
+  }
+
+  switch (eventName) {
+    case 'ClockUpdatedSeconds': {
+      overlayState.hasReceivedDataSinceConnected = true;
+      if (raw.Data !== undefined) {
+        const sec = typeof raw.Data === 'number' ? raw.Data : parseInt(raw.Data as string, 10);
+        if (!isNaN(sec)) {
+          latestData.timeSeconds = sec;
+        }
+      }
+      break;
+    }
+
     case 'GoalScored': {
       overlayState.hasReceivedDataSinceConnected = true;
       if (!raw.Data) return;
@@ -440,6 +564,7 @@ export function connectWebSocket(): void {
     ws.onopen = () => {
       wsStatus = 'connected';
       overlayState.hasReceivedDataSinceConnected = false;
+      isLowFrequencySyncPending = true;
       notifyWsStatus();
       evaluateAutoScene();
     };
@@ -529,5 +654,6 @@ const REAL_SAMPLE_RAW: RLStateData = {
 };
 
 export function initMockData(): void {
+  isLowFrequencySyncPending = true;
   processUpdateState(REAL_SAMPLE_RAW);
 }
