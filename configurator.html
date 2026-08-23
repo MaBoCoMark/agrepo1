@@ -747,7 +747,7 @@
       <div style="display: flex; align-items: center; gap: 10px;">
         <span style="font-size: 11px; color: var(--primer-fg-muted); width: 50px;">Color:</span>
         <input type="color" id="bg-color-picker" value="#0b0f19" style="width: 32px; height: 26px; border: 1px solid var(--primer-border-default); border-radius: 4px; background: transparent; cursor: pointer; padding: 0;">
-        <input type="text" id="bg-hex-input" class="input-field" value="#0b0f19" style="width: 80px; padding: 3px 6px; font-size: 11px;">
+        <input type="text" id="bg-hex-input" class="input-field" value="#0b0f19" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width: 80px; padding: 3px 6px; font-size: 11px;">
       </div>
 
       <div style="display: flex; align-items: center; gap: 10px;">
@@ -758,7 +758,7 @@
 
       <div style="display: flex; align-items: center; gap: 10px;">
         <span style="font-size: 11px; color: var(--primer-fg-muted); width: 50px;">RGBA:</span>
-        <input type="text" id="bg-rgba-input" class="input-field" value="rgba(11, 15, 25, 1)" style="flex: 1; padding: 3px 6px; font-size: 11px;" readonly>
+        <input type="text" id="bg-rgba-input" class="input-field" value="rgba(11, 15, 25, 1)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="flex: 1; padding: 3px 6px; font-size: 11px;" readonly>
       </div>
     </div>
   </div>
@@ -813,7 +813,7 @@
       <div style="font-size: 11px; color: var(--primer-success-fg); margin-bottom: 6px; font-weight: bold;">+ Insert Component to Layout:</div>
       
       <!-- Regex-based search bar -->
-      <input type="text" id="component-filter-regex" class="input-field" placeholder="🔍 Search / Regex filter (e.g. boost|speed, text$, ^el-)..." style="width: 100%; margin-bottom: 8px;">
+      <input type="text" id="component-filter-regex" class="input-field" placeholder="🔍 Search / Regex filter (e.g. boost|speed, text$, ^el-)..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width: 100%; margin-bottom: 8px;">
 
       <!-- 1. Tier Dropdown -->
       <div style="display: flex; gap: 6px; margin-bottom: 8px;">
@@ -944,8 +944,8 @@
     </div>
 
     <div class="input-group">
-      <input type="text" id="ws-host-input" class="input-field" value="127.0.0.1" placeholder="Host (e.g. 127.0.0.1)" style="flex: 2;">
-      <input type="text" id="ws-port-input" class="input-field" value="52950" placeholder="Port" style="flex: 1;">
+      <input type="text" id="ws-host-input" class="input-field" value="127.0.0.1" placeholder="Host (e.g. 127.0.0.1)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="flex: 2;">
+      <input type="text" id="ws-port-input" class="input-field" value="52950" placeholder="Port" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="flex: 1;">
     </div>
 
     <button id="ws-toggle-btn" class="btn btn-primary" style="width: 100%; margin-bottom: 8px;">Connect</button>
@@ -1037,7 +1037,7 @@
       <p style="color: var(--primer-fg-muted); font-size: 11px; margin-bottom: 8px;">
         Paste your previously copied layout configuration JSON string below:
       </p>
-      <textarea id="import-json-input" class="input-field" style="width: 100%; height: 160px; font-family: monospace; font-size: 11px; box-sizing: border-box; resize: vertical; margin-bottom: 12px;" placeholder="[ { &quot;instanceId&quot;: &quot;...&quot;, ... } ]"></textarea>
+      <textarea id="import-json-input" class="input-field" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width: 100%; height: 160px; font-family: monospace; font-size: 11px; box-sizing: border-box; resize: vertical; margin-bottom: 12px;" placeholder="[ { &quot;instanceId&quot;: &quot;...&quot;, ... } ]"></textarea>
       <div style="display: flex; justify-content: flex-end; gap: 8px;">
         <button id="cancel-import-btn" class="btn btn-secondary">Cancel</button>
         <button id="confirm-import-btn" class="btn btn-success">Apply Layout</button>
@@ -1062,7 +1062,7 @@
       </div>
 
       <!-- Search / Regex Filter for Events -->
-      <input type="text" id="event-regex-input" class="input-field" placeholder="🔍 Regex filter (e.g. ^Goal|Match, Tick, Score)..." style="width: 100%; margin-bottom: 8px;">
+      <input type="text" id="event-regex-input" class="input-field" placeholder="🔍 Regex filter (e.g. ^Goal|Match, Tick, Score)..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width: 100%; margin-bottom: 8px;">
 
       <!-- Bulk Action Buttons -->
       <div style="display: flex; gap: 6px; margin-bottom: 6px; flex-wrap: wrap;">
@@ -1101,7 +1101,7 @@
         <button id="btn-close-low-freq-mgr" class="btn btn-danger btn-sm">✕ Close</button>
       </div>
 
-      <input type="text" id="low-freq-regex-input" class="input-field" placeholder="🔍 Search / Regex filter..." style="width: 100%; margin-bottom: 8px;">
+      <input type="text" id="low-freq-regex-input" class="input-field" placeholder="🔍 Search / Regex filter..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width: 100%; margin-bottom: 8px;">
 
       <div style="display: flex; gap: 6px; margin-bottom: 6px; flex-wrap: wrap;">
         <button id="btn-low-freq-select-filtered" class="btn btn-sm btn-primary">✓ Select All Filtered</button>
@@ -1135,7 +1135,7 @@
         <button id="btn-close-timeline-mgr" class="btn btn-danger btn-sm">✕ Close</button>
       </div>
 
-      <input type="text" id="timeline-regex-input" class="input-field" placeholder="🔍 Search / Regex filter..." style="width: 100%; margin-bottom: 8px;">
+      <input type="text" id="timeline-regex-input" class="input-field" placeholder="🔍 Search / Regex filter..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width: 100%; margin-bottom: 8px;">
 
       <div style="display: flex; gap: 6px; margin-bottom: 6px; flex-wrap: wrap;">
         <button id="btn-timeline-select-filtered" class="btn btn-sm btn-primary">✓ Select All Filtered</button>
@@ -1164,7 +1164,7 @@
       </div>
 
       <div style="display: flex; gap: 8px; margin-top: 10px; align-items: center;">
-        <input type="text" id="catalog-search-input" class="input-field" placeholder="🔍 Regex search (e.g. boost|speed, text$, ^element)..." style="flex: 2;">
+        <input type="text" id="catalog-search-input" class="input-field" placeholder="🔍 Regex search (e.g. boost|speed, text$, ^element)..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="flex: 2;">
         <select id="catalog-tier-select" class="select-field" style="flex: 1;">
           <option value="all">📂 All Categories</option>
           <option value="element">🧩 Elements</option>

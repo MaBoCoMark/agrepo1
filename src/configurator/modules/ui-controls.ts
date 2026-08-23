@@ -287,6 +287,10 @@ export function createTextInputControl(
   input.value = value;
   input.placeholder = placeholder;
   input.style.flex = '1';
+  input.spellcheck = false;
+  input.setAttribute('autocorrect', 'off');
+  input.setAttribute('autocapitalize', 'off');
+  input.setAttribute('autocomplete', 'off');
 
   input.addEventListener('input', () => {
     onChange(input.value);

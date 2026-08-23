@@ -27,7 +27,7 @@
  */
 
 export interface BoostTierState {
-  tier: number; // 0: low/alert (<12), 1: low (<20 or <30), 2: mid (<60), 3: high (>=60)
+  tier: number; // 0: low/alert (<=12), 1: low (<20), 2: mid (<60), 3: high (>=60)
   lastVal: number;
   lastTransform: string;
   lastBlink: boolean;
@@ -71,16 +71,16 @@ export function updateBoostMeterElement(
       state.lastTransform = transformStr;
     }
 
-    // 3. Determine tier (0: <12, 1: <30, 2: <60, 3: >=60)
+    // 3. Determine tier (0: <=12, 1: <20, 2: <60, 3: >=60)
     let currentTier = 3;
     let blink = false;
     let color = colorHigh || '#10b981';
 
-    if (boost < 12) {
+    if (boost <= 12) {
       currentTier = 0;
       color = colorLow || '#ef4444';
       blink = enableBlink;
-    } else if (boost < 30) {
+    } else if (boost < 20) {
       currentTier = 1;
       color = colorLow || '#ef4444';
       blink = false;

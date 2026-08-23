@@ -335,10 +335,10 @@ export function bindCompetitiveDomCache(
 
             let color = colorHigh;
             let blink = false;
-            if (boost < 12) {
+            if (boost <= 12) {
               color = colorLow;
               blink = canBlink;
-            } else if (boost < 30) {
+            } else if (boost < 20) {
               color = colorLow;
             } else if (boost < 60) {
               color = colorMid;
@@ -467,15 +467,34 @@ export function bindCompetitiveDomCache(
       case 'element-system-time': {
         const valEl = cached.valEl;
         if (valEl) {
+          const reel = cached.digitReel;
           timeSecondsListeners.push(() => {
             const now = new Date();
-            const h = now.getHours().toString().padStart(2, '0');
-            const m = now.getMinutes().toString().padStart(2, '0');
-            const s = now.getSeconds().toString().padStart(2, '0');
-            const str = `${h}:${m}:${s}`;
-            if (str !== cached.lastTextContent) {
-              valEl.textContent = str;
-              cached.lastTextContent = str;
+            const h = now.getHours();
+            const m = now.getMinutes();
+            const s = now.getSeconds();
+            if (reel && reel.slots.length >= 6) {
+              const h1 = Math.floor(h / 10);
+              const h2 = h % 10;
+              const m1 = Math.floor(m / 10);
+              const m2 = m % 10;
+              const s1 = Math.floor(s / 10);
+              const s2 = s % 10;
+              updateReelSlot(reel.slots[0], h1, '1');
+              updateReelSlot(reel.slots[1], h2, '1');
+              updateReelSlot(reel.slots[2], m1, '1');
+              updateReelSlot(reel.slots[3], m2, '1');
+              updateReelSlot(reel.slots[4], s1, '1');
+              updateReelSlot(reel.slots[5], s2, '1');
+            } else {
+              const hs = h.toString().padStart(2, '0');
+              const ms = m.toString().padStart(2, '0');
+              const ss = s.toString().padStart(2, '0');
+              const str = `${hs}:${ms}:${ss}`;
+              if (str !== cached.lastTextContent) {
+                valEl.textContent = str;
+                cached.lastTextContent = str;
+              }
             }
           });
         }
@@ -659,11 +678,11 @@ export function bindCompetitiveDomCache(
             let currentTier = 3;
             let blink = false;
             let color = colorHigh;
-            if (boost < 12) {
+            if (boost <= 12) {
               currentTier = 0;
               color = colorLow;
               blink = canBlink;
-            } else if (boost < 30) {
+            } else if (boost < 20) {
               currentTier = 1;
               color = colorLow;
             } else if (boost < 60) {
@@ -704,11 +723,11 @@ export function bindCompetitiveDomCache(
             let currentTier = 3;
             let blink = false;
             let color = colorHigh;
-            if (boost < 12) {
+            if (boost <= 12) {
               currentTier = 0;
               color = colorLow;
               blink = canBlink;
-            } else if (boost < 30) {
+            } else if (boost < 20) {
               currentTier = 1;
               color = colorLow;
             } else if (boost < 60) {
@@ -853,10 +872,10 @@ export function bindCompetitiveDomCache(
 
               let color = colorHigh;
               let blink = false;
-              if (boost < 12) {
+              if (boost <= 12) {
                 color = colorLow;
                 blink = enableBlink;
-              } else if (boost < 30) {
+              } else if (boost < 20) {
                 color = colorLow;
               } else if (boost < 60) {
                 color = colorMid;
@@ -1229,7 +1248,7 @@ export function bindCompetitiveDomCache(
               if (transformStr !== tierState.lastTransform) {
                 p1Fill.style.transform = transformStr;
                 tierState.lastTransform = transformStr;
-                p1Fill.style.backgroundColor = boost < 30 ? '#ef4444' : boost < 60 ? '#f59e0b' : '#10b981';
+                p1Fill.style.backgroundColor = boost < 20 ? '#ef4444' : boost < 60 ? '#f59e0b' : '#10b981';
               }
             }
             tierState.lastVal = boost;
@@ -1283,7 +1302,7 @@ export function bindCompetitiveDomCache(
               if (t !== tierState.lastTransform) {
                 p1Fill.style.transform = t;
                 tierState.lastTransform = t;
-                p1Fill.style.backgroundColor = boost < 30 ? '#ef4444' : boost < 60 ? '#f59e0b' : '#10b981';
+                p1Fill.style.backgroundColor = boost < 20 ? '#ef4444' : boost < 60 ? '#f59e0b' : '#10b981';
               }
             }
             tierState.lastVal = boost;
@@ -1300,7 +1319,7 @@ export function bindCompetitiveDomCache(
             if (p2Val) p2Val.textContent = boost.toString();
             if (p2Fill) {
               p2Fill.style.transform = `scaleX(${boost / 100})`;
-              p2Fill.style.backgroundColor = boost < 30 ? '#ef4444' : boost < 60 ? '#f59e0b' : '#10b981';
+              p2Fill.style.backgroundColor = boost < 20 ? '#ef4444' : boost < 60 ? '#f59e0b' : '#10b981';
             }
           });
         }
@@ -1315,7 +1334,7 @@ export function bindCompetitiveDomCache(
             if (p3Val) p3Val.textContent = boost.toString();
             if (p3Fill) {
               p3Fill.style.transform = `scaleX(${boost / 100})`;
-              p3Fill.style.backgroundColor = boost < 30 ? '#ef4444' : boost < 60 ? '#f59e0b' : '#10b981';
+              p3Fill.style.backgroundColor = boost < 20 ? '#ef4444' : boost < 60 ? '#f59e0b' : '#10b981';
             }
           });
         }

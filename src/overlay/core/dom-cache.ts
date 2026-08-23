@@ -419,7 +419,7 @@ export function buildCompetitiveDomCache(
     // Query and cache all internal node references ONCE
     const textElements = Array.from(
       container.querySelectorAll<HTMLElement>(
-        '.dyn-val, .hud-val, .score-diff-val, .dyn-score-text, .dyn-time-val, .dyn-ball-val, .dyn-speed-val, .dyn-boost-val, .dyn-name, .dyn-p1-name, .dyn-p2-name, .dyn-p3-name, .dyn-p1-val, .dyn-p2-val, .dyn-p3-val, .hud-label, .dyn-label, .dyn-sub-val, .widget-boost-val, .hud-player-name, .hud-bool-text, .panel-sub-label, .panel-sub-val, .dyn-ot-val, .roster-name, .roster-boost-val, .metric-label, .metric-val, .dyn-diff-val, .hud-val-countdown, .dyn-player-label, .dyn-ball-team-val, .team-score-p1, .team-score-p2, .time-clock, .dyn-p-name, .dyn-p-speed, .dyn-p-boost-val, .roster-p1-name, .roster-p2-name, .roster-p3-name, .roster-p1-boost, .roster-p2-boost, .roster-p3-boost, .digit-roller, .reel-strip > span, .digit-colon'
+        '.dyn-val, .hud-val, .score-diff-val, .dyn-score-text, .dyn-time-val, .dyn-ball-val, .dyn-speed-val, .dyn-boost-val, .dyn-name, .dyn-p1-name, .dyn-p2-name, .dyn-p3-name, .dyn-p1-val, .dyn-p2-val, .dyn-p3-val, .hud-label, .dyn-label, .dyn-sub-val, .widget-boost-val, .hud-player-name, .hud-bool-text, .panel-sub-label, .panel-sub-val, .dyn-ot-val, .roster-name, .roster-boost-val, .metric-label, .metric-val, .dyn-diff-val, .hud-val-countdown, .dyn-player-label, .dyn-ball-team-val, .team-score-p1, .team-score-p2, .time-clock, .dyn-p-name, .dyn-p-speed, .dyn-p-boost-val, .roster-p1-name, .roster-p2-name, .roster-p3-name, .roster-p1-boost, .roster-p2-boost, .roster-p3-boost'
       )
     );
 

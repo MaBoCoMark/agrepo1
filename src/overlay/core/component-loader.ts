@@ -222,7 +222,7 @@ export function applyTextStyles(
   fallbackTextColor?: string
 ) {
   const textElements = container.querySelectorAll<HTMLElement>(
-    ".dyn-val, .hud-val, .score-diff-val, .dyn-score-text, .dyn-time-val, .dyn-ball-val, .dyn-speed-val, .dyn-boost-val, .dyn-name, .dyn-p1-name, .dyn-p2-name, .dyn-p3-name, .dyn-p1-val, .dyn-p2-val, .dyn-p3-val, .hud-label, .dyn-label, .dyn-sub-val, .widget-boost-val, .hud-player-name, .hud-bool-text, .panel-sub-label, .panel-sub-val, .dyn-ot-val, .roster-name, .roster-boost-val, .metric-label, .metric-val, .dyn-diff-val, .hud-val-countdown, .dyn-player-label, .dyn-ball-team-val, .team-score-p1, .team-score-p2, .time-clock, .dyn-p-name, .dyn-p-speed, .dyn-p-boost-val, .roster-p1-name, .roster-p2-name, .roster-p3-name, .roster-p1-boost, .roster-p2-boost, .roster-p3-boost, .digit-roller, .reel-strip > span, .digit-colon"
+    ".dyn-val, .hud-val, .score-diff-val, .dyn-score-text, .dyn-time-val, .dyn-ball-val, .dyn-speed-val, .dyn-boost-val, .dyn-name, .dyn-p1-name, .dyn-p2-name, .dyn-p3-name, .dyn-p1-val, .dyn-p2-val, .dyn-p3-val, .hud-label, .dyn-label, .dyn-sub-val, .widget-boost-val, .hud-player-name, .hud-bool-text, .panel-sub-label, .panel-sub-val, .dyn-ot-val, .roster-name, .roster-boost-val, .metric-label, .metric-val, .dyn-diff-val, .hud-val-countdown, .dyn-player-label, .dyn-ball-team-val, .team-score-p1, .team-score-p2, .time-clock, .dyn-p-name, .dyn-p-speed, .dyn-p-boost-val, .roster-p1-name, .roster-p2-name, .roster-p3-name, .roster-p1-boost, .roster-p2-boost, .roster-p3-boost"
   );
   const boxElements = container.querySelectorAll<HTMLElement>(
     ".dyn-text-box, .el-custom-text-box, .hud-card, .el-system-time-box, .widget-boost-combo-card, .panel-match-header-container, .player-telemetry-panel, .panel-team-roster-container, .panel-sub-card, .el-global-text-indicator-box, .el-ball-speed-box, .el-ball-team-box, .el-boost-alert-box, .el-boost-text-fixed-box, .el-boost-text-box, .el-match-score-box, .el-num-box, .el-name-text-box, .el-score-diff-box, .el-speed-text-box, .el-static-box, .el-time-text-box, .time-hud-card, .status-hud-card"
@@ -389,10 +389,10 @@ export function updateComponentInstanceDom(
         }
         let fallbackColor = inst.customProps?.colorHigh || "#10b981"; // green
         let blink = false;
-        if (boost < 12) {
+        if (boost <= 12) {
           fallbackColor = inst.customProps?.colorLow || "#ef4444"; // red with alert blink
           blink = inst.customProps?.enableBlink !== false && inst.componentType !== "element-boost-text-fixed";
-        } else if (boost < 30) {
+        } else if (boost < 20) {
           fallbackColor = inst.customProps?.colorLow || "#ef4444"; // red, no blink
           blink = false;
         } else if (boost < 60) {
@@ -403,7 +403,7 @@ export function updateComponentInstanceDom(
           blink = false;
         }
         valEl.classList.toggle("danger-blink", blink);
-        applyTextStyles(container, inst, telemetry, fallbackColor);
+        applyTextStyles(container, inst, telemetry, inst.componentType === "element-boost-text-fixed" ? undefined : fallbackColor);
       }
       break;
     }
@@ -484,10 +484,41 @@ export function updateComponentInstanceDom(
       const valEl = container.querySelector<HTMLElement>(".dyn-val");
       if (valEl) {
         const now = new Date();
-        const hrs = now.getHours().toString().padStart(2, "0");
-        const mins = now.getMinutes().toString().padStart(2, "0");
-        const secs = now.getSeconds().toString().padStart(2, "0");
-        valEl.textContent = `${hrs}:${mins}:${secs}`;
+        const h = now.getHours();
+        const m = now.getMinutes();
+        const s = now.getSeconds();
+        const slots = Array.from(container.querySelectorAll<HTMLElement>(".digit-slot"));
+        if (slots.length >= 6) {
+          const h1 = Math.floor(h / 10);
+          const h2 = h % 10;
+          const m1 = Math.floor(m / 10);
+          const m2 = m % 10;
+          const s1 = Math.floor(s / 10);
+          const s2 = s % 10;
+          const strip0 = slots[0].querySelector<HTMLElement>(".reel-strip");
+          const strip1 = slots[1].querySelector<HTMLElement>(".reel-strip");
+          const strip2 = slots[2].querySelector<HTMLElement>(".reel-strip");
+          const strip3 = slots[3].querySelector<HTMLElement>(".reel-strip");
+          const strip4 = slots[4].querySelector<HTMLElement>(".reel-strip");
+          const strip5 = slots[5].querySelector<HTMLElement>(".reel-strip");
+          if (strip0) strip0.style.transform = `translateY(-${h1 * 10}%)`;
+          if (strip1) strip1.style.transform = `translateY(-${h2 * 10}%)`;
+          if (strip2) strip2.style.transform = `translateY(-${m1 * 10}%)`;
+          if (strip3) strip3.style.transform = `translateY(-${m2 * 10}%)`;
+          if (strip4) strip4.style.transform = `translateY(-${s1 * 10}%)`;
+          if (strip5) strip5.style.transform = `translateY(-${s2 * 10}%)`;
+          slots[0].style.opacity = "1";
+          slots[1].style.opacity = "1";
+          slots[2].style.opacity = "1";
+          slots[3].style.opacity = "1";
+          slots[4].style.opacity = "1";
+          slots[5].style.opacity = "1";
+        } else {
+          const hrs = h.toString().padStart(2, "0");
+          const mins = m.toString().padStart(2, "0");
+          const secs = s.toString().padStart(2, "0");
+          valEl.textContent = `${hrs}:${mins}:${secs}`;
+        }
         applyTextStyles(container, inst, telemetry, undefined);
       }
       break;
@@ -683,10 +714,10 @@ export function updateComponentInstanceDom(
         fill.style.width = boost + "%";
         let color = inst.customProps?.colorHigh || "#10b981";
         let blink = false;
-        if (boost < 12) {
+        if (boost <= 12) {
           color = inst.customProps?.colorLow || "#ef4444";
           blink = inst.customProps?.enableBlink !== false && inst.componentType !== "element-boost-bar-no-blink";
-        } else if (boost < 30) {
+        } else if (boost < 20) {
           color = inst.customProps?.colorLow || "#ef4444";
           blink = false;
         } else if (boost < 60) {
@@ -723,10 +754,10 @@ export function updateComponentInstanceDom(
         fill.style.height = boost + "%";
         let color = inst.customProps?.colorHigh || "#10b981";
         let blink = false;
-        if (boost < 12) {
+        if (boost <= 12) {
           color = inst.customProps?.colorLow || "#ef4444";
           blink = inst.customProps?.enableBlink !== false;
-        } else if (boost < 30) {
+        } else if (boost < 20) {
           color = inst.customProps?.colorLow || "#ef4444";
           blink = false;
         } else if (boost < 60) {
@@ -886,10 +917,10 @@ export function updateComponentInstanceDom(
 
         let color = inst.customProps?.colorHigh || "#10b981";
         let blink = false;
-        if (boost < 12) {
+        if (boost <= 12) {
           color = inst.customProps?.colorLow || "#ef4444";
           blink = inst.customProps?.enableBlink !== false;
-        } else if (boost < 30) {
+        } else if (boost < 20) {
           color = inst.customProps?.colorLow || "#ef4444";
           blink = false;
         } else if (boost < 60) {
@@ -1072,10 +1103,10 @@ export function updateComponentInstanceDom(
         fill.style.width = boost + "%";
         let color = inst.customProps?.colorHigh || "#10b981";
         let blink = false;
-        if (boost < 12) {
+        if (boost <= 12) {
           color = inst.customProps?.colorLow || "#ef4444";
           blink = inst.customProps?.enableBlink !== false;
-        } else if (boost < 30) {
+        } else if (boost < 20) {
           color = inst.customProps?.colorLow || "#ef4444";
           blink = false;
         } else if (boost < 60) {
@@ -1106,10 +1137,10 @@ export function updateComponentInstanceDom(
         fill.style.width = boost + "%";
         let color = inst.customProps?.colorHigh || "#10b981";
         let blink = false;
-        if (boost < 12) {
+        if (boost <= 12) {
           color = inst.customProps?.colorLow || "#ef4444";
           blink = inst.customProps?.enableBlink !== false;
-        } else if (boost < 30) {
+        } else if (boost < 20) {
           color = inst.customProps?.colorLow || "#ef4444";
           blink = false;
         } else if (boost < 60) {
@@ -1208,7 +1239,7 @@ export function updateComponentInstanceDom(
       if (bFill) {
         bFill.style.width = boost + "%";
         let color = inst.customProps?.colorHigh || "#10b981";
-        if (boost < 30) {
+        if (boost < 20) {
           color = inst.customProps?.colorLow || "#ef4444";
         } else if (boost < 60) {
           color = inst.customProps?.colorMid || "#f59e0b";

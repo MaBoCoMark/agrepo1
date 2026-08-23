@@ -18,33 +18,92 @@
 
 <template id="component-template">
   <div class="el-system-time-box align-center dyn-text-box">
-      <span class="dyn-val">00:00:00</span>
+    <div class="dyn-val digit-roller">
+      <span class="digit-slot slot-h1" data-slot="h1"><span class="reel-strip"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span></span></span>
+      <span class="digit-slot slot-h2" data-slot="h2"><span class="reel-strip"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span></span></span>
+      <span class="digit-colon">:</span>
+      <span class="digit-slot slot-m1" data-slot="m1"><span class="reel-strip"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span></span></span>
+      <span class="digit-slot slot-m2" data-slot="m2"><span class="reel-strip"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span></span></span>
+      <span class="digit-colon">:</span>
+      <span class="digit-slot slot-s1" data-slot="s1"><span class="reel-strip"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span></span></span>
+      <span class="digit-slot slot-s2" data-slot="s2"><span class="reel-strip"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span></span></span>
     </div>
+  </div>
 </template>
 
 <style>
 .el-system-time-box {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      font-family: "GHMonoR", monospace;
-      line-height: 1;
-      overflow: hidden;
-      user-select: none;
-      container-type: size;
-      box-sizing: border-box;
-      border-radius: 4px;
-    }
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  font-family: "GHMonoR", monospace;
+  line-height: 1;
+  overflow: hidden;
+  user-select: none;
+  container-type: size;
+  box-sizing: border-box;
+  border-radius: 4px;
+}
 
-    .align-left { justify-content: flex-start; text-align: left; }
-    .align-center { justify-content: center; text-align: center; }
-    .align-right { justify-content: flex-end; text-align: right; }
+.align-left { justify-content: flex-start; text-align: left; }
+.align-center { justify-content: center; text-align: center; }
+.align-right { justify-content: flex-end; text-align: right; }
 
-    .el-system-time-box .dyn-val {
-      font-weight: 700;
-      font-size: calc(min(60cqh, 22cqw));
-      color: #f8fafc;
-      letter-spacing: 0.5px;
-    }
+.el-system-time-box .dyn-val {
+  font-weight: 700;
+  font-size: calc(min(60cqh, 22cqw));
+  color: #f8fafc;
+}
+
+.digit-roller {
+  display: inline-flex;
+  align-items: center;
+  height: 1em;
+  line-height: 1;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: normal;
+}
+.digit-slot {
+  display: inline-block;
+  height: 1em;
+  line-height: 1;
+  overflow: hidden;
+  position: relative;
+  width: 0.62em;
+  text-align: center;
+  flex-shrink: 0;
+  will-change: opacity;
+}
+.reel-strip {
+  display: flex;
+  flex-direction: column;
+  transform: translateY(0%);
+  will-change: transform;
+}
+.reel-strip > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 1em;
+  line-height: 1;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  -webkit-text-stroke: inherit;
+  paint-order: inherit;
+  color: inherit;
+}
+.digit-colon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 1em;
+  line-height: 1;
+  width: 0.35em;
+  flex-shrink: 0;
+  -webkit-text-stroke: inherit;
+  paint-order: inherit;
+  color: inherit;
+}
 </style>
