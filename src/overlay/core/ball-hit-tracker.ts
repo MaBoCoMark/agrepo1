@@ -48,6 +48,20 @@ export interface BallHitPayloadData {
   MatchGuid?: string;
   Players?: BallHitPlayer[];
   Ball?: BallHitBall;
+  Target?: {
+    Name?: string;
+    TeamNum?: number | string;
+    [key: string]: any;
+  };
+  Game?: {
+    Target?: {
+      Name?: string;
+      TeamNum?: number | string;
+      [key: string]: any;
+    };
+    [key: string]: any;
+  };
+  TargetTeam?: number | string;
   [key: string]: any;
 }
 
@@ -113,6 +127,17 @@ export let isBallHitDirty = true;
 export let isRecordingHits = true;
 export let currentOperationMode: BallHitOperationMode = 'mapping';
 
+// Default: Only indicate latest hit (no previous hit point cloud clutter)
+export let onlyLatestHit = true;
+
+// Target player's team (0 = Blue, 1 = Orange). Controls 180° pitch orientation!
+export let currentTargetTeam: number = 0;
+
+// Outer speed ring customization: Percentage relative to narrower dimension of pitch (100% = max width of narrower side)
+export let speedRingPercent = 20;
+export let isPreviewSpeedRing = false;
+export let previewSpeedKph = 110;
+
 export let hitHistoryBuffer: HitPointRecord[] = [];
 export const MAX_HIT_HISTORY = 3000;
 
@@ -135,6 +160,55 @@ export function setOperationMode(mode: BallHitOperationMode): void {
 export function setRecordingState(recording: boolean): void {
   isRecordingHits = recording;
   isBallHitDirty = true;
+}
+
+export function setOnlyLatestHit(latestOnly: boolean): void {
+  onlyLatestHit = latestOnly;
+  isBallHitDirty = true;
+}
+
+/**
+ * Sets the active target team (0 = Blue / our team, 1 = Orange / our team).
+ * Governs the 180° mini map orientation.
+ */
+export function setTargetTeam(team: number): void {
+  const normalized = (team === 1 || String(team) === '1') ? 1 : 0;
+  if (currentTargetTeam !== normalized) {
+    currentTargetTeam = normalized;
+    isBallHitDirty = true;
+  }
+}
+
+export function getTargetTeam(): number {
+  return currentTargetTeam;
+}
+
+export function setSpeedRingPercent(percent: number): void {
+  speedRingPercent = Math.max(1, Math.min(100, percent));
+  isBallHitDirty = true;
+}
+
+export function setPreviewSpeedRing(preview: boolean, speed?: number): void {
+  isPreviewSpeedRing = preview;
+  if (typeof speed === 'number') {
+    previewSpeedKph = Math.max(0, Math.min(110, speed));
+  }
+  isBallHitDirty = true;
+}
+
+export function setPreviewSpeedKph(speed: number): void {
+  previewSpeedKph = Math.max(0, Math.min(110, speed));
+  isBallHitDirty = true;
+}
+
+/**
+ * Checks whether the pitch mini map should rotate 180 degrees.
+ * Based exclusively on TARGET PLAYER's team (our perspective):
+ * - Target Team 0: Normal 0° orientation.
+ * - Target Team 1: 180° orientation (our goal stays at the bottom, opponent goal at top).
+ */
+export function isPitchRotated180(): boolean {
+  return currentTargetTeam === 1;
 }
 
 export function clearHitHistory(): void {
@@ -194,9 +268,10 @@ export function importHitsFromJson(jsonString: string): number {
         const x = typeof item.x === 'number' ? item.x : (typeof item.X === 'number' ? item.X : (Array.isArray(item) ? item[0] : null));
         const y = typeof item.y === 'number' ? item.y : (typeof item.Y === 'number' ? item.Y : (Array.isArray(item) ? item[1] : null));
         const z = typeof item.z === 'number' ? item.z : (typeof item.Z === 'number' ? item.Z : (Array.isArray(item) ? item[2] : 50));
+        const teamNum = item.teamNum ?? item.TeamNum ?? (typeof item[3] === 'number' ? item[3] : undefined);
         if (x !== null && y !== null && !isNaN(x) && !isNaN(y)) {
           const isNoise = !isPointInsideSafetyBounds(x, y, z ?? 50);
-          hitHistoryBuffer.push({ x, y, z: z ?? 50, timestamp: Date.now(), isNoise });
+          hitHistoryBuffer.push({ x, y, z: z ?? 50, timestamp: Date.now(), isNoise, teamNum });
           addedCount++;
         }
       }
@@ -229,6 +304,9 @@ export function exportBoostPickupsJson(): string {
 }
 
 export function processBoostPickupPacket(_raw: any): boolean {
+  if (overlayState.currentActiveScene !== 'ball-hit') {
+    return false;
+  }
   return false;
 }
 
@@ -257,6 +335,15 @@ export function processBallHitPacket(raw: BallHitWebSocketMessage): boolean {
 
   if (!payloadData || typeof payloadData !== 'object') {
     return false;
+  }
+
+  // Update target team if specified in packet
+  if (payloadData.Game?.Target?.TeamNum !== undefined) {
+    setTargetTeam(Number(payloadData.Game.Target.TeamNum));
+  } else if (payloadData.Target?.TeamNum !== undefined) {
+    setTargetTeam(Number(payloadData.Target.TeamNum));
+  } else if (payloadData.TargetTeam !== undefined) {
+    setTargetTeam(Number(payloadData.TargetTeam));
   }
 
   const ball: BallHitBall | undefined = payloadData.Ball || (payloadData as any).ball;
@@ -293,11 +380,13 @@ export function processBallHitPacket(raw: BallHitWebSocketMessage): boolean {
   const d = new Date();
   const timeStr = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}.${d.getMilliseconds().toString().padStart(3, '0')}`;
 
+  const hitTeamNum = primaryPlayer?.TeamNum ?? primaryPlayer?.teamNum ?? '-';
+
   lastBallHitSnapshot.hasData = true;
   lastBallHitSnapshot.timestamp = timeStr;
   lastBallHitSnapshot.playerName = primaryPlayer?.Name || primaryPlayer?.name || 'Unknown';
   lastBallHitSnapshot.shortcut = primaryPlayer?.Shortcut ?? primaryPlayer?.shortcut ?? '-';
-  lastBallHitSnapshot.teamNum = primaryPlayer?.TeamNum ?? primaryPlayer?.teamNum ?? '-';
+  lastBallHitSnapshot.teamNum = hitTeamNum;
   lastBallHitSnapshot.preHitSpeed = preSpeed;
   lastBallHitSnapshot.postHitSpeed = postSpeed;
   lastBallHitSnapshot.speedDelta = postSpeed - preSpeed;
@@ -305,7 +394,7 @@ export function processBallHitPacket(raw: BallHitWebSocketMessage): boolean {
   lastBallHitSnapshot.y = y;
   lastBallHitSnapshot.z = z;
 
-  // If recording is active, append to point cloud
+  // If recording is active, append to point cloud with player team attribution
   if (isRecordingHits && x !== null && y !== null && !isNaN(x) && !isNaN(y)) {
     const isNoise = !isPointInsideSafetyBounds(x, y, z ?? 0);
     hitHistoryBuffer.push({
@@ -313,7 +402,8 @@ export function processBallHitPacket(raw: BallHitWebSocketMessage): boolean {
       y,
       z: z ?? 0,
       timestamp: Date.now(),
-      isNoise
+      isNoise,
+      teamNum: hitTeamNum
     });
     if (hitHistoryBuffer.length > MAX_HIT_HISTORY) {
       hitHistoryBuffer.shift();
@@ -340,6 +430,8 @@ export interface BallHitDomNodes {
 
   modeMappingBtn: HTMLElement | null;
   modeCalibBtn: HTMLElement | null;
+  toggleTrackingBtn: HTMLElement | null;
+  trackingBtnText: HTMLElement | null;
   recordingToggleBtn: HTMLElement | null;
   recordingBadge: HTMLElement | null;
 
@@ -390,6 +482,20 @@ export interface BallHitDomNodes {
   btnResetCalib: HTMLElement | null;
   statsValidHits: HTMLElement | null;
   statsNoiseHits: HTMLElement | null;
+
+  // Speed Ring Percentage Controls
+  speedRingPercentSlider: HTMLInputElement | null;
+  speedRingPercentVal: HTMLElement | null;
+  speedRingPreviewCheck: HTMLInputElement | null;
+  speedRingPreviewSlider: HTMLInputElement | null;
+  speedRingPreviewVal: HTMLElement | null;
+
+  // Corner and Rotation Badges
+  tagTL: HTMLElement | null;
+  tagTR: HTMLElement | null;
+  tagBL: HTMLElement | null;
+  tagBR: HTMLElement | null;
+  rotationTag: HTMLElement | null;
 }
 
 let ballHitDomNodes: BallHitDomNodes | null = null;
@@ -406,6 +512,8 @@ export function cacheBallHitNodes(): BallHitDomNodes {
 
     modeMappingBtn: document.getElementById('bh-btn-mode-mapping'),
     modeCalibBtn: document.getElementById('bh-btn-mode-calibration'),
+    toggleTrackingBtn: document.getElementById('bh-btn-toggle-tracking'),
+    trackingBtnText: document.getElementById('bh-tracking-btn-text'),
     recordingToggleBtn: document.getElementById('bh-btn-toggle-record'),
     recordingBadge: document.getElementById('bh-record-badge'),
 
@@ -453,7 +561,19 @@ export function cacheBallHitNodes(): BallHitDomNodes {
     btnImportJson: document.getElementById('bh-btn-import-json'),
     btnResetCalib: document.getElementById('bh-btn-reset-calib'),
     statsValidHits: document.getElementById('bh-stats-valid-hits'),
-    statsNoiseHits: document.getElementById('bh-stats-noise-hits')
+    statsNoiseHits: document.getElementById('bh-stats-noise-hits'),
+
+    speedRingPercentSlider: document.getElementById('bh-speed-ring-percent-slider') as HTMLInputElement | null,
+    speedRingPercentVal: document.getElementById('bh-speed-ring-percent-val'),
+    speedRingPreviewCheck: document.getElementById('bh-speed-ring-preview-check') as HTMLInputElement | null,
+    speedRingPreviewSlider: document.getElementById('bh-speed-ring-preview-slider') as HTMLInputElement | null,
+    speedRingPreviewVal: document.getElementById('bh-speed-ring-preview-val'),
+
+    tagTL: document.getElementById('bh-tag-tl'),
+    tagTR: document.getElementById('bh-tag-tr'),
+    tagBL: document.getElementById('bh-tag-bl'),
+    tagBR: document.getElementById('bh-tag-br'),
+    rotationTag: document.getElementById('bh-pitch-rotation-tag')
   };
 
   bindPitchCanvasEvents();
@@ -540,8 +660,13 @@ function bindPitchCanvasEvents(): void {
   canvas.addEventListener('mousedown', (e: MouseEvent) => {
     if (currentOperationMode !== 'calibration') return;
     const rect = canvas.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const clickY = e.clientY - rect.top;
+    let clickX = e.clientX - rect.left;
+    let clickY = e.clientY - rect.top;
+
+    if (isPitchRotated180()) {
+      clickX = canvas.width - clickX;
+      clickY = canvas.height - clickY;
+    }
 
     // Check if clicked close to any vertex
     const radius = 14;
@@ -563,8 +688,13 @@ function bindPitchCanvasEvents(): void {
   window.addEventListener('mousemove', (e: MouseEvent) => {
     if (!isDraggingVertex || selectedVertexIndex === null || !dom.pitchCanvas) return;
     const rect = dom.pitchCanvas.getBoundingClientRect();
-    const mouseX = Math.max(0, Math.min(dom.pitchCanvas.width, e.clientX - rect.left));
-    const mouseY = Math.max(0, Math.min(dom.pitchCanvas.height, e.clientY - rect.top));
+    let mouseX = Math.max(0, Math.min(dom.pitchCanvas.width, e.clientX - rect.left));
+    let mouseY = Math.max(0, Math.min(dom.pitchCanvas.height, e.clientY - rect.top));
+
+    if (isPitchRotated180()) {
+      mouseX = dom.pitchCanvas.width - mouseX;
+      mouseY = dom.pitchCanvas.height - mouseY;
+    }
 
     const worldPt = canvasToWorld(mouseX, mouseY, dom.pitchCanvas.width, dom.pitchCanvas.height, currentCalibration);
     currentControlPoints[selectedVertexIndex].x = Math.round(worldPt.x * 10) / 10;
@@ -587,6 +717,11 @@ function bindPitchCanvasEvents(): void {
 
   dom.modeCalibBtn?.addEventListener('click', () => {
     setOperationMode('calibration');
+  });
+
+  // Toggle point cloud tracking vs latest hit only
+  dom.toggleTrackingBtn?.addEventListener('click', () => {
+    setOnlyLatestHit(!onlyLatestHit);
   });
 
   dom.recordingToggleBtn?.addEventListener('click', () => {
@@ -630,6 +765,30 @@ function bindPitchCanvasEvents(): void {
     resetControlPointsToDefault();
   });
 
+  // Outer Speed Ring controls (Percentage relative to narrower side)
+  dom.speedRingPercentSlider?.addEventListener('input', () => {
+    if (dom.speedRingPercentSlider) {
+      setSpeedRingPercent(parseInt(dom.speedRingPercentSlider.value, 10));
+    }
+  });
+
+  dom.speedRingPreviewCheck?.addEventListener('change', () => {
+    if (dom.speedRingPreviewCheck) {
+      setPreviewSpeedRing(dom.speedRingPreviewCheck.checked, previewSpeedKph);
+    }
+  });
+
+  dom.speedRingPreviewSlider?.addEventListener('input', () => {
+    if (dom.speedRingPreviewSlider) {
+      const spd = parseInt(dom.speedRingPreviewSlider.value, 10);
+      setPreviewSpeedKph(spd);
+      if (dom.speedRingPreviewCheck && !dom.speedRingPreviewCheck.checked) {
+        dom.speedRingPreviewCheck.checked = true;
+        setPreviewSpeedRing(true, spd);
+      }
+    }
+  });
+
   // WASD / Arrow Calibration Hotkeys
   window.addEventListener('keydown', (e: KeyboardEvent) => {
     if (overlayState.currentActiveScene !== 'ball-hit') return;
@@ -655,7 +814,7 @@ function bindPitchCanvasEvents(): void {
 }
 
 /**
- * Render 2D Pitch Radar Canvas with 1:1 isometric scale and static 34 boost pads
+ * Render 2D Pitch Radar Canvas with 1:1 isometric scale, static 34 boost pads, and 180° rotation for Target Team 1.
  */
 function drawPitchRadar(canvas: HTMLCanvasElement): void {
   const ctx = canvas.getContext('2d');
@@ -667,6 +826,15 @@ function drawPitchRadar(canvas: HTMLCanvasElement): void {
   ctx.clearRect(0, 0, w, h);
 
   const bounds = getCanvasDrawBounds(w, h);
+  const isRotated = isPitchRotated180();
+
+  // If Target Player is Team 1 (Orange team perspective), turn 180 degrees around pitch canvas center
+  if (isRotated) {
+    ctx.save();
+    ctx.translate(w / 2, h / 2);
+    ctx.rotate(Math.PI);
+    ctx.translate(-w / 2, -h / 2);
+  }
 
   // 1. Radar Grid / Pitch Field Underlay
   ctx.save();
@@ -754,8 +922,8 @@ function drawPitchRadar(canvas: HTMLCanvasElement): void {
   }
   ctx.restore();
 
-  // 3. Render Historical Hit Points Cloud (Ball Hits)
-  if (hitHistoryBuffer.length > 0) {
+  // 3. Render Historical Hit Points Cloud (Ball Hits) - only if not in "latest only" mode
+  if (!onlyLatestHit && hitHistoryBuffer.length > 0) {
     ctx.save();
     for (let i = 0; i < hitHistoryBuffer.length; i++) {
       const pt = hitHistoryBuffer[i];
@@ -763,10 +931,12 @@ function drawPitchRadar(canvas: HTMLCanvasElement): void {
       ctx.beginPath();
       ctx.arc(screen.x, screen.y, pt.isNoise ? 2.5 : 3, 0, Math.PI * 2);
       if (pt.isNoise) {
-        ctx.fillStyle = 'rgba(255, 51, 102, 0.35)';
+        ctx.fillStyle = 'rgba(255, 209, 102, 0.4)';
       } else {
-        const alpha = Math.min(0.85, 0.2 + (i / hitHistoryBuffer.length) * 0.65);
-        ctx.fillStyle = `rgba(0, 255, 136, ${alpha})`;
+        const isMyHit = (pt.teamNum === currentTargetTeam || pt.teamNum === String(currentTargetTeam) || (pt.teamNum === undefined && currentTargetTeam === 0));
+        const alpha = Math.min(0.85, 0.25 + (i / hitHistoryBuffer.length) * 0.65);
+        // My Team Hit = Green, Opponent Hit = Red
+        ctx.fillStyle = isMyHit ? `rgba(0, 255, 136, ${alpha})` : `rgba(255, 51, 102, ${alpha})`;
       }
       ctx.fill();
     }
@@ -814,54 +984,104 @@ function drawPitchRadar(canvas: HTMLCanvasElement): void {
       ctx.lineWidth = 1.5;
       ctx.stroke();
 
-      // Vertex Index Label
+      // Vertex Index Label (keep text upright even if map is rotated)
       if (currentOperationMode === 'calibration' || isSelected) {
+        ctx.save();
+        if (isRotated) {
+          ctx.translate(sp.x, sp.y);
+          ctx.rotate(Math.PI);
+          ctx.translate(-sp.x, -sp.y);
+        }
         ctx.font = 'bold 9px monospace';
         ctx.fillStyle = isSelected ? '#ffd166' : 'rgba(255, 255, 255, 0.75)';
         ctx.fillText(cp.id, sp.x + 8, sp.y + 3);
+        ctx.restore();
       }
     }
     ctx.restore();
   }
 
-  // 6. Render Latest Ball Hit Ripple & Speed-Scaled Dynamic Outer Circle
-  if (lastBallHitSnapshot.hasData && lastBallHitSnapshot.x !== null && lastBallHitSnapshot.y !== null) {
-    const liveScreen = worldToCanvas(lastBallHitSnapshot.x, lastBallHitSnapshot.y, w, h, currentCalibration);
+  // 6. Render Latest Ball Hit Ripple & Speed-Scaled Dynamic Outer Circle (or Preview Mode)
+  const isPreview = isPreviewSpeedRing;
+  const showHit = (lastBallHitSnapshot.hasData && lastBallHitSnapshot.x !== null && lastBallHitSnapshot.y !== null) || isPreview;
+
+  if (showHit) {
+    const hitX = isPreview ? 0 : (lastBallHitSnapshot.x ?? 0);
+    const hitY = isPreview ? 0 : (lastBallHitSnapshot.y ?? 0);
+    const liveScreen = worldToCanvas(hitX, hitY, w, h, currentCalibration);
     ctx.save();
 
-    // Dynamic Outer Red Circle based on postHitSpeed (0 - 110 scale)
-    // When speed is 0 or less, the outer ring is not displayed (radius is 0).
-    const postSpeed = typeof lastBallHitSnapshot.postHitSpeed === 'number' ? lastBallHitSnapshot.postHitSpeed : 0;
+    // Determine if hit was by our team or opponent team:
+    // Our team hit = GREEN (#00ff88), Opponent hit = RED (#ff3366)
+    const hitTeam = lastBallHitSnapshot.teamNum;
+    const isMyTeamHit = isPreview
+      ? true
+      : (hitTeam === currentTargetTeam || hitTeam === String(currentTargetTeam) || (hitTeam === '-' && currentTargetTeam === 0));
+
+    const hitColor = isMyTeamHit ? '#00ff88' : '#ff3366';
+    const ringStroke = isMyTeamHit ? 'rgba(0, 255, 136, 0.95)' : 'rgba(255, 51, 102, 0.95)';
+    const ringFill = isMyTeamHit ? 'rgba(0, 255, 136, 0.14)' : 'rgba(255, 51, 102, 0.14)';
+    const shadowColor = isMyTeamHit ? '#00ff88' : '#ff3366';
+
+    // Dynamic Outer Circle scaled to narrower dimension percentage and postHitSpeed (0 - 110 scale)
+    const postSpeed = isPreview
+      ? previewSpeedKph
+      : (typeof lastBallHitSnapshot.postHitSpeed === 'number' ? lastBallHitSnapshot.postHitSpeed : 0);
     const clampedSpeed = Math.max(0, Math.min(110, postSpeed));
 
+    const narrowerSide = Math.min(bounds.actualDrawW, bounds.actualDrawH);
+    // 100% outer ring percentage means outer circle diameter equals 100% of the narrower side
+    const maxRingRadius = (narrowerSide * (speedRingPercent / 100)) / 2;
+
     if (clampedSpeed > 0) {
-      const maxRingRadius = 36;
       const ringRadius = (clampedSpeed / 110) * maxRingRadius;
 
       ctx.beginPath();
       ctx.arc(liveScreen.x, liveScreen.y, ringRadius, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(255, 51, 102, 0.9)';
+      ctx.strokeStyle = ringStroke;
       ctx.lineWidth = 2;
-      ctx.shadowColor = '#ff3366';
+      ctx.shadowColor = shadowColor;
       ctx.shadowBlur = 8;
       ctx.stroke();
 
       // Translucent inner fill inside speed ring
-      ctx.fillStyle = 'rgba(255, 51, 102, 0.12)';
+      ctx.fillStyle = ringFill;
       ctx.fill();
     }
 
-    // Core Red Hit Point
+    // Core Hit Point Dot
     ctx.beginPath();
     ctx.arc(liveScreen.x, liveScreen.y, 5, 0, Math.PI * 2);
-    ctx.fillStyle = '#ff3366';
-    ctx.shadowColor = '#ff3366';
+    ctx.fillStyle = hitColor;
+    ctx.shadowColor = shadowColor;
     ctx.shadowBlur = 14;
     ctx.fill();
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 1;
     ctx.stroke();
 
+    // In preview mode, draw clear textual guidance
+    if (isPreview) {
+      ctx.save();
+      if (isRotated) {
+        ctx.translate(liveScreen.x, liveScreen.y);
+        ctx.rotate(Math.PI);
+        ctx.translate(-liveScreen.x, -liveScreen.y);
+      }
+      ctx.font = 'bold 11px monospace';
+      ctx.fillStyle = hitColor;
+      ctx.shadowColor = '#000000';
+      ctx.shadowBlur = 4;
+      const previewText = `PREVIEW: ${clampedSpeed.toFixed(0)} KM/H (${speedRingPercent}% max diameter, R: ${((clampedSpeed / 110) * maxRingRadius).toFixed(1)}px)`;
+      ctx.fillText(previewText, liveScreen.x + 12, liveScreen.y - 12);
+      ctx.restore();
+    }
+
+    ctx.restore();
+  }
+
+  // Restore 180° rotation transform
+  if (isRotated) {
     ctx.restore();
   }
 }
@@ -887,6 +1107,14 @@ export function renderBallHitScene(): void {
     dom.modeCalibBtn.className = currentOperationMode === 'calibration' ? 'bh-mode-pill active' : 'bh-mode-pill';
   }
 
+  // Toggle tracking vs latest hit only
+  if (dom.toggleTrackingBtn) {
+    dom.toggleTrackingBtn.className = onlyLatestHit ? 'bh-mode-pill active' : 'bh-mode-pill';
+  }
+  if (dom.trackingBtnText) {
+    dom.trackingBtnText.textContent = onlyLatestHit ? 'Latest Hit Only' : 'Tracking All Hits';
+  }
+
   // Recording status badge
   if (dom.recordingBadge) {
     dom.recordingBadge.textContent = isRecordingHits ? 'RECORDING' : 'PAUSED';
@@ -903,6 +1131,7 @@ export function renderBallHitScene(): void {
   if (dom.statsNoiseHits) dom.statsNoiseHits.textContent = noiseHits.toString();
 
   // Calibration tags
+  const isRotated = isPitchRotated180();
   if (dom.calibOffsetTag) {
     dom.calibOffsetTag.textContent = `Offset: (${currentCalibration.offsetX.toFixed(0)}, ${currentCalibration.offsetY.toFixed(0)})`;
   }
@@ -910,12 +1139,50 @@ export function renderBallHitScene(): void {
     dom.calibScaleTag.textContent = `Scale: ${currentCalibration.scaleX.toFixed(2)}x / ${currentCalibration.scaleY.toFixed(2)}y`;
   }
   if (dom.calibInvertTag) {
-    dom.calibInvertTag.textContent = `Invert: X[${currentCalibration.invertX ? '✓' : '✗'}] Y[${currentCalibration.invertY ? '✓' : '✗'}]`;
+    dom.calibInvertTag.textContent = `Invert: X[${currentCalibration.invertX ? '✓' : '✗'}] Y[${currentCalibration.invertY ? '✓' : '✗'}] | Target: Team ${currentTargetTeam} (${isRotated ? '180°' : '0°'})`;
+  }
+
+  // Speed ring percentage controls
+  if (dom.speedRingPercentSlider && dom.speedRingPercentSlider.value !== speedRingPercent.toString()) {
+    dom.speedRingPercentSlider.value = speedRingPercent.toString();
+  }
+  if (dom.speedRingPercentVal) {
+    dom.speedRingPercentVal.textContent = `${speedRingPercent}%`;
+  }
+  if (dom.speedRingPreviewCheck && dom.speedRingPreviewCheck.checked !== isPreviewSpeedRing) {
+    dom.speedRingPreviewCheck.checked = isPreviewSpeedRing;
+  }
+  if (dom.speedRingPreviewSlider && dom.speedRingPreviewSlider.value !== previewSpeedKph.toString()) {
+    dom.speedRingPreviewSlider.value = previewSpeedKph.toString();
+  }
+  if (dom.speedRingPreviewVal) {
+    dom.speedRingPreviewVal.textContent = `${previewSpeedKph} KPH`;
+  }
+
+  // Corner Tags & Rotation Tag
+  if (isRotated) {
+    if (dom.tagTL) dom.tagTL.textContent = 'X: +4500, Y: -6000 (DEFENDING GOAL)';
+    if (dom.tagTR) dom.tagTR.textContent = 'X: -4500, Y: -6000 (DEFENDING GOAL)';
+    if (dom.tagBL) dom.tagBL.textContent = 'X: +4500, Y: +6000 (OPPONENT GOAL)';
+    if (dom.tagBR) dom.tagBR.textContent = 'X: -4500, Y: +6000 (OPPONENT GOAL)';
+    if (dom.rotationTag) {
+      dom.rotationTag.textContent = '🔄 ROTATED 180° (TEAM 1 ORANGE PERSPECTIVE)';
+      dom.rotationTag.style.display = 'block';
+    }
+  } else {
+    if (dom.tagTL) dom.tagTL.textContent = 'X: -4500, Y: +6000 (OPPONENT GOAL)';
+    if (dom.tagTR) dom.tagTR.textContent = 'X: +4500, Y: +6000 (OPPONENT GOAL)';
+    if (dom.tagBL) dom.tagBL.textContent = 'X: -4500, Y: -6000 (DEFENDING GOAL)';
+    if (dom.tagBR) dom.tagBR.textContent = 'X: +4500, Y: -6000 (DEFENDING GOAL)';
+    if (dom.rotationTag) {
+      dom.rotationTag.textContent = 'TEAM 0 BLUE PERSPECTIVE (0°)';
+      dom.rotationTag.style.display = 'none';
+    }
   }
 
   // Awaiting notice
   if (dom.awaitingNotice) {
-    dom.awaitingNotice.style.display = (lastBallHitSnapshot.hasData || hitHistoryBuffer.length > 0) ? 'none' : 'flex';
+    dom.awaitingNotice.style.display = (lastBallHitSnapshot.hasData || hitHistoryBuffer.length > 0 || isPreviewSpeedRing) ? 'none' : 'flex';
   }
 
   // 2. Player Attribution & Speeds
@@ -925,12 +1192,14 @@ export function renderBallHitScene(): void {
     if (dom.playerTeamNum) dom.playerTeamNum.textContent = String(lastBallHitSnapshot.teamNum);
 
     if (dom.playerTeamBadge) {
-      if (lastBallHitSnapshot.teamNum === 0 || lastBallHitSnapshot.teamNum === '0') {
-        dom.playerTeamBadge.textContent = 'TEAM 0 (BLUE)';
-        dom.playerTeamBadge.className = 'bh-team-badge team-blue';
-      } else if (lastBallHitSnapshot.teamNum === 1 || lastBallHitSnapshot.teamNum === '1') {
-        dom.playerTeamBadge.textContent = 'TEAM 1 (ORANGE)';
-        dom.playerTeamBadge.className = 'bh-team-badge team-orange';
+      const hitTeam = lastBallHitSnapshot.teamNum;
+      const isMyTeam = (hitTeam === currentTargetTeam || hitTeam === String(currentTargetTeam));
+      if (hitTeam === 0 || hitTeam === '0') {
+        dom.playerTeamBadge.textContent = isMyTeam ? 'TEAM 0 (MY TEAM)' : 'TEAM 0 (OPPONENT)';
+        dom.playerTeamBadge.className = isMyTeam ? 'bh-team-badge team-blue' : 'bh-team-badge team-blue';
+      } else if (hitTeam === 1 || hitTeam === '1') {
+        dom.playerTeamBadge.textContent = isMyTeam ? 'TEAM 1 (MY TEAM)' : 'TEAM 1 (OPPONENT)';
+        dom.playerTeamBadge.className = isMyTeam ? 'bh-team-badge team-orange' : 'bh-team-badge team-orange';
       } else {
         dom.playerTeamBadge.textContent = `TEAM ${lastBallHitSnapshot.teamNum}`;
         dom.playerTeamBadge.className = 'bh-team-badge team-neutral';

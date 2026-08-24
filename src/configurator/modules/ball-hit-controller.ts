@@ -22,6 +22,10 @@ export function initBallHitController(): void {
   let controlPoints: ControlPoint[] = loadSavedControlPoints();
   let currentMode: 'mapping' | 'calibration' = 'mapping';
   let isRecording = true;
+  let onlyLatestHit = true;
+  let speedRingPercent = 20;
+  let isPreviewActive = false;
+  let previewSpeed = 110;
 
   // DOM Elements
   const modeMappingRadio = document.getElementById('bh-cfg-mode-mapping') as HTMLInputElement | null;
@@ -47,6 +51,13 @@ export function initBallHitController(): void {
 
   const invertXCheck = document.getElementById('bh-cfg-invert-x-check') as HTMLInputElement | null;
   const invertYCheck = document.getElementById('bh-cfg-invert-y-check') as HTMLInputElement | null;
+
+  const onlyLatestCheck = document.getElementById('bh-cfg-only-latest-check') as HTMLInputElement | null;
+  const ringPercentSlider = document.getElementById('bh-cfg-ring-percent-slider') as HTMLInputElement | null;
+  const ringPercentVal = document.getElementById('bh-cfg-ring-percent-val');
+  const previewCheck = document.getElementById('bh-cfg-preview-check') as HTMLInputElement | null;
+  const previewSpeedSlider = document.getElementById('bh-cfg-preview-speed-slider') as HTMLInputElement | null;
+  const previewSpeedVal = document.getElementById('bh-cfg-preview-speed-val');
 
   const pointsTableContainer = document.getElementById('bh-cfg-points-table');
 
@@ -95,6 +106,15 @@ export function initBallHitController(): void {
 
     if (invertXCheck) invertXCheck.checked = calibration.invertX;
     if (invertYCheck) invertYCheck.checked = calibration.invertY;
+
+    if (onlyLatestCheck) onlyLatestCheck.checked = onlyLatestHit;
+
+    if (ringPercentSlider) ringPercentSlider.value = speedRingPercent.toString();
+    if (ringPercentVal) ringPercentVal.textContent = `${speedRingPercent}%`;
+
+    if (previewCheck) previewCheck.checked = isPreviewActive;
+    if (previewSpeedSlider) previewSpeedSlider.value = previewSpeed.toString();
+    if (previewSpeedVal) previewSpeedVal.textContent = `${previewSpeed} KPH`;
 
     renderPointsTable();
   }
@@ -205,6 +225,33 @@ export function initBallHitController(): void {
   invertYCheck?.addEventListener('change', () => {
     calibration.invertY = invertYCheck.checked;
     syncCalibrationToOverlay();
+  });
+
+  // Hit Tracking & Speed Ring Percentage Tuning
+  onlyLatestCheck?.addEventListener('change', () => {
+    onlyLatestHit = onlyLatestCheck.checked;
+    emitTo('overlay', 'pitch-toggle-latest-only', { onlyLatest: onlyLatestHit });
+  });
+
+  ringPercentSlider?.addEventListener('input', () => {
+    speedRingPercent = parseInt(ringPercentSlider.value, 10);
+    if (ringPercentVal) ringPercentVal.textContent = `${speedRingPercent}%`;
+    emitTo('overlay', 'pitch-speed-ring-update', { percent: speedRingPercent });
+  });
+
+  previewCheck?.addEventListener('change', () => {
+    isPreviewActive = previewCheck.checked;
+    emitTo('overlay', 'pitch-speed-ring-update', { preview: isPreviewActive, previewSpeed });
+  });
+
+  previewSpeedSlider?.addEventListener('input', () => {
+    previewSpeed = parseInt(previewSpeedSlider.value, 10);
+    if (previewSpeedVal) previewSpeedVal.textContent = `${previewSpeed} KPH`;
+    if (!isPreviewActive && previewCheck) {
+      isPreviewActive = true;
+      previewCheck.checked = true;
+    }
+    emitTo('overlay', 'pitch-speed-ring-update', { preview: isPreviewActive, previewSpeed });
   });
 
   // Listen for updates from overlay

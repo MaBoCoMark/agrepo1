@@ -45,6 +45,11 @@ import {
   importHitsFromJson,
   importBoostsFromJson,
   markBallHitDirty,
+  setOnlyLatestHit,
+  setSpeedRingPercent,
+  setTargetTeam,
+  setPreviewSpeedRing,
+  setPreviewSpeedKph,
   BallHitOperationMode
 } from './ball-hit-tracker';
 import { CalibrationSettings, ControlPoint } from './pitch-geometry';
@@ -280,6 +285,29 @@ export async function setupOverlayEventListeners(): Promise<void> {
 
   await listen<void>('pitch-clear-all', () => {
     clearAllPitchData();
+  });
+
+  await listen<{ onlyLatest: boolean }>('pitch-toggle-latest-only', (e) => {
+    if (e.payload?.onlyLatest !== undefined) {
+      setOnlyLatestHit(Boolean(e.payload.onlyLatest));
+    }
+  });
+
+  await listen<{ percent?: number; maxRadius?: number; preview?: boolean; previewSpeed?: number }>('pitch-speed-ring-update', (e) => {
+    if (typeof e.payload?.percent === 'number') {
+      setSpeedRingPercent(e.payload.percent);
+    }
+    if (e.payload?.preview !== undefined) {
+      setPreviewSpeedRing(Boolean(e.payload.preview), e.payload.previewSpeed);
+    } else if (typeof e.payload?.previewSpeed === 'number') {
+      setPreviewSpeedKph(e.payload.previewSpeed);
+    }
+  });
+
+  await listen<{ targetTeam: number }>('pitch-target-team-update', (e) => {
+    if (typeof e.payload?.targetTeam === 'number') {
+      setTargetTeam(e.payload.targetTeam);
+    }
   });
 
   await listen<{ raw: string }>('pitch-import-data', (e) => {

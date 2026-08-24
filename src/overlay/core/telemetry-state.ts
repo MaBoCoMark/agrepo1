@@ -12,6 +12,7 @@ export const previousData: TelemetryBuffer = {
   bOvertime: false,
   ballSpeed: -1,
   ballTeamNum: -1,
+  myTeamNum: -1,
   myScore: -1,
   oppScore: -1,
   scoreDiff: -999,
@@ -59,6 +60,7 @@ export const latestData: TelemetryBuffer = {
   bOvertime: false,
   ballSpeed: 0,
   ballTeamNum: 0,
+  myTeamNum: 0,
   myScore: 0,
   oppScore: 0,
   scoreDiff: 0,
@@ -106,6 +108,7 @@ export function resetPreviousData(): void {
   previousData.bOvertime = false;
   previousData.ballSpeed = -1;
   previousData.ballTeamNum = -1;
+  previousData.myTeamNum = -1;
   previousData.myScore = -1;
   previousData.oppScore = -1;
   previousData.scoreDiff = -999;

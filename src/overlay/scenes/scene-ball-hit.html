@@ -22,6 +22,10 @@
         <span>🔍</span>
         <span>Verification & Calibration</span>
       </button>
+      <button type="button" id="bh-btn-toggle-tracking" class="bh-mode-pill active" title="Toggle point cloud tracking: Only Latest Hit (Default) vs Full Point Cloud">
+        <span>🎯</span>
+        <span id="bh-tracking-btn-text">Latest Hit Only</span>
+      </button>
       <div class="bh-rec-group">
         <span id="bh-record-badge" class="bh-rec-badge rec-active">RECORDING</span>
         <button type="button" id="bh-btn-toggle-record" class="bh-btn-xs">⏸ Pause</button>
@@ -279,34 +283,54 @@
       <div class="bh-calib-strip">
         <div class="bh-calib-tags-wrap">
           <span id="bh-calib-offset-tag" class="bh-calib-tag">Offset: (0, 0)</span>
-          <span id="bh-calib-scale-tag" class="bh-calib-tag">Scale: 1.00x / 1.00y</span>
-          <span id="bh-calib-invert-tag" class="bh-calib-tag">Invert: X[✗] Y[✗]</span>
+          <span id="bh-calib-scale-tag" class="bh-calib-tag">Scale: 1.10x / 1.00y</span>
+          <span id="bh-calib-invert-tag" class="bh-calib-tag">Invert: X[✓] Y[✗]</span>
         </div>
         <div class="bh-calib-hint">
           ⌨️ <strong>[WASD / Arrows]</strong> Pan &nbsp;|&nbsp; <strong>[Q/E]</strong> Scale &nbsp;|&nbsp; <strong>Drag Points</strong> Fine-tune
         </div>
       </div>
 
-      <!-- 2D Canvas Viewport with 1:1 isometric proportions -->
+      <!-- Outer Speed Ring Percentage Tuning & Live Preview Bar -->
+      <div class="bh-speed-ring-bar">
+        <div class="bh-ring-control-group">
+          <label class="bh-ring-label" for="bh-speed-ring-percent-slider">Outer Ring Max Width (% of narrower side):</label>
+          <input type="range" id="bh-speed-ring-percent-slider" min="1" max="100" value="20" step="1" class="bh-slider-sm" title="Adjust the maximum outer circle size relative to the narrower side of the pitch">
+          <span id="bh-speed-ring-percent-val" class="bh-ring-val">20%</span>
+        </div>
+        <div class="bh-ring-control-group">
+          <label class="bh-ring-checkbox-label" for="bh-speed-ring-preview-check">
+            <input type="checkbox" id="bh-speed-ring-preview-check" title="Toggle outer speed ring preview">
+            <span>Speed Preview (0-110 km/h):</span>
+          </label>
+          <input type="range" id="bh-speed-ring-preview-slider" min="0" max="110" value="110" step="1" class="bh-slider-sm" title="Preview outer circle size scaling from 0 to 110 km/h">
+          <span id="bh-speed-ring-preview-val" class="bh-ring-val">110 KPH</span>
+        </div>
+      </div>
+
+      <!-- 2D Canvas Viewport with 1:1 isometric proportions (Unobstructed Canvas) -->
       <div class="bh-canvas-stage">
         <canvas id="bh-pitch-canvas" class="bh-radar-canvas"></canvas>
 
-        <!-- Canvas Legend & Pitch Labels -->
-        <div class="bh-canvas-legend">
-          <div class="legend-item"><span class="legend-dot dot-cyan"></span> 16 Control Points Wireframe</div>
-          <div class="legend-item"><span class="legend-dot dot-green"></span> Ball Hits Point Cloud</div>
-          <div class="legend-item"><span class="legend-dot dot-yellow"></span> Small Boost Pad (12%)</div>
-          <div class="legend-item"><span class="legend-dot dot-amber"></span> Big Boost Pill (100%)</div>
-          <div class="legend-item"><span class="legend-dot dot-red"></span> Latest Hit (Speed Circle)</div>
-          <div class="legend-item"><span class="legend-dot dot-gold"></span> Draggable Vertices (P1-P16)</div>
-        </div>
+        <!-- Dynamic Rotation Tag -->
+        <div id="bh-pitch-rotation-tag" class="bh-pitch-rotation-tag" style="display: none;">0° (TEAM 0)</div>
 
         <!-- Corner Safety Badges -->
-        <div class="bh-corner-tag tag-top-left">X: -4500, Y: +6000</div>
-        <div class="bh-corner-tag tag-top-right">X: +4500, Y: +6000</div>
-        <div class="bh-corner-tag tag-bot-left">X: -4500, Y: -6000</div>
-        <div class="bh-corner-tag tag-bot-right">X: +4500, Y: -6000</div>
+        <div id="bh-tag-tl" class="bh-corner-tag tag-top-left">X: -4500, Y: +6000</div>
+        <div id="bh-tag-tr" class="bh-corner-tag tag-top-right">X: +4500, Y: +6000</div>
+        <div id="bh-tag-bl" class="bh-corner-tag tag-bot-left">X: -4500, Y: -6000</div>
+        <div id="bh-tag-br" class="bh-corner-tag tag-bot-right">X: +4500, Y: -6000</div>
         <div class="bh-pitch-origin-tag">(0, 0) CENTER</div>
+      </div>
+
+      <!-- Canvas Legend (Moved OUTSIDE canvas: Green for My Team, Red for Opponent) -->
+      <div class="bh-pitch-legend">
+        <div class="legend-item"><span class="legend-dot dot-green"></span> My Team Hit (Green)</div>
+        <div class="legend-item"><span class="legend-dot dot-red"></span> Opponent Hit (Red)</div>
+        <div class="legend-item"><span class="legend-dot dot-cyan"></span> 16-Pt Wireframe</div>
+        <div class="legend-item"><span class="legend-dot dot-yellow"></span> Small Pad (12%)</div>
+        <div class="legend-item"><span class="legend-dot dot-amber"></span> Big Pill (100%)</div>
+        <div class="legend-item"><span class="legend-dot dot-gold"></span> Draggable Vertices</div>
       </div>
 
       <!-- Scope note -->

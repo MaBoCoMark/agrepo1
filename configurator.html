@@ -990,9 +990,9 @@
       <!-- Scale X -->
       <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 2px;">
         <span style="color: var(--primer-fg-muted);">Scale X:</span>
-        <span id="bh-cfg-scale-x-val" style="color: var(--primer-accent-fg); font-weight: bold;">1.00x</span>
+        <span id="bh-cfg-scale-x-val" style="color: var(--primer-accent-fg); font-weight: bold;">1.10x</span>
       </div>
-      <input type="range" id="bh-cfg-scale-x-slider" min="20" max="250" value="100" step="1" style="width: 100%; margin-bottom: 8px;">
+      <input type="range" id="bh-cfg-scale-x-slider" min="20" max="250" value="110" step="1" style="width: 100%; margin-bottom: 8px;">
 
       <!-- Scale Y -->
       <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 2px;">
@@ -1004,7 +1004,7 @@
       <!-- Invert Axis Toggles -->
       <div style="display: flex; gap: 16px; margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--primer-border-default);">
         <label style="display: flex; align-items: center; cursor: pointer; font-size: 11px;">
-          <input type="checkbox" id="bh-cfg-invert-x-check" style="margin-right: 6px;">
+          <input type="checkbox" id="bh-cfg-invert-x-check" checked style="margin-right: 6px;">
           Invert X Axis
         </label>
         <label style="display: flex; align-items: center; cursor: pointer; font-size: 11px;">
@@ -1012,6 +1012,41 @@
           Invert Y Axis
         </label>
       </div>
+    </div>
+
+    <!-- Hit Tracking & Speed Ring Tuning Card -->
+    <div class="primer-card">
+      <div style="font-size: 11px; font-weight: bold; color: var(--primer-accent-fg); margin-bottom: 8px;">
+        HIT TRACKING & SPEED CIRCLE PREVIEW
+      </div>
+
+      <!-- Only Latest Hit Checkbox -->
+      <div style="margin-bottom: 10px;">
+        <label style="display: flex; align-items: center; cursor: pointer; font-size: 11px;">
+          <input type="checkbox" id="bh-cfg-only-latest-check" checked style="margin-right: 6px;">
+          <span>🎯 Only Indicate Latest Hit (Disable Previous Hits Cloud)</span>
+        </label>
+        <div style="font-size: 10px; color: var(--primer-fg-muted); margin-left: 20px; margin-top: 2px;">
+          Enabled by default. Point cloud tracking is only needed when verifying graph coordinates.
+        </div>
+      </div>
+
+      <!-- Outer Ring Max Size (Percentage of narrower side) -->
+      <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 2px;">
+        <span style="color: var(--primer-fg-muted);">Outer Ring Max Width (% narrower side):</span>
+        <span id="bh-cfg-ring-percent-val" style="color: var(--primer-accent-fg); font-weight: bold;">20%</span>
+      </div>
+      <input type="range" id="bh-cfg-ring-percent-slider" min="1" max="100" value="20" step="1" style="width: 100%; margin-bottom: 8px;">
+
+      <!-- Speed Ring Preview -->
+      <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 2px;">
+        <label style="display: flex; align-items: center; cursor: pointer;">
+          <input type="checkbox" id="bh-cfg-preview-check" style="margin-right: 4px;">
+          <span>Preview Post-Hit Speed:</span>
+        </label>
+        <span id="bh-cfg-preview-speed-val" style="color: var(--primer-accent-fg); font-weight: bold;">110 KPH</span>
+      </div>
+      <input type="range" id="bh-cfg-preview-speed-slider" min="0" max="110" value="110" step="1" style="width: 100%;">
     </div>
 
     <!-- 16 Control Points Coordinates Drawer -->

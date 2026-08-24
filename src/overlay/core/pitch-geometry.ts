@@ -10,7 +10,7 @@
  * 4. Outlier filtering / de-noising algorithm
  * 5. 45-degree rebound tangent fitting & automatic pitch boundary solver
  * 6. Coordinate transformation & calibration matrices (offset, scale, invert)
- * 7. Serialization, JSON import/export, and local persistence
+ * 7. Serialization and JSON import/export (In-memory session state, no localStorage persistence)
  * ============================================================================
  */
 
@@ -36,6 +36,7 @@ export interface HitPointRecord {
   z: number;
   timestamp: number;
   isNoise?: boolean;
+  teamNum?: number | string;
 }
 
 export interface BoostPadDefinition {
@@ -144,14 +145,11 @@ export const DEFAULT_CONTROL_POINTS: ControlPoint[] = [
 export const DEFAULT_CALIBRATION: CalibrationSettings = {
   offsetX: 0,
   offsetY: 0,
-  scaleX: 1.0,
+  scaleX: 1.1,
   scaleY: 1.0,
-  invertX: false,
+  invertX: true,
   invertY: false
 };
-
-const STORAGE_KEY_CALIBRATION = 'pitch_calibration_settings';
-const STORAGE_KEY_CONTROL_POINTS = 'pitch_control_points_v1';
 
 /**
  * Filter out rogue noise, clipping data, or penetrations outside safety bounds.
@@ -349,66 +347,31 @@ function round2(val: number): number {
 }
 
 /**
- * Load saved calibration settings from localStorage.
+ * Load default calibration settings (In-memory session, do not persist to localStorage).
  */
 export function loadSavedCalibration(): CalibrationSettings {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY_CALIBRATION);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      return {
-        offsetX: typeof parsed.offsetX === 'number' ? parsed.offsetX : DEFAULT_CALIBRATION.offsetX,
-        offsetY: typeof parsed.offsetY === 'number' ? parsed.offsetY : DEFAULT_CALIBRATION.offsetY,
-        scaleX: typeof parsed.scaleX === 'number' ? parsed.scaleX : DEFAULT_CALIBRATION.scaleX,
-        scaleY: typeof parsed.scaleY === 'number' ? parsed.scaleY : DEFAULT_CALIBRATION.scaleY,
-        invertX: Boolean(parsed.invertX),
-        invertY: Boolean(parsed.invertY)
-      };
-    }
-  } catch (err) {
-    console.error('Failed to load calibration settings from storage:', err);
-  }
   return { ...DEFAULT_CALIBRATION };
 }
 
 /**
- * Persist calibration settings to localStorage.
+ * Save calibration settings (In-memory only, no local storage persistence).
  */
-export function saveCalibrationToStorage(cal: CalibrationSettings): void {
-  try {
-    localStorage.setItem(STORAGE_KEY_CALIBRATION, JSON.stringify(cal));
-  } catch (err) {
-    console.error('Failed to save calibration to storage:', err);
-  }
+export function saveCalibrationToStorage(_cal: CalibrationSettings): void {
+  // In-memory only per requirement: do not store stats/calibration inside local storage or anywhere
 }
 
 /**
- * Load saved 16 control points from localStorage.
+ * Load default 16 control points (In-memory session, do not persist to localStorage).
  */
 export function loadSavedControlPoints(): ControlPoint[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY_CONTROL_POINTS);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length === 16) {
-        return parsed;
-      }
-    }
-  } catch (err) {
-    console.error('Failed to load control points from storage:', err);
-  }
   return JSON.parse(JSON.stringify(DEFAULT_CONTROL_POINTS));
 }
 
 /**
- * Persist 16 control points to localStorage.
+ * Save 16 control points (In-memory only, no local storage persistence).
  */
-export function saveControlPointsToStorage(points: ControlPoint[]): void {
-  try {
-    localStorage.setItem(STORAGE_KEY_CONTROL_POINTS, JSON.stringify(points));
-  } catch (err) {
-    console.error('Failed to save control points to storage:', err);
-  }
+export function saveControlPointsToStorage(_points: ControlPoint[]): void {
+  // In-memory only per requirement: do not store inside local storage or anywhere
 }
 
 /**

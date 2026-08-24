@@ -1,4 +1,4 @@
-import { processBallHitPacket, processBoostPickupPacket } from './ball-hit-tracker';
+import { processBallHitPacket, processBoostPickupPacket, setTargetTeam } from './ball-hit-tracker';
 import { emitTo } from '@tauri-apps/api/event';
 import { latestData, overlayState } from './telemetry-state';
 import { switchSceneMode } from './scene-manager';
@@ -221,9 +221,12 @@ export function processLowFrequencyData(data: RLStateData): void {
     }
   }
 
-  // 2. Team Colors
+  // 2. Team Colors & Target Team
+  const effectiveTargetTeam = targetTeam !== null ? targetTeam : (p1?.TeamNum !== undefined ? p1.TeamNum : 0);
+  latestData.myTeamNum = effectiveTargetTeam;
+  setTargetTeam(effectiveTargetTeam);
+
   if (data.Game?.Teams && Array.isArray(data.Game.Teams) && data.Game.Teams.length > 0) {
-    const effectiveTargetTeam = targetTeam !== null ? targetTeam : (p1?.TeamNum !== undefined ? p1.TeamNum : 0);
     let myTeamObj = data.Game.Teams.find((t) => t.TeamNum === effectiveTargetTeam);
     let oppTeamObj = data.Game.Teams.find((t) => t.TeamNum !== effectiveTargetTeam);
 
@@ -367,6 +370,10 @@ export function processUpdateState(data: RLStateData): void {
       }
     }
   }
+
+  const effectiveUpdateTargetTeam = targetTeam !== null ? targetTeam : (p1?.TeamNum !== undefined ? p1.TeamNum : 0);
+  latestData.myTeamNum = effectiveUpdateTargetTeam;
+  setTargetTeam(effectiveUpdateTargetTeam);
 
   // P1 Fast Numerical/Boolean State
   if (p1) {

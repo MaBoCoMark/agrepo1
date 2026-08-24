@@ -23,6 +23,7 @@ export interface TelemetryBuffer {
   bOvertime: boolean;
   ballSpeed: number;
   ballTeamNum: number;
+  myTeamNum: number;
   myScore: number;
   oppScore: number;
   scoreDiff: number;
