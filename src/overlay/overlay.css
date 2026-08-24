@@ -1693,3 +1693,176 @@ body.layout-editing .comp-container:hover {
 .bh-info-icon {
   font-size: calc(var(--replay-font-scale) * 0.4);
 }
+
+/* ============================================================
+   🌟 BALL HIT SVG & MINIMAP COMPONENT WIDGET STYLES
+   ============================================================ */
+.ball-hit-svg-scene {
+  position: absolute;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  contain: strict;
+  overflow: hidden;
+}
+
+.mini-map-container {
+  position: absolute;
+  pointer-events: auto;
+  cursor: move;
+  box-sizing: border-box;
+  background: rgba(4, 7, 14, 0.85);
+  border: 1px solid rgba(0, 240, 255, 0.35);
+  border-radius: 8px;
+  overflow: visible;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  touch-action: none;
+}
+
+.mini-map-container.selected {
+  outline: 2px solid #00f0ff;
+  outline-offset: 2px;
+}
+
+.mini-map-stage {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-origin: center center;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: visible;
+}
+
+.mini-map-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+
+.pitch-field-bg {
+  fill: rgba(10, 15, 25, 0.7);
+  transition: fill 0.15s, fill-opacity 0.15s;
+}
+
+.pitch-boundary-polygon {
+  fill: none;
+  stroke: #00f0ff;
+  stroke-width: 75;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  transition: stroke 0.15s, stroke-width 0.15s, stroke-opacity 0.15s;
+}
+
+.pitch-line {
+  stroke: rgba(255, 255, 255, 0.22);
+  stroke-width: 45;
+  stroke-linecap: round;
+}
+
+.pitch-line-dashed {
+  stroke-dasharray: 120 120;
+}
+
+.pitch-circle {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.22);
+  stroke-width: 45;
+}
+
+.boost-pill {
+  fill: #f59e0b;
+  opacity: 0.9;
+}
+
+.boost-pad {
+  fill: #fbbf24;
+  opacity: 0.8;
+}
+
+.mini-map-hit-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  contain: layout style;
+  overflow: visible;
+}
+
+.mini-map-hit-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  will-change: transform, opacity;
+  contain: layout style;
+}
+
+.hit-outer-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid #00f0ff;
+  background: rgba(0, 240, 255, 0.15);
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.hit-center-dot {
+  border-radius: 50%;
+  background: #00ff88;
+  box-shadow: 0 0 8px #00ff88;
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.mini-map-dragger {
+  position: absolute;
+  inset: -2px;
+  border: 1px dashed #00f0ff;
+  pointer-events: none;
+  z-index: 999;
+  box-sizing: border-box;
+  display: none;
+}
+
+.mini-map-container.selected .mini-map-dragger {
+  display: block;
+}
+
+.mm-drag-handle {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  background: #ffffff;
+  border: 2px solid #00f0ff;
+  border-radius: 2px;
+  box-sizing: border-box;
+  pointer-events: auto;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  touch-action: none;
+}
+
+.mm-drag-handle:hover {
+  transform: translate(-50%, -50%) scale(1.3);
+  background: #00f0ff;
+}
+
+.mini-map-dragger .handle-nw { top: 0%; left: 0%; cursor: nwse-resize; }
+.mini-map-dragger .handle-n  { top: 0%; left: 50%; cursor: ns-resize; }
+.mini-map-dragger .handle-ne { top: 0%; left: 100%; cursor: nesw-resize; }
+.mini-map-dragger .handle-e  { top: 50%; left: 100%; cursor: ew-resize; }
+.mini-map-dragger .handle-se { top: 100%; left: 100%; cursor: nwse-resize; }
+.mini-map-dragger .handle-s  { top: 100%; left: 50%; cursor: ns-resize; }
+.mini-map-dragger .handle-sw { top: 100%; left: 0%; cursor: nesw-resize; }
+.mini-map-dragger .handle-w  { top: 50%; left: 0%; cursor: ew-resize; }

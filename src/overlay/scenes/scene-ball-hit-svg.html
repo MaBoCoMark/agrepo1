@@ -1,0 +1,56 @@
+<div class="ball-hit-svg-scene" id="ball-hit-svg-scene">
+  <!-- Mini Map Container Widget (Scales in vw, enforces 3:4 aspect ratio, draggable & 8-point resizable) -->
+  <div class="mini-map-container" id="mini-map-container" style="left: 38vw; top: 18vw; width: 24vw; height: 32vw;">
+    <div class="mini-map-stage" id="mini-map-stage">
+      <!-- 1. SVG Pitch Vector Layer -->
+      <svg class="mini-map-svg" id="mini-map-svg-pitch" viewBox="-4500 -6000 9000 12000" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <clipPath id="pitch-clip">
+            <polygon points="-4075,-4000 -2950,-5120 -892.75,-5120 -892.75,-5800 892.75,-5800 892.75,-5120 2950,-5120 4075,-4000 4075,4000 2950,5120 892.75,5120 892.75,5800 -892.75,5800 -892.75,5120 -2950,5120 -4075,4000" />
+          </clipPath>
+        </defs>
+
+        <!-- Pitch Background Field -->
+        <polygon class="pitch-field-bg" id="pitch-field-bg" points="-4075,-4000 -2950,-5120 -892.75,-5120 -892.75,-5800 892.75,-5800 892.75,-5120 2950,-5120 4075,-4000 4075,4000 2950,5120 892.75,5120 892.75,5800 -892.75,5800 -892.75,5120 -2950,5120 -4075,4000" />
+
+        <!-- Pitch Markings -->
+        <g class="pitch-markings" id="pitch-markings">
+          <!-- Centerline -->
+          <line x1="-4075" y1="0" x2="4075" y2="0" class="pitch-line" id="pitch-centerline" />
+          <!-- Midfield Vertical Line -->
+          <line x1="0" y1="-5120" x2="0" y2="5120" class="pitch-line pitch-line-dashed" id="pitch-midline" />
+          <!-- Center Circle -->
+          <circle cx="0" cy="0" r="912" class="pitch-circle" id="pitch-center-circle" />
+        </g>
+
+        <!-- Boost Locations (28 Small Pads + 6 Big Pills) -->
+        <g class="pitch-boosts" id="pitch-boosts-layer">
+          <!-- Dynamic boost circles injected via JS -->
+        </g>
+
+        <!-- Outermost Pitch Boundary (Only Outer Border, No Corner Dots) -->
+        <polygon class="pitch-boundary-polygon" id="pitch-boundary-polygon" points="-4075,-4000 -2950,-5120 -892.75,-5120 -892.75,-5800 892.75,-5800 892.75,-5120 2950,-5120 4075,-4000 4075,4000 2950,5120 892.75,5120 892.75,5800 -892.75,5800 -892.75,5120 -2950,5120 -4075,4000" />
+      </svg>
+
+      <!-- 2. GPU-Accelerated Ball Hit Indicator Layer (DOM Nodes, 0-Layout Thrashing) -->
+      <div class="mini-map-hit-layer" id="mini-map-hit-layer">
+        <div class="mini-map-hit-indicator" id="mini-map-hit-indicator" style="display: none; opacity: 0;">
+          <div class="hit-outer-ring" id="hit-outer-ring"></div>
+          <div class="hit-center-dot" id="hit-center-dot"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8-Point Dragger Overlay Frame -->
+    <div class="mini-map-dragger" id="mini-map-dragger">
+      <div class="mm-drag-handle handle-nw" data-handle="nw"></div>
+      <div class="mm-drag-handle handle-n" data-handle="n"></div>
+      <div class="mm-drag-handle handle-ne" data-handle="ne"></div>
+      <div class="mm-drag-handle handle-e" data-handle="e"></div>
+      <div class="mm-drag-handle handle-se" data-handle="se"></div>
+      <div class="mm-drag-handle handle-s" data-handle="s"></div>
+      <div class="mm-drag-handle handle-sw" data-handle="sw"></div>
+      <div class="mm-drag-handle handle-w" data-handle="w"></div>
+    </div>
+  </div>
+</div>

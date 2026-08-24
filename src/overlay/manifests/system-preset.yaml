@@ -34,3 +34,6 @@ scenes:
   - id: "ball-hit"
     name: "Ball Hit Inspector"
     file: "/src/overlay/scenes/scene-ball-hit.html"
+  - id: "ball-hit-svg"
+    name: "Ball Hit SVG"
+    file: "/src/overlay/scenes/scene-ball-hit-svg.html"

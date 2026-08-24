@@ -1,4 +1,5 @@
 import { processBallHitPacket, processBoostPickupPacket, setTargetTeam } from './ball-hit-tracker';
+import { processBallHitSvgPacket, setBallHitSvgTargetTeam } from './ball-hit-svg-tracker';
 import { emitTo } from '@tauri-apps/api/event';
 import { latestData, overlayState } from './telemetry-state';
 import { switchSceneMode } from './scene-manager';
@@ -225,6 +226,7 @@ export function processLowFrequencyData(data: RLStateData): void {
   const effectiveTargetTeam = targetTeam !== null ? targetTeam : (p1?.TeamNum !== undefined ? p1.TeamNum : 0);
   latestData.myTeamNum = effectiveTargetTeam;
   setTargetTeam(effectiveTargetTeam);
+  setBallHitSvgTargetTeam(effectiveTargetTeam);
 
   if (data.Game?.Teams && Array.isArray(data.Game.Teams) && data.Game.Teams.length > 0) {
     let myTeamObj = data.Game.Teams.find((t) => t.TeamNum === effectiveTargetTeam);
@@ -234,19 +236,19 @@ export function processLowFrequencyData(data: RLStateData): void {
     if (!oppTeamObj && data.Game.Teams[1]) oppTeamObj = data.Game.Teams[1];
 
     if (myTeamObj?.ColorPrimary) {
-      const hex = myTeamObj.ColorPrimary.startsWith('#') ? myTeamObj.ColorPrimary : `#${myTeamObj.ColorPrimary}`;
+      const hex = myTeamObj.ColorPrimary.startsWith('#') ? myTeamObj.ColorPrimary : `#${myTeamObj.ColorPrimary}` ;
       latestData.myPrimaryColor = hex;
     }
     if (myTeamObj?.ColorSecondary) {
-      const hex = myTeamObj.ColorSecondary.startsWith('#') ? myTeamObj.ColorSecondary : `#${myTeamObj.ColorSecondary}`;
+      const hex = myTeamObj.ColorSecondary.startsWith('#') ? myTeamObj.ColorSecondary : `#${myTeamObj.ColorSecondary}` ;
       latestData.mySecondaryColor = hex;
     }
     if (oppTeamObj?.ColorPrimary) {
-      const hex = oppTeamObj.ColorPrimary.startsWith('#') ? oppTeamObj.ColorPrimary : `#${oppTeamObj.ColorPrimary}`;
+      const hex = oppTeamObj.ColorPrimary.startsWith('#') ? oppTeamObj.ColorPrimary : `#${oppTeamObj.ColorPrimary}` ;
       latestData.oppPrimaryColor = hex;
     }
     if (oppTeamObj?.ColorSecondary) {
-      const hex = oppTeamObj.ColorSecondary.startsWith('#') ? oppTeamObj.ColorSecondary : `#${oppTeamObj.ColorSecondary}`;
+      const hex = oppTeamObj.ColorSecondary.startsWith('#') ? oppTeamObj.ColorSecondary : `#${oppTeamObj.ColorSecondary}` ;
       latestData.oppSecondaryColor = hex;
     }
   }
@@ -374,6 +376,7 @@ export function processUpdateState(data: RLStateData): void {
   const effectiveUpdateTargetTeam = targetTeam !== null ? targetTeam : (p1?.TeamNum !== undefined ? p1.TeamNum : 0);
   latestData.myTeamNum = effectiveUpdateTargetTeam;
   setTargetTeam(effectiveUpdateTargetTeam);
+  setBallHitSvgTargetTeam(effectiveUpdateTargetTeam);
 
   // P1 Fast Numerical/Boolean State
   if (p1) {
@@ -476,6 +479,7 @@ export function handleIncomingMessage(raw: RLWebSocketMessage): void {
       overlayState.hasReceivedDataSinceConnected = true;
       if (raw.Data !== undefined || (raw as any).Ball !== undefined) {
         processBallHitPacket(raw);
+        processBallHitSvgPacket(raw);
       }
       break;
     }
@@ -670,19 +674,19 @@ export function disconnectWebSocket(): void {
 
 // Sample mock init
 const REAL_SAMPLE_RAW: RLStateData = {
-  MatchGuid: '852D9D5546F30BE5E44F6C88F7ED98EA',
+  MatchGuid: "852D9D5546F30BE5E44F6C88F7ED98EA",
   Players: [
-    { Name: 'steamuser', Shortcut: 5, TeamNum: 1, bHasCar: true, Speed: 82.7996, Boost: 11, bSupersonic: true },
-    { Name: 'Fury', Shortcut: 1, TeamNum: 0, bHasCar: true, Speed: 40.0, Boost: 50 },
-    { Name: 'Sticks', Shortcut: 6, TeamNum: 1, bOnGround: true, bHasCar: true, Speed: 82.7997, Boost: 15, bBoosting: true, bSupersonic: true },
-    { Name: 'Stinger', Shortcut: 2, TeamNum: 0, bHasCar: true, Speed: 55.0, Boost: 33 },
-    { Name: 'Khan', Shortcut: 7, TeamNum: 1, bOnGround: true, bHasCar: true, Speed: 26.1496, Boost: 100 },
-    { Name: 'Outlaw', Shortcut: 3, TeamNum: 0, bHasCar: true, Speed: 30.0, Boost: 45 }
+    { Name: "steamuser", Shortcut: 5, TeamNum: 1, bHasCar: true, Speed: 82.7996, Boost: 11, bSupersonic: true },
+    { Name: "Fury", Shortcut: 1, TeamNum: 0, bHasCar: true, Speed: 40.0, Boost: 50 },
+    { Name: "Sticks", Shortcut: 6, TeamNum: 1, bOnGround: true, bHasCar: true, Speed: 82.7997, Boost: 15, bBoosting: true, bSupersonic: true },
+    { Name: "Stinger", Shortcut: 2, TeamNum: 0, bHasCar: true, Speed: 55.0, Boost: 33 },
+    { Name: "Khan", Shortcut: 7, TeamNum: 1, bOnGround: true, bHasCar: true, Speed: 26.1496, Boost: 100 },
+    { Name: "Outlaw", Shortcut: 3, TeamNum: 0, bHasCar: true, Speed: 30.0, Boost: 45 }
   ],
   Game: {
     Teams: [
-      { Name: 'Rovers', TeamNum: 0, Score: 0, ColorPrimary: '1873FF', ColorSecondary: 'E5E5E5' },
-      { Name: '1', TeamNum: 1, Score: 1, ColorPrimary: 'C26418', ColorSecondary: 'E5E5E5' }
+      { Name: "Rovers", TeamNum: 0, Score: 0, ColorPrimary: "1873FF", ColorSecondary: "E5E5E5" },
+      { Name: "1", TeamNum: 1, Score: 1, ColorPrimary: "C26418", ColorSecondary: "E5E5E5" }
     ],
     PlaylistId: 24,
     TimeSeconds: 270,
@@ -690,10 +694,10 @@ const REAL_SAMPLE_RAW: RLStateData = {
     Ball: { Speed: 43.92, TeamNum: 0 },
     bReplay: false,
     bHasWinner: false,
-    Winner: '',
-    Arena: 'NeoTokyo_Arcade_P',
+    Winner: "",
+    Arena: "NeoTokyo_Arcade_P",
     bHasTarget: true,
-    Target: { Name: 'steamuser', Shortcut: 5, TeamNum: 1 }
+    Target: { Name: "steamuser", Shortcut: 5, TeamNum: 1 }
   }
 };
 

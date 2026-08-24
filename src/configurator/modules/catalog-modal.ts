@@ -39,6 +39,7 @@ export function initCatalogModal(
     bOvertime: false,
     ballSpeed: 75,
     ballTeamNum: 0,
+    myTeamNum: 0,
     myScore: 2,
     oppScore: 1,
     scoreDiff: 1,

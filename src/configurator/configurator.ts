@@ -9,6 +9,7 @@ import { initCompetitiveDesigner } from './modules/competitive-designer';
 import { initBenchmarkTool } from './modules/benchmark-tool';
 import { initTelemetrySyncController } from './modules/telemetry-sync-controller';
 import { initBallHitController } from './modules/ball-hit-controller';
+import { initBallHitSvgController } from './modules/ball-hit-svg-controller';
 import { ComponentInstance } from '../overlay/core/component-types';
 
 /**
@@ -27,6 +28,7 @@ import { ComponentInstance } from '../overlay/core/component-types';
  * - Competitive Scene Visual Layout Designer & 8-point draggers
  * - Performance Benchmark Engine & Frametime Charting
  * - Ball Hit 2D Pitch Mapping & Calibration Controller
+ * - Ball Hit SVG & Pitch MiniMap Controller
  * ============================================================================
  */
 
@@ -70,4 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 11. Ball Hit 2D Pitch Mapping & Calibration Controller
   initBallHitController();
+
+  // 12. Ball Hit SVG & Pitch MiniMap Controller
+  initBallHitSvgController();
 });

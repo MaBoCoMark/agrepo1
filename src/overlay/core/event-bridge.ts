@@ -52,6 +52,12 @@ import {
   setPreviewSpeedKph,
   BallHitOperationMode
 } from './ball-hit-tracker';
+import {
+  updateBallHitSvgConfig,
+  simulateBallHitSvg,
+  setBallHitSvgTargetTeam,
+  BallHitSvgConfig
+} from './ball-hit-svg-tracker';
 import { CalibrationSettings, ControlPoint } from './pitch-geometry';
 
 /**
@@ -322,6 +328,23 @@ export async function setupOverlayEventListeners(): Promise<void> {
       } catch {
         importHitsFromJson(e.payload.raw);
       }
+    }
+  });
+
+  // 12. Ball Hit SVG & Pitch MiniMap IPC Controls
+  await listen<{ config: Partial<BallHitSvgConfig> }>('ball-hit-svg-config-update', (e) => {
+    if (e.payload?.config) {
+      updateBallHitSvgConfig(e.payload.config);
+    }
+  });
+
+  await listen<{ x?: number; y?: number; speed?: number; isMyTeam?: boolean }>('ball-hit-svg-simulate', (e) => {
+    simulateBallHitSvg(e.payload?.x ?? 0, e.payload?.y ?? 0, e.payload?.speed ?? 85, e.payload?.isMyTeam ?? true);
+  });
+
+  await listen<{ targetTeam: number }>('ball-hit-svg-target-team', (e) => {
+    if (typeof e.payload?.targetTeam === 'number') {
+      setBallHitSvgTargetTeam(e.payload.targetTeam);
     }
   });
 

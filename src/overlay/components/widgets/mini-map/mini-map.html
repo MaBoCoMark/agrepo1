@@ -1,0 +1,147 @@
+<script type="application/json" id="component-manifest">
+{
+  "id": "widget-mini-map",
+  "displayName": "Pitch MiniMap (SVG)",
+  "tier": "widget",
+  "category": "global",
+  "isProportional": true,
+  "defaultWidthVw": 18,
+  "defaultHeightVw": 24,
+  "minWidthVw": 8,
+  "minHeightVw": 10.67,
+  "baseWidthPx": 240,
+  "baseHeightPx": 320
+}
+</script>
+
+<template id="component-template">
+  <div class="mini-map-box">
+    <div class="mini-map-stage">
+      <svg class="mini-map-svg" viewBox="-4500 -6000 9000 12000" preserveAspectRatio="xMidYMid meet">
+        <polygon class="pitch-field-bg" points="-4075,-4000 -2950,-5120 -892.75,-5120 -892.75,-5800 892.75,-5800 892.75,-5120 2950,-5120 4075,-4000 4075,4000 2950,5120 892.75,5120 892.75,5800 -892.75,5800 -892.75,5120 -2950,5120 -4075,4000" />
+        <g class="pitch-markings">
+          <line x1="-4075" y1="0" x2="4075" y2="0" class="pitch-line" />
+          <line x1="0" y1="-5120" x2="0" y2="5120" class="pitch-line pitch-line-dashed" />
+          <circle cx="0" cy="0" r="912" class="pitch-circle" />
+        </g>
+        <g class="pitch-boosts">
+          <circle cx="3072" cy="-4096" r="280" class="boost-pill" />
+          <circle cx="-3072" cy="-4096" r="280" class="boost-pill" />
+          <circle cx="3584" cy="0" r="280" class="boost-pill" />
+          <circle cx="-3584" cy="0" r="280" class="boost-pill" />
+          <circle cx="3072" cy="4096" r="280" class="boost-pill" />
+          <circle cx="-3072" cy="4096" r="280" class="boost-pill" />
+          <circle cx="0" cy="-4240" r="100" class="boost-pad" />
+          <circle cx="0" cy="-2816" r="100" class="boost-pad" />
+          <circle cx="0" cy="-1024" r="100" class="boost-pad" />
+          <circle cx="0" cy="1024" r="100" class="boost-pad" />
+          <circle cx="0" cy="2816" r="100" class="boost-pad" />
+          <circle cx="0" cy="4240" r="100" class="boost-pad" />
+          <circle cx="1024" cy="0" r="100" class="boost-pad" />
+          <circle cx="-1024" cy="0" r="100" class="boost-pad" />
+        </g>
+        <polygon class="pitch-boundary-polygon" points="-4075,-4000 -2950,-5120 -892.75,-5120 -892.75,-5800 892.75,-5800 892.75,-5120 2950,-5120 4075,-4000 4075,4000 2950,5120 892.75,5120 892.75,5800 -892.75,5800 -892.75,5120 -2950,5120 -4075,4000" />
+      </svg>
+      <div class="mini-map-hit-layer">
+        <div class="mini-map-hit-indicator" style="transform: translate3d(50%, 50%, 0) translate(-50%, -50%);">
+          <div class="hit-outer-ring" style="width: 36px; height: 36px;"></div>
+          <div class="hit-center-dot"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style>
+.mini-map-box {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  box-sizing: border-box;
+  background: rgba(4, 7, 14, 0.85);
+  border: 1px solid rgba(0, 240, 255, 0.35);
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mini-map-stage {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mini-map-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.pitch-field-bg {
+  fill: rgba(10, 15, 25, 0.6);
+}
+.pitch-boundary-polygon {
+  fill: none;
+  stroke: #00f0ff;
+  stroke-width: 80;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.pitch-line {
+  stroke: rgba(255, 255, 255, 0.25);
+  stroke-width: 45;
+}
+.pitch-line-dashed {
+  stroke-dasharray: 120 120;
+}
+.pitch-circle {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.25);
+  stroke-width: 45;
+}
+.boost-pill {
+  fill: #f59e0b;
+  opacity: 0.9;
+}
+.boost-pad {
+  fill: #fbbf24;
+  opacity: 0.8;
+}
+.mini-map-hit-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  contain: layout style;
+}
+.mini-map-hit-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  will-change: transform, opacity;
+  contain: layout style;
+}
+.hit-outer-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid #00f0ff;
+  background: rgba(0, 240, 255, 0.15);
+  box-sizing: border-box;
+  pointer-events: none;
+}
+.hit-center-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #00ff88;
+  box-shadow: 0 0 8px #00ff88;
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+}
+</style>
