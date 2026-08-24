@@ -16,6 +16,12 @@ export function initBallHitSvgController(): void {
   let config: BallHitSvgConfig = loadSavedBallHitSvgConfig();
   let simTargetTeam = 0; // 0 = Blue, 1 = Orange
 
+  // Widget Container Background DOM Elements
+  const containerBgPicker = document.getElementById('bh-svg-container-bg-picker') as HTMLInputElement | null;
+  const containerBgHex = document.getElementById('bh-svg-container-bg-hex') as HTMLInputElement | null;
+  const containerOpacitySlider = document.getElementById('bh-svg-container-opacity-slider') as HTMLInputElement | null;
+  const containerOpacityVal = document.getElementById('bh-svg-container-opacity-val');
+
   // Pitch Boundary DOM Elements
   const borderStrokeSlider = document.getElementById('bh-svg-border-stroke-slider') as HTMLInputElement | null;
   const borderStrokeVal = document.getElementById('bh-svg-border-stroke-val');
@@ -63,22 +69,35 @@ export function initBallHitSvgController(): void {
   const oppDotOpacitySlider = document.getElementById('bh-svg-opp-dot-opacity-slider') as HTMLInputElement | null;
   const oppDotOpacityVal = document.getElementById('bh-svg-opp-dot-opacity-val');
 
-  // Outer Speed Ring DOM Elements
+  // Outer Speed Ring Common DOM Elements
   const ringMaxPercentSlider = document.getElementById('bh-svg-ring-max-percent-slider') as HTMLInputElement | null;
   const ringMaxPercentVal = document.getElementById('bh-svg-ring-max-percent-val');
-
-  const ringBorderColorPicker = document.getElementById('bh-svg-ring-border-color-picker') as HTMLInputElement | null;
-  const ringBorderColorHex = document.getElementById('bh-svg-ring-border-color-hex') as HTMLInputElement | null;
   const ringBorderWidthSlider = document.getElementById('bh-svg-ring-border-width-slider') as HTMLInputElement | null;
   const ringBorderWidthVal = document.getElementById('bh-svg-ring-border-width-val');
-  const ringBorderOpacitySlider = document.getElementById('bh-svg-ring-border-opacity-slider') as HTMLInputElement | null;
-  const ringBorderOpacityVal = document.getElementById('bh-svg-ring-border-opacity-val');
 
-  const ringFillColorPicker = document.getElementById('bh-svg-ring-fill-color-picker') as HTMLInputElement | null;
-  const ringFillColorHex = document.getElementById('bh-svg-ring-fill-color-hex') as HTMLInputElement | null;
-  const ringFillOpacitySlider = document.getElementById('bh-svg-ring-fill-opacity-slider') as HTMLInputElement | null;
-  const ringFillOpacityVal = document.getElementById('bh-svg-ring-fill-opacity-val');
+  // Outer Speed Ring - My Team
+  const myRingBorderColorPicker = document.getElementById('bh-svg-my-ring-border-color-picker') as HTMLInputElement | null;
+  const myRingBorderColorHex = document.getElementById('bh-svg-my-ring-border-color-hex') as HTMLInputElement | null;
+  const myRingBorderOpacitySlider = document.getElementById('bh-svg-my-ring-border-opacity-slider') as HTMLInputElement | null;
+  const myRingBorderOpacityVal = document.getElementById('bh-svg-my-ring-border-opacity-val');
 
+  const myRingFillColorPicker = document.getElementById('bh-svg-my-ring-fill-color-picker') as HTMLInputElement | null;
+  const myRingFillColorHex = document.getElementById('bh-svg-my-ring-fill-color-hex') as HTMLInputElement | null;
+  const myRingFillOpacitySlider = document.getElementById('bh-svg-my-ring-fill-opacity-slider') as HTMLInputElement | null;
+  const myRingFillOpacityVal = document.getElementById('bh-svg-my-ring-fill-opacity-val');
+
+  // Outer Speed Ring - Opponent Team
+  const oppRingBorderColorPicker = document.getElementById('bh-svg-opp-ring-border-color-picker') as HTMLInputElement | null;
+  const oppRingBorderColorHex = document.getElementById('bh-svg-opp-ring-border-color-hex') as HTMLInputElement | null;
+  const oppRingBorderOpacitySlider = document.getElementById('bh-svg-opp-ring-border-opacity-slider') as HTMLInputElement | null;
+  const oppRingBorderOpacityVal = document.getElementById('bh-svg-opp-ring-border-opacity-val');
+
+  const oppRingFillColorPicker = document.getElementById('bh-svg-opp-ring-fill-color-picker') as HTMLInputElement | null;
+  const oppRingFillColorHex = document.getElementById('bh-svg-opp-ring-fill-color-hex') as HTMLInputElement | null;
+  const oppRingFillOpacitySlider = document.getElementById('bh-svg-opp-ring-fill-opacity-slider') as HTMLInputElement | null;
+  const oppRingFillOpacityVal = document.getElementById('bh-svg-opp-ring-fill-opacity-val');
+
+  // Ring Preview
   const ringPreviewCheck = document.getElementById('bh-svg-ring-preview-check') as HTMLInputElement | null;
   const ringPreviewSpeedSlider = document.getElementById('bh-svg-ring-preview-speed-slider') as HTMLInputElement | null;
   const ringPreviewSpeedVal = document.getElementById('bh-svg-ring-preview-speed-val');
@@ -114,6 +133,12 @@ export function initBallHitSvgController(): void {
   }
 
   function updateUI() {
+    // Widget Overall Background
+    if (containerBgPicker) containerBgPicker.value = config.containerBgColor || '#04070e';
+    if (containerBgHex) containerBgHex.value = config.containerBgColor || '#04070e';
+    if (containerOpacitySlider) containerOpacitySlider.value = Math.round((config.containerBgOpacity ?? 0.85) * 100).toString();
+    if (containerOpacityVal) containerOpacityVal.textContent = `${Math.round((config.containerBgOpacity ?? 0.85) * 100)}%`;
+
     // Pitch Boundary
     if (borderStrokeSlider) borderStrokeSlider.value = config.borderStrokeWidth.toString();
     if (borderStrokeVal) borderStrokeVal.textContent = config.borderStrokeWidth.toString();
@@ -147,7 +172,7 @@ export function initBallHitSvgController(): void {
     if (pillOpacitySlider) pillOpacitySlider.value = Math.round(config.pillOpacity * 100).toString();
     if (pillOpacityVal) pillOpacityVal.textContent = `${Math.round(config.pillOpacity * 100)}%`;
 
-    // Dot
+    // Center Dot
     if (dotRadiusSlider) dotRadiusSlider.value = config.dotRadius.toString();
     if (dotRadiusVal) dotRadiusVal.textContent = `${config.dotRadius} px`;
 
@@ -161,22 +186,45 @@ export function initBallHitSvgController(): void {
     if (oppDotOpacitySlider) oppDotOpacitySlider.value = Math.round(config.oppTeamDotOpacity * 100).toString();
     if (oppDotOpacityVal) oppDotOpacityVal.textContent = `${Math.round(config.oppTeamDotOpacity * 100)}%`;
 
-    // Outer Ring
+    // Outer Ring Common
     if (ringMaxPercentSlider) ringMaxPercentSlider.value = config.ringMaxPercent.toString();
     if (ringMaxPercentVal) ringMaxPercentVal.textContent = `${config.ringMaxPercent}%`;
-
-    if (ringBorderColorPicker) ringBorderColorPicker.value = config.ringBorderColor;
-    if (ringBorderColorHex) ringBorderColorHex.value = config.ringBorderColor;
     if (ringBorderWidthSlider) ringBorderWidthSlider.value = config.ringBorderWidth.toString();
     if (ringBorderWidthVal) ringBorderWidthVal.textContent = `${config.ringBorderWidth} px`;
-    if (ringBorderOpacitySlider) ringBorderOpacitySlider.value = Math.round(config.ringBorderOpacity * 100).toString();
-    if (ringBorderOpacityVal) ringBorderOpacityVal.textContent = `${Math.round(config.ringBorderOpacity * 100)}%`;
 
-    if (ringFillColorPicker) ringFillColorPicker.value = config.ringFillColor;
-    if (ringFillColorHex) ringFillColorHex.value = config.ringFillColor;
-    if (ringFillOpacitySlider) ringFillOpacitySlider.value = Math.round(config.ringFillOpacity * 100).toString();
-    if (ringFillOpacityVal) ringFillOpacityVal.textContent = `${Math.round(config.ringFillOpacity * 100)}%`;
+    // Outer Ring - My Team
+    const myBorderCol = config.myTeamRingBorderColor || config.ringBorderColor || '#00ff88';
+    const myBorderOp = config.myTeamRingBorderOpacity ?? config.ringBorderOpacity ?? 0.85;
+    const myFillCol = config.myTeamRingFillColor || config.ringFillColor || '#00ff88';
+    const myFillOp = config.myTeamRingFillOpacity ?? config.ringFillOpacity ?? 0.15;
 
+    if (myRingBorderColorPicker) myRingBorderColorPicker.value = myBorderCol;
+    if (myRingBorderColorHex) myRingBorderColorHex.value = myBorderCol;
+    if (myRingBorderOpacitySlider) myRingBorderOpacitySlider.value = Math.round(myBorderOp * 100).toString();
+    if (myRingBorderOpacityVal) myRingBorderOpacityVal.textContent = `${Math.round(myBorderOp * 100)}%`;
+
+    if (myRingFillColorPicker) myRingFillColorPicker.value = myFillCol;
+    if (myRingFillColorHex) myRingFillColorHex.value = myFillCol;
+    if (myRingFillOpacitySlider) myRingFillOpacitySlider.value = Math.round(myFillOp * 100).toString();
+    if (myRingFillOpacityVal) myRingFillOpacityVal.textContent = `${Math.round(myFillOp * 100)}%`;
+
+    // Outer Ring - Opponent Team
+    const oppBorderCol = config.oppTeamRingBorderColor || '#ff3366';
+    const oppBorderOp = config.oppTeamRingBorderOpacity ?? 0.85;
+    const oppFillCol = config.oppTeamRingFillColor || '#ff3366';
+    const oppFillOp = config.oppTeamRingFillOpacity ?? 0.15;
+
+    if (oppRingBorderColorPicker) oppRingBorderColorPicker.value = oppBorderCol;
+    if (oppRingBorderColorHex) oppRingBorderColorHex.value = oppBorderCol;
+    if (oppRingBorderOpacitySlider) oppRingBorderOpacitySlider.value = Math.round(oppBorderOp * 100).toString();
+    if (oppRingBorderOpacityVal) oppRingBorderOpacityVal.textContent = `${Math.round(oppBorderOp * 100)}%`;
+
+    if (oppRingFillColorPicker) oppRingFillColorPicker.value = oppFillCol;
+    if (oppRingFillColorHex) oppRingFillColorHex.value = oppFillCol;
+    if (oppRingFillOpacitySlider) oppRingFillOpacitySlider.value = Math.round(oppFillOp * 100).toString();
+    if (oppRingFillOpacityVal) oppRingFillOpacityVal.textContent = `${Math.round(oppFillOp * 100)}%`;
+
+    // Preview
     if (ringPreviewCheck) ringPreviewCheck.checked = config.ringPreviewActive;
     if (ringPreviewSpeedSlider) ringPreviewSpeedSlider.value = config.ringPreviewSpeed.toString();
     if (ringPreviewSpeedVal) ringPreviewSpeedVal.textContent = `${config.ringPreviewSpeed} KPH`;
@@ -204,7 +252,25 @@ export function initBallHitSvgController(): void {
 
   // --- Event Listeners ---
 
-  // Pitch Boundary
+  // Widget Container Overall Background
+  containerBgPicker?.addEventListener('input', () => {
+    config.containerBgColor = containerBgPicker.value;
+    if (containerBgHex) containerBgHex.value = config.containerBgColor;
+    syncConfigToOverlay();
+  });
+  containerBgHex?.addEventListener('change', () => {
+    config.containerBgColor = containerBgHex.value;
+    if (containerBgPicker) containerBgPicker.value = config.containerBgColor;
+    syncConfigToOverlay();
+  });
+  containerOpacitySlider?.addEventListener('input', () => {
+    const val = parseInt(containerOpacitySlider.value, 10);
+    config.containerBgOpacity = val / 100;
+    if (containerOpacityVal) containerOpacityVal.textContent = `${val}%`;
+    syncConfigToOverlay();
+  });
+
+  // Pitch Boundary & Field
   borderStrokeSlider?.addEventListener('input', () => {
     config.borderStrokeWidth = parseInt(borderStrokeSlider.value, 10);
     if (borderStrokeVal) borderStrokeVal.textContent = config.borderStrokeWidth.toString();
@@ -358,21 +424,10 @@ export function initBallHitSvgController(): void {
     syncConfigToOverlay();
   });
 
-  // Outer Ring
+  // Outer Ring Common
   ringMaxPercentSlider?.addEventListener('input', () => {
     config.ringMaxPercent = parseInt(ringMaxPercentSlider.value, 10);
     if (ringMaxPercentVal) ringMaxPercentVal.textContent = `${config.ringMaxPercent}%`;
-    syncConfigToOverlay();
-  });
-
-  ringBorderColorPicker?.addEventListener('input', () => {
-    config.ringBorderColor = ringBorderColorPicker.value;
-    if (ringBorderColorHex) ringBorderColorHex.value = config.ringBorderColor;
-    syncConfigToOverlay();
-  });
-  ringBorderColorHex?.addEventListener('change', () => {
-    config.ringBorderColor = ringBorderColorHex.value;
-    if (ringBorderColorPicker) ringBorderColorPicker.value = config.ringBorderColor;
     syncConfigToOverlay();
   });
 
@@ -382,31 +437,81 @@ export function initBallHitSvgController(): void {
     syncConfigToOverlay();
   });
 
-  ringBorderOpacitySlider?.addEventListener('input', () => {
-    const val = parseInt(ringBorderOpacitySlider.value, 10);
-    config.ringBorderOpacity = val / 100;
-    if (ringBorderOpacityVal) ringBorderOpacityVal.textContent = `${val}%`;
+  // Outer Ring - My Team
+  myRingBorderColorPicker?.addEventListener('input', () => {
+    config.myTeamRingBorderColor = myRingBorderColorPicker.value;
+    if (myRingBorderColorHex) myRingBorderColorHex.value = config.myTeamRingBorderColor;
+    syncConfigToOverlay();
+  });
+  myRingBorderColorHex?.addEventListener('change', () => {
+    config.myTeamRingBorderColor = myRingBorderColorHex.value;
+    if (myRingBorderColorPicker) myRingBorderColorPicker.value = config.myTeamRingBorderColor;
     syncConfigToOverlay();
   });
 
-  ringFillColorPicker?.addEventListener('input', () => {
-    config.ringFillColor = ringFillColorPicker.value;
-    if (ringFillColorHex) ringFillColorHex.value = config.ringFillColor;
-    syncConfigToOverlay();
-  });
-  ringFillColorHex?.addEventListener('change', () => {
-    config.ringFillColor = ringFillColorHex.value;
-    if (ringFillColorPicker) ringFillColorPicker.value = config.ringFillColor;
+  myRingBorderOpacitySlider?.addEventListener('input', () => {
+    const val = parseInt(myRingBorderOpacitySlider.value, 10);
+    config.myTeamRingBorderOpacity = val / 100;
+    if (myRingBorderOpacityVal) myRingBorderOpacityVal.textContent = `${val}%`;
     syncConfigToOverlay();
   });
 
-  ringFillOpacitySlider?.addEventListener('input', () => {
-    const val = parseInt(ringFillOpacitySlider.value, 10);
-    config.ringFillOpacity = val / 100;
-    if (ringFillOpacityVal) ringFillOpacityVal.textContent = `${val}%`;
+  myRingFillColorPicker?.addEventListener('input', () => {
+    config.myTeamRingFillColor = myRingFillColorPicker.value;
+    if (myRingFillColorHex) myRingFillColorHex.value = config.myTeamRingFillColor;
+    syncConfigToOverlay();
+  });
+  myRingFillColorHex?.addEventListener('change', () => {
+    config.myTeamRingFillColor = myRingFillColorHex.value;
+    if (myRingFillColorPicker) myRingFillColorPicker.value = config.myTeamRingFillColor;
     syncConfigToOverlay();
   });
 
+  myRingFillOpacitySlider?.addEventListener('input', () => {
+    const val = parseInt(myRingFillOpacitySlider.value, 10);
+    config.myTeamRingFillOpacity = val / 100;
+    if (myRingFillOpacityVal) myRingFillOpacityVal.textContent = `${val}%`;
+    syncConfigToOverlay();
+  });
+
+  // Outer Ring - Opponent Team
+  oppRingBorderColorPicker?.addEventListener('input', () => {
+    config.oppTeamRingBorderColor = oppRingBorderColorPicker.value;
+    if (oppRingBorderColorHex) oppRingBorderColorHex.value = config.oppTeamRingBorderColor;
+    syncConfigToOverlay();
+  });
+  oppRingBorderColorHex?.addEventListener('change', () => {
+    config.oppTeamRingBorderColor = oppRingBorderColorHex.value;
+    if (oppRingBorderColorPicker) oppRingBorderColorPicker.value = config.oppTeamRingBorderColor;
+    syncConfigToOverlay();
+  });
+
+  oppRingBorderOpacitySlider?.addEventListener('input', () => {
+    const val = parseInt(oppRingBorderOpacitySlider.value, 10);
+    config.oppTeamRingBorderOpacity = val / 100;
+    if (oppRingBorderOpacityVal) oppRingBorderOpacityVal.textContent = `${val}%`;
+    syncConfigToOverlay();
+  });
+
+  oppRingFillColorPicker?.addEventListener('input', () => {
+    config.oppTeamRingFillColor = oppRingFillColorPicker.value;
+    if (oppRingFillColorHex) oppRingFillColorHex.value = config.oppTeamRingFillColor;
+    syncConfigToOverlay();
+  });
+  oppRingFillColorHex?.addEventListener('change', () => {
+    config.oppTeamRingFillColor = oppRingFillColorHex.value;
+    if (oppRingFillColorPicker) oppRingFillColorPicker.value = config.oppTeamRingFillColor;
+    syncConfigToOverlay();
+  });
+
+  oppRingFillOpacitySlider?.addEventListener('input', () => {
+    const val = parseInt(oppRingFillOpacitySlider.value, 10);
+    config.oppTeamRingFillOpacity = val / 100;
+    if (oppRingFillOpacityVal) oppRingFillOpacityVal.textContent = `${val}%`;
+    syncConfigToOverlay();
+  });
+
+  // Preview Controls
   ringPreviewCheck?.addEventListener('change', () => {
     config.ringPreviewActive = ringPreviewCheck.checked;
     syncConfigToOverlay();
@@ -452,14 +557,16 @@ export function initBallHitSvgController(): void {
 
   // Action Buttons
   btnSimMyHit?.addEventListener('click', () => {
+    config.ringPreviewTeam = 'my';
     const spd = config.ringPreviewActive ? config.ringPreviewSpeed : 95;
-    // Generate random pitch location for variety
+    // Generate realistic randomized pitch coordinates (-3500..3500, -4500..4500)
     const rx = (Math.random() - 0.5) * 6000;
     const ry = (Math.random() - 0.5) * 8000;
     emitTo('overlay', 'ball-hit-svg-simulate', { x: rx, y: ry, speed: spd, isMyTeam: true });
   });
 
   btnSimOppHit?.addEventListener('click', () => {
+    config.ringPreviewTeam = 'opp';
     const spd = config.ringPreviewActive ? config.ringPreviewSpeed : 105;
     const rx = (Math.random() - 0.5) * 6000;
     const ry = (Math.random() - 0.5) * 8000;

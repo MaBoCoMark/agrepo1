@@ -7,7 +7,7 @@ import { STANDARD_BOOST_LOCATIONS } from './pitch-geometry';
  */
 
 export interface BallHitSvgConfig {
-  // Pitch Boundary
+  // Pitch Boundary & Field
   borderStrokeWidth: number; // SVG units (default 75)
   borderColor: string;
   borderOpacity: number; // 0.0 - 1.0
@@ -15,6 +15,10 @@ export interface BallHitSvgConfig {
   bgFillOpacity: number; // 0.0 - 1.0
   pitchLineColor: string;
   pitchLineOpacity: number;
+
+  // Widget Container Overall Background
+  containerBgColor: string;
+  containerBgOpacity: number; // 0.0 - 1.0
 
   // Boost Resources
   padRadius: number; // SVG units (default 90)
@@ -31,15 +35,26 @@ export interface BallHitSvgConfig {
   oppTeamDotColor: string;
   oppTeamDotOpacity: number;
 
-  // Outer Speed Ring
+  // Outer Speed Ring Common
   ringMaxPercent: number; // 1 - 100% of pitch short side (default 100)
-  ringBorderColor: string;
   ringBorderWidth: number; // px (default 2)
-  ringBorderOpacity: number; // 0.0 - 1.0
-  ringFillColor: string;
-  ringFillOpacity: number; // 0.0 - 1.0
+
+  // Outer Speed Ring - My Team
+  myTeamRingBorderColor: string;
+  myTeamRingBorderOpacity: number;
+  myTeamRingFillColor: string;
+  myTeamRingFillOpacity: number;
+
+  // Outer Speed Ring - Opponent Team
+  oppTeamRingBorderColor: string;
+  oppTeamRingBorderOpacity: number;
+  oppTeamRingFillColor: string;
+  oppTeamRingFillOpacity: number;
+
+  // Live Ring Preview
   ringPreviewActive: boolean;
   ringPreviewSpeed: number; // 0 - 110 KPH
+  ringPreviewTeam: 'my' | 'opp';
 
   // Animation Controls
   animHoldDuration: number; // default 0.5s
@@ -53,6 +68,12 @@ export interface BallHitSvgConfig {
   widthVw: number;
   heightVw: number;
   followAspectRatio: boolean;
+
+  // Legacy fallback fields
+  ringBorderColor?: string;
+  ringBorderOpacity?: number;
+  ringFillColor?: string;
+  ringFillOpacity?: number;
 }
 
 export const DEFAULT_BALL_HIT_SVG_CONFIG: BallHitSvgConfig = {
@@ -63,6 +84,9 @@ export const DEFAULT_BALL_HIT_SVG_CONFIG: BallHitSvgConfig = {
   bgFillOpacity: 0.7,
   pitchLineColor: '#ffffff',
   pitchLineOpacity: 0.22,
+
+  containerBgColor: '#04070e',
+  containerBgOpacity: 0.85,
 
   padRadius: 90,
   padColor: '#fbbf24',
@@ -78,13 +102,20 @@ export const DEFAULT_BALL_HIT_SVG_CONFIG: BallHitSvgConfig = {
   oppTeamDotOpacity: 1.0,
 
   ringMaxPercent: 100,
-  ringBorderColor: '#00f0ff',
   ringBorderWidth: 2,
-  ringBorderOpacity: 0.8,
-  ringFillColor: '#00f0ff',
-  ringFillOpacity: 0.15,
+  myTeamRingBorderColor: '#00ff88',
+  myTeamRingBorderOpacity: 0.85,
+  myTeamRingFillColor: '#00ff88',
+  myTeamRingFillOpacity: 0.15,
+
+  oppTeamRingBorderColor: '#ff3366',
+  oppTeamRingBorderOpacity: 0.85,
+  oppTeamRingFillColor: '#ff3366',
+  oppTeamRingFillOpacity: 0.15,
+
   ringPreviewActive: false,
   ringPreviewSpeed: 110,
+  ringPreviewTeam: 'my',
 
   animHoldDuration: 0.5,
   animFadeDuration: 1.0,
@@ -100,11 +131,45 @@ export const DEFAULT_BALL_HIT_SVG_CONFIG: BallHitSvgConfig = {
 
 const STORAGE_KEY = 'saved_ball_hit_svg_config';
 
+/**
+ * Converts Hex color string (#rrggbb or #rgb) and alpha (0..1) to rgba(...) CSS string
+ */
+export function hexToRgba(color: string, opacity: number = 1): string {
+  if (!color) return `rgba(0, 240, 255, ${opacity})`;
+  if (color.startsWith('rgba') || color.startsWith('rgb')) {
+    return color;
+  }
+  let hex = color.replace('#', '').trim();
+  if (hex.length === 3) {
+    hex = hex.split('').map((c) => c + c).join('');
+  }
+  const r = parseInt(hex.substring(0, 2), 16) || 0;
+  const g = parseInt(hex.substring(2, 4), 16) || 0;
+  const b = parseInt(hex.substring(4, 6), 16) || 0;
+  const clampedAlpha = Math.max(0, Math.min(1, opacity));
+  return `rgba(${r}, ${g}, ${b}, ${clampedAlpha})`;
+}
+
 export function loadSavedBallHitSvgConfig(): BallHitSvgConfig {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
-      return { ...DEFAULT_BALL_HIT_SVG_CONFIG, ...JSON.parse(raw) };
+      const parsed = JSON.parse(raw);
+      return {
+        ...DEFAULT_BALL_HIT_SVG_CONFIG,
+        ...parsed,
+        // Backward compatibility migration for speed ring separate colors
+        myTeamRingBorderColor: parsed.myTeamRingBorderColor || parsed.ringBorderColor || DEFAULT_BALL_HIT_SVG_CONFIG.myTeamRingBorderColor,
+        myTeamRingBorderOpacity: parsed.myTeamRingBorderOpacity ?? parsed.ringBorderOpacity ?? DEFAULT_BALL_HIT_SVG_CONFIG.myTeamRingBorderOpacity,
+        myTeamRingFillColor: parsed.myTeamRingFillColor || parsed.ringFillColor || DEFAULT_BALL_HIT_SVG_CONFIG.myTeamRingFillColor,
+        myTeamRingFillOpacity: parsed.myTeamRingFillOpacity ?? parsed.ringFillOpacity ?? DEFAULT_BALL_HIT_SVG_CONFIG.myTeamRingFillOpacity,
+        oppTeamRingBorderColor: parsed.oppTeamRingBorderColor || DEFAULT_BALL_HIT_SVG_CONFIG.oppTeamRingBorderColor,
+        oppTeamRingBorderOpacity: parsed.oppTeamRingBorderOpacity ?? parsed.ringBorderOpacity ?? DEFAULT_BALL_HIT_SVG_CONFIG.oppTeamRingBorderOpacity,
+        oppTeamRingFillColor: parsed.oppTeamRingFillColor || DEFAULT_BALL_HIT_SVG_CONFIG.oppTeamRingFillColor,
+        oppTeamRingFillOpacity: parsed.oppTeamRingFillOpacity ?? parsed.ringFillOpacity ?? DEFAULT_BALL_HIT_SVG_CONFIG.oppTeamRingFillOpacity,
+        containerBgColor: parsed.containerBgColor || DEFAULT_BALL_HIT_SVG_CONFIG.containerBgColor,
+        containerBgOpacity: parsed.containerBgOpacity ?? DEFAULT_BALL_HIT_SVG_CONFIG.containerBgOpacity
+      };
     }
   } catch {
     // ignore
@@ -145,7 +210,8 @@ export function updateBallHitSvgConfig(newCfg: Partial<BallHitSvgConfig>): void 
   saveBallHitSvgConfig(currentConfig);
   applyBallHitSvgStyles();
   if (currentConfig.ringPreviewActive) {
-    simulateBallHitSvg(0, 0, currentConfig.ringPreviewSpeed, true);
+    const isMy = currentConfig.ringPreviewTeam !== 'opp';
+    simulateBallHitSvg(0, 0, currentConfig.ringPreviewSpeed, isMy);
   }
 }
 
@@ -157,10 +223,15 @@ export function getBallHitSvgConfig(): BallHitSvgConfig {
  * Sets target team (0 or 1) and flips minimap 180° if Team 1
  */
 export function setBallHitSvgTargetTeam(team: number): void {
-  if (currentTargetTeam !== team) {
-    currentTargetTeam = team;
+  const normalized = team === 1 || String(team) === '1' ? 1 : 0;
+  if (currentTargetTeam !== normalized) {
+    currentTargetTeam = normalized;
     applyTeamOrientation();
   }
+}
+
+export function getBallHitSvgTargetTeam(): number {
+  return currentTargetTeam;
 }
 
 function applyTeamOrientation(): void {
@@ -204,6 +275,11 @@ export function applyBallHitSvgStyles(): void {
     container.style.top = `${currentConfig.topVw}vw`;
     container.style.width = `${currentConfig.widthVw}vw`;
     container.style.height = `${currentConfig.heightVw}vw`;
+    // Apply Widget Overall Container Background Color & Opacity
+    container.style.backgroundColor = hexToRgba(
+      currentConfig.containerBgColor || '#04070e',
+      currentConfig.containerBgOpacity ?? 0.85
+    );
   }
 
   // Pitch boundary polygon
@@ -282,36 +358,51 @@ export function triggerBallHitIndicator(
   }
 
   // 2. Compute Pitch Percentage Coordinates
-  // Pitch is X: [-4500, 4500], Y: [-6000, 6000]
-  // SVG / Canvas: Left = -4500 (0%), Top = +6000 (0%), Bottom = -6000 (100%)
+  // Pitch bounds: X: [-4500, 4500] (width 9000), Y: [-6000, 6000] (height 12000)
+  // Rocket League: Y=+6000 is Orange goal (top), Y=-6000 is Blue goal (bottom).
+  // SVG ViewBox (-4500, -6000, 9000, 12000):
+  // X: -4500 (0%) -> +4500 (100%)
+  // Y: -6000 (Top, 0%) -> +6000 (Bottom, 100%) (SVG Y = -worldY)
   const clampedX = Math.max(-4500, Math.min(4500, worldX));
   const clampedY = Math.max(-6000, Math.min(6000, worldY));
 
-  const normX = (clampedX - (-4500)) / 9000;
+  const normX = (4500 - clampedX) / 9000;
   const normY = (6000 - clampedY) / 12000;
 
   const containerW = container.clientWidth || 240;
-  const containerH = container.clientHeight || 320;
 
-  const pixelX = normX * containerW;
-  const pixelY = normY * containerH;
-
-  // 3. Position Indicator with GPU transform
+  // 3. Position Indicator with percentage coordinates + transform centering
   indicator.style.display = 'flex';
-  indicator.style.transform = `translate3d(${pixelX}px, ${pixelY}px, 0) translate(-50%, -50%)`;
+  indicator.style.left = `${normX * 100}%`;
+  indicator.style.top = `${normY * 100}%`;
+  indicator.style.transform = 'translate(-50%, -50%)';
 
-  // 4. Center Dot Styles (Unified radius, separated colors & opacities)
+  // 4. Center Dot Styles (Separate colors & opacities for My Team vs Opponent Team)
   const dotColor = isMyTeam ? currentConfig.myTeamDotColor : currentConfig.oppTeamDotColor;
   const dotOpacity = isMyTeam ? currentConfig.myTeamDotOpacity : currentConfig.oppTeamDotOpacity;
-  const dotD = currentConfig.dotRadius * 2;
+  const dotD = Math.max(2, currentConfig.dotRadius * 2);
 
   dot.style.width = `${dotD}px`;
   dot.style.height = `${dotD}px`;
-  dot.style.backgroundColor = dotColor;
-  dot.style.boxShadow = `0 0 8px ${dotColor}`;
+  dot.style.backgroundColor = hexToRgba(dotColor, dotOpacity);
+  dot.style.boxShadow = `0 0 8px ${hexToRgba(dotColor, dotOpacity)}`;
 
-  // 5. Outer Speed Ring
-  // Diameter based on postHitSpeed relative to 100% of pitch short side (container width)
+  // 5. Outer Speed Ring (Separate border and fill colors/opacities for My Team vs Opponent Team)
+  const ringBorderColor = isMyTeam
+    ? (currentConfig.myTeamRingBorderColor || currentConfig.ringBorderColor || '#00ff88')
+    : (currentConfig.oppTeamRingBorderColor || '#ff3366');
+  const ringBorderOpacity = isMyTeam
+    ? (currentConfig.myTeamRingBorderOpacity ?? currentConfig.ringBorderOpacity ?? 0.85)
+    : (currentConfig.oppTeamRingBorderOpacity ?? 0.85);
+
+  const ringFillColor = isMyTeam
+    ? (currentConfig.myTeamRingFillColor || currentConfig.ringFillColor || '#00ff88')
+    : (currentConfig.oppTeamRingFillColor || '#ff3366');
+  const ringFillOpacity = isMyTeam
+    ? (currentConfig.myTeamRingFillOpacity ?? currentConfig.ringFillOpacity ?? 0.15)
+    : (currentConfig.oppTeamRingFillOpacity ?? 0.15);
+
+  // Diameter based on speed relative to pitch short side (container width)
   const speed = currentConfig.ringPreviewActive ? currentConfig.ringPreviewSpeed : speedKph;
   const speedFraction = Math.max(0, Math.min(1.0, speed / 110));
   const maxRingDiameter = containerW * (currentConfig.ringMaxPercent / 100);
@@ -319,14 +410,11 @@ export function triggerBallHitIndicator(
 
   ring.style.width = `${ringDiameter}px`;
   ring.style.height = `${ringDiameter}px`;
-  ring.style.border = `${currentConfig.ringBorderWidth}px solid ${currentConfig.ringBorderColor}`;
-  ring.style.borderColor = currentConfig.ringBorderColor;
-  ring.style.opacity = currentConfig.ringBorderOpacity.toString();
-  ring.style.backgroundColor = currentConfig.ringFillColor;
+  ring.style.border = `${currentConfig.ringBorderWidth}px solid ${hexToRgba(ringBorderColor, ringBorderOpacity)}`;
+  ring.style.backgroundColor = hexToRgba(ringFillColor, ringFillOpacity);
+  ring.style.boxShadow = `0 0 8px ${hexToRgba(ringBorderColor, ringBorderOpacity * 0.5)}`;
   ring.style.borderRadius = '50%';
-
-  // Set initial opacity before animation
-  indicator.style.opacity = dotOpacity.toString();
+  ring.style.opacity = '1';
 
   // 6. Web Animations API Execution (Composited on GPU thread)
   const holdSec = Math.max(0, currentConfig.animHoldDuration);
@@ -337,9 +425,11 @@ export function triggerBallHitIndicator(
 
   const easingCurve = resolveEasingString(currentConfig.animEasingType, currentConfig.animCustomEasing);
 
+  indicator.style.opacity = '1';
+
   const keyframes = [
-    { opacity: dotOpacity, offset: 0 },
-    { opacity: dotOpacity, offset: holdFraction, easing: easingCurve },
+    { opacity: 1, offset: 0 },
+    { opacity: 1, offset: holdFraction, easing: easingCurve },
     { opacity: 0, offset: 1.0 }
   ];
 
@@ -355,8 +445,8 @@ export function triggerBallHitIndicator(
       currentAnim = null;
     };
   } catch (err) {
-    // Fallback if WAAPI has edge case
-    indicator.style.opacity = dotOpacity.toString();
+    // Fallback
+    indicator.style.opacity = '1';
     setTimeout(() => {
       indicator.style.transition = `opacity ${fadeSec}s ${easingCurve}`;
       indicator.style.opacity = '0';
@@ -370,35 +460,78 @@ export function triggerBallHitIndicator(
 export function processBallHitSvgPacket(packet: any): void {
   if (!packet) return;
 
+  let payloadData: any = packet;
+  try {
+    if (typeof packet === 'string') {
+      payloadData = JSON.parse(packet);
+    } else if (packet.Data !== undefined) {
+      payloadData = typeof packet.Data === 'string' ? JSON.parse(packet.Data) : packet.Data;
+    } else {
+      payloadData = packet;
+    }
+  } catch (err) {
+    console.error('Failed to parse BallHit SVG packet:', err);
+    return;
+  }
+
+  if (!payloadData || typeof payloadData !== 'object') return;
+
+  // Extract Ball Location
+  const ball = payloadData.Ball || payloadData.ball;
+  const loc = ball?.Location || ball?.location || payloadData.Location || payloadData.location;
+
   let hitX = 0;
   let hitY = 0;
+  if (loc) {
+    hitX = Number(loc.X ?? loc.x ?? 0);
+    hitY = Number(loc.Y ?? loc.y ?? 0);
+  }
+
+  // Extract Ball Speed
   let speed = 60;
-  let teamNum: number | undefined;
-
-  const d = packet.Data || packet;
-  if (d.Location) {
-    hitX = Number(d.Location.X ?? d.Location.x ?? 0);
-    hitY = Number(d.Location.Y ?? d.Location.y ?? 0);
-  } else if (d.Ball?.Location) {
-    hitX = Number(d.Ball.Location.X ?? d.Ball.Location.x ?? 0);
-    hitY = Number(d.Ball.Location.Y ?? d.Ball.Location.y ?? 0);
+  const rawSpd =
+    ball?.PostHitSpeed ??
+    ball?.postHitSpeed ??
+    ball?.Speed ??
+    ball?.speed ??
+    payloadData.postHitSpeed ??
+    payloadData.PostHitSpeed;
+  if (rawSpd !== undefined && rawSpd !== null) {
+    const numSpd = Number(rawSpd);
+    // If speed is in unreal units/sec (>150), convert to KPH (uu/s * 0.036 = kph)
+    speed = numSpd > 150 ? numSpd * 0.036 : numSpd;
   }
 
-  if (d.Ball?.Speed !== undefined) {
-    const rawSpd = Number(d.Ball.Speed);
-    speed = rawSpd > 150 ? rawSpd * 0.036 : rawSpd;
-  } else if (d.postHitSpeed !== undefined) {
-    const rawSpd = Number(d.postHitSpeed);
-    speed = rawSpd > 150 ? rawSpd * 0.036 : rawSpd;
+  // Extract Player Team
+  const players = payloadData.Players || payloadData.players || [];
+  const primaryPlayer =
+    (Array.isArray(players) && players.length > 0 ? players[0] : null) ||
+    payloadData.Player ||
+    payloadData.player;
+  const hitTeamNum =
+    primaryPlayer?.TeamNum ??
+    primaryPlayer?.teamNum ??
+    payloadData.TeamNum ??
+    payloadData.teamNum;
+
+  // Update target team if present in packet
+  const targetTeamNum =
+    payloadData.Game?.Target?.TeamNum ??
+    payloadData.Target?.TeamNum ??
+    payloadData.TargetTeam ??
+    payloadData.targetTeam;
+  if (targetTeamNum !== undefined && targetTeamNum !== null) {
+    setBallHitSvgTargetTeam(Number(targetTeamNum));
   }
 
-  if (d.Player?.TeamNum !== undefined) {
-    teamNum = Number(d.Player.TeamNum);
-  } else if (d.TeamNum !== undefined) {
-    teamNum = Number(d.TeamNum);
+  // Determine if it was our team (Green) or opponent team (Red)
+  let isMyTeam = true;
+  if (hitTeamNum !== undefined && hitTeamNum !== null && hitTeamNum !== '-') {
+    isMyTeam = (Number(hitTeamNum) === currentTargetTeam || String(hitTeamNum) === String(currentTargetTeam));
+  } else {
+    isMyTeam = currentTargetTeam === 0;
   }
 
-  const isMyTeam = teamNum === undefined || teamNum === currentTargetTeam;
   triggerBallHitIndicator(hitX, hitY, speed, isMyTeam);
 }
 

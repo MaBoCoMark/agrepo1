@@ -1086,34 +1086,27 @@
       </div>
     </div>
 
-    <!-- Pitch Boundary & Field Background Card -->
+    <!-- Widget Overall Background & Pitch Boundary Card -->
     <div class="primer-card">
       <div style="font-size: 11px; font-weight: bold; color: var(--primer-accent-fg); margin-bottom: 8px;">
-        PITCH BOUNDARY & FIELD
+        WIDGET CONTAINER & PITCH FIELD
       </div>
 
-      <!-- Stroke Width -->
-      <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 2px;">
-        <span style="color: var(--primer-fg-muted);">Border Thickness:</span>
-        <span id="bh-svg-border-stroke-val" style="color: var(--primer-accent-fg); font-weight: bold;">75</span>
-      </div>
-      <input type="range" id="bh-svg-border-stroke-slider" min="10" max="250" value="75" step="5" style="width: 100%; margin-bottom: 8px;">
-
-      <!-- Border Color & Opacity -->
+      <!-- Widget Overall Container Background Color & Opacity -->
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
         <div>
-          <div style="font-size: 11px; color: var(--primer-fg-muted); margin-bottom: 2px;">Border Color:</div>
+          <div style="font-size: 11px; color: var(--primer-fg-muted); margin-bottom: 2px;">Widget BG Color:</div>
           <div style="display: flex; gap: 4px; align-items: center;">
-            <input type="color" id="bh-svg-border-color-picker" value="#00f0ff" style="width: 28px; height: 24px; padding: 0; border: none; cursor: pointer;">
-            <input type="text" id="bh-svg-border-color-hex" value="#00f0ff" class="input-field" style="flex: 1; font-size: 10px; padding: 2px 4px; font-family: monospace;">
+            <input type="color" id="bh-svg-container-bg-picker" value="#04070e" style="width: 28px; height: 24px; padding: 0; border: none; cursor: pointer;">
+            <input type="text" id="bh-svg-container-bg-hex" value="#04070e" class="input-field" style="flex: 1; font-size: 10px; padding: 2px 4px; font-family: monospace;">
           </div>
         </div>
         <div>
           <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 2px;">
-            <span style="color: var(--primer-fg-muted);">Opacity:</span>
-            <span id="bh-svg-border-opacity-val" style="color: var(--primer-accent-fg); font-weight: bold;">85%</span>
+            <span style="color: var(--primer-fg-muted);">Widget BG Opacity:</span>
+            <span id="bh-svg-container-opacity-val" style="color: var(--primer-accent-fg); font-weight: bold;">85%</span>
           </div>
-          <input type="range" id="bh-svg-border-opacity-slider" min="0" max="100" value="85" step="5" style="width: 100%;">
+          <input type="range" id="bh-svg-container-opacity-slider" min="0" max="100" value="85" step="5" style="width: 100%;">
         </div>
       </div>
 
@@ -1128,10 +1121,37 @@
         </div>
         <div>
           <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 2px;">
-            <span style="color: var(--primer-fg-muted);">BG Opacity:</span>
+            <span style="color: var(--primer-fg-muted);">Field Opacity:</span>
             <span id="bh-svg-bg-opacity-val" style="color: var(--primer-accent-fg); font-weight: bold;">70%</span>
           </div>
           <input type="range" id="bh-svg-bg-opacity-slider" min="0" max="100" value="70" step="5" style="width: 100%;">
+        </div>
+      </div>
+
+      <!-- Pitch Border Thickness -->
+      <div style="padding-top: 6px; border-top: 1px dashed var(--primer-border-default); margin-bottom: 8px;">
+        <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 2px;">
+          <span style="color: var(--primer-fg-muted);">Border Thickness:</span>
+          <span id="bh-svg-border-stroke-val" style="color: var(--primer-accent-fg); font-weight: bold;">75</span>
+        </div>
+        <input type="range" id="bh-svg-border-stroke-slider" min="10" max="250" value="75" step="5" style="width: 100%;">
+      </div>
+
+      <!-- Border Color & Opacity -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+        <div>
+          <div style="font-size: 11px; color: var(--primer-fg-muted); margin-bottom: 2px;">Border Color:</div>
+          <div style="display: flex; gap: 4px; align-items: center;">
+            <input type="color" id="bh-svg-border-color-picker" value="#00f0ff" style="width: 28px; height: 24px; padding: 0; border: none; cursor: pointer;">
+            <input type="text" id="bh-svg-border-color-hex" value="#00f0ff" class="input-field" style="flex: 1; font-size: 10px; padding: 2px 4px; font-family: monospace;">
+          </div>
+        </div>
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 2px;">
+            <span style="color: var(--primer-fg-muted);">Border Opacity:</span>
+            <span id="bh-svg-border-opacity-val" style="color: var(--primer-accent-fg); font-weight: bold;">85%</span>
+          </div>
+          <input type="range" id="bh-svg-border-opacity-slider" min="0" max="100" value="85" step="5" style="width: 100%;">
         </div>
       </div>
 
@@ -1245,7 +1265,7 @@
       </div>
 
       <!-- Opponent Team Hit Color & Opacity -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
         <div>
           <div style="font-size: 11px; color: var(--primer-fg-muted); margin-bottom: 2px;">Opponent Hit Color:</div>
           <div style="display: flex; gap: 4px; align-items: center;">
@@ -1261,65 +1281,110 @@
           <input type="range" id="bh-svg-opp-dot-opacity-slider" min="0" max="100" value="100" step="5" style="width: 100%;">
         </div>
       </div>
+    </div>
 
-      <!-- Speed Outer Ring Styling & Preview -->
-      <div style="padding-top: 8px; border-top: 1px dashed var(--primer-border-default);">
-        <div style="font-size: 11px; font-weight: bold; color: var(--primer-accent-fg); margin-bottom: 6px;">
-          SPEED OUTER RING (100% SHORT SIDE)
+    <!-- Speed Outer Ring Styling Card -->
+    <div class="primer-card">
+      <div style="font-size: 11px; font-weight: bold; color: var(--primer-accent-fg); margin-bottom: 6px;">
+        SPEED OUTER RING (100% SHORT SIDE)
+      </div>
+
+      <!-- Outer Ring Max Size -->
+      <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 2px;">
+        <span style="color: var(--primer-fg-muted);">Max Diameter (% short side):</span>
+        <span id="bh-svg-ring-max-percent-val" style="color: var(--primer-accent-fg); font-weight: bold;">100%</span>
+      </div>
+      <input type="range" id="bh-svg-ring-max-percent-slider" min="10" max="100" value="100" step="5" style="width: 100%; margin-bottom: 8px;">
+
+      <!-- Border Width -->
+      <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 2px;">
+        <span style="color: var(--primer-fg-muted);">Ring Border Width:</span>
+        <span id="bh-svg-ring-border-width-val" style="color: var(--primer-accent-fg); font-weight: bold;">2 px</span>
+      </div>
+      <input type="range" id="bh-svg-ring-border-width-slider" min="1" max="8" value="2" step="1" style="width: 100%; margin-bottom: 8px;">
+
+      <!-- 🟢 Our Team Speed Ring Border & Fill -->
+      <div style="padding-top: 6px; border-top: 1px dashed var(--primer-border-default); margin-bottom: 8px;">
+        <div style="font-size: 10px; font-weight: bold; color: #00ff88; margin-bottom: 4px;">
+          🟢 OUR TEAM SPEED RING
         </div>
-
-        <!-- Outer Ring Max Size -->
-        <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 2px;">
-          <span style="color: var(--primer-fg-muted);">Max Diameter (% of pitch short side):</span>
-          <span id="bh-svg-ring-max-percent-val" style="color: var(--primer-accent-fg); font-weight: bold;">100%</span>
-        </div>
-        <input type="range" id="bh-svg-ring-max-percent-slider" min="10" max="100" value="100" step="5" style="width: 100%; margin-bottom: 8px;">
-
-        <!-- Outer Ring Border Controls -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 6px;">
           <div>
-            <div style="font-size: 11px; color: var(--primer-fg-muted); margin-bottom: 2px;">Ring Border Color:</div>
+            <div style="font-size: 10px; color: var(--primer-fg-muted); margin-bottom: 2px;">Border Color:</div>
             <div style="display: flex; gap: 4px; align-items: center;">
-              <input type="color" id="bh-svg-ring-border-color-picker" value="#00f0ff" style="width: 28px; height: 24px; padding: 0; border: none; cursor: pointer;">
-              <input type="text" id="bh-svg-ring-border-color-hex" value="#00f0ff" class="input-field" style="flex: 1; font-size: 10px; padding: 2px 4px; font-family: monospace;">
+              <input type="color" id="bh-svg-my-ring-border-color-picker" value="#00ff88" style="width: 28px; height: 24px; padding: 0; border: none; cursor: pointer;">
+              <input type="text" id="bh-svg-my-ring-border-color-hex" value="#00ff88" class="input-field" style="flex: 1; font-size: 10px; padding: 2px 4px; font-family: monospace;">
             </div>
           </div>
           <div>
-            <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 2px;">
-              <span style="color: var(--primer-fg-muted);">Border Width:</span>
-              <span id="bh-svg-ring-border-width-val" style="color: var(--primer-accent-fg); font-weight: bold;">2 px</span>
-            </div>
-            <input type="range" id="bh-svg-ring-border-width-slider" min="1" max="8" value="2" step="1" style="width: 100%;">
-          </div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
-          <div>
-            <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 2px;">
+            <div style="display: flex; justify-content: space-between; font-size: 10px; margin-bottom: 2px;">
               <span style="color: var(--primer-fg-muted);">Border Opacity:</span>
-              <span id="bh-svg-ring-border-opacity-val" style="color: var(--primer-accent-fg); font-weight: bold;">80%</span>
+              <span id="bh-svg-my-ring-border-opacity-val" style="color: var(--primer-accent-fg); font-weight: bold;">85%</span>
             </div>
-            <input type="range" id="bh-svg-ring-border-opacity-slider" min="0" max="100" value="80" step="5" style="width: 100%;">
+            <input type="range" id="bh-svg-my-ring-border-opacity-slider" min="0" max="100" value="85" step="5" style="width: 100%;">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <div>
+            <div style="font-size: 10px; color: var(--primer-fg-muted); margin-bottom: 2px;">Fill Color:</div>
+            <div style="display: flex; gap: 4px; align-items: center;">
+              <input type="color" id="bh-svg-my-ring-fill-color-picker" value="#00ff88" style="width: 28px; height: 24px; padding: 0; border: none; cursor: pointer;">
+              <input type="text" id="bh-svg-my-ring-fill-color-hex" value="#00ff88" class="input-field" style="flex: 1; font-size: 10px; padding: 2px 4px; font-family: monospace;">
+            </div>
           </div>
           <div>
-            <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 2px;">
+            <div style="display: flex; justify-content: space-between; font-size: 10px; margin-bottom: 2px;">
               <span style="color: var(--primer-fg-muted);">Fill Opacity:</span>
-              <span id="bh-svg-ring-fill-opacity-val" style="color: var(--primer-accent-fg); font-weight: bold;">15%</span>
+              <span id="bh-svg-my-ring-fill-opacity-val" style="color: var(--primer-accent-fg); font-weight: bold;">15%</span>
             </div>
-            <input type="range" id="bh-svg-ring-fill-opacity-slider" min="0" max="100" value="15" step="5" style="width: 100%;">
+            <input type="range" id="bh-svg-my-ring-fill-opacity-slider" min="0" max="100" value="15" step="5" style="width: 100%;">
+          </div>
+        </div>
+      </div>
+
+      <!-- 🔴 Opponent Team Speed Ring Border & Fill -->
+      <div style="padding-top: 6px; border-top: 1px dashed var(--primer-border-default); margin-bottom: 8px;">
+        <div style="font-size: 10px; font-weight: bold; color: #ff3366; margin-bottom: 4px;">
+          🔴 OPPONENT TEAM SPEED RING
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 6px;">
+          <div>
+            <div style="font-size: 10px; color: var(--primer-fg-muted); margin-bottom: 2px;">Border Color:</div>
+            <div style="display: flex; gap: 4px; align-items: center;">
+              <input type="color" id="bh-svg-opp-ring-border-color-picker" value="#ff3366" style="width: 28px; height: 24px; padding: 0; border: none; cursor: pointer;">
+              <input type="text" id="bh-svg-opp-ring-border-color-hex" value="#ff3366" class="input-field" style="flex: 1; font-size: 10px; padding: 2px 4px; font-family: monospace;">
+            </div>
+          </div>
+          <div>
+            <div style="display: flex; justify-content: space-between; font-size: 10px; margin-bottom: 2px;">
+              <span style="color: var(--primer-fg-muted);">Border Opacity:</span>
+              <span id="bh-svg-opp-ring-border-opacity-val" style="color: var(--primer-accent-fg); font-weight: bold;">85%</span>
+            </div>
+            <input type="range" id="bh-svg-opp-ring-border-opacity-slider" min="0" max="100" value="85" step="5" style="width: 100%;">
           </div>
         </div>
 
-        <!-- Outer Ring Fill Color -->
-        <div style="margin-bottom: 8px;">
-          <div style="font-size: 11px; color: var(--primer-fg-muted); margin-bottom: 2px;">Ring Fill Color:</div>
-          <div style="display: flex; gap: 4px; align-items: center;">
-            <input type="color" id="bh-svg-ring-fill-color-picker" value="#00f0ff" style="width: 28px; height: 24px; padding: 0; border: none; cursor: pointer;">
-            <input type="text" id="bh-svg-ring-fill-color-hex" value="#00f0ff" class="input-field" style="flex: 1; font-size: 10px; padding: 2px 4px; font-family: monospace;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <div>
+            <div style="font-size: 10px; color: var(--primer-fg-muted); margin-bottom: 2px;">Fill Color:</div>
+            <div style="display: flex; gap: 4px; align-items: center;">
+              <input type="color" id="bh-svg-opp-ring-fill-color-picker" value="#ff3366" style="width: 28px; height: 24px; padding: 0; border: none; cursor: pointer;">
+              <input type="text" id="bh-svg-opp-ring-fill-color-hex" value="#ff3366" class="input-field" style="flex: 1; font-size: 10px; padding: 2px 4px; font-family: monospace;">
+            </div>
+          </div>
+          <div>
+            <div style="display: flex; justify-content: space-between; font-size: 10px; margin-bottom: 2px;">
+              <span style="color: var(--primer-fg-muted);">Fill Opacity:</span>
+              <span id="bh-svg-opp-ring-fill-opacity-val" style="color: var(--primer-accent-fg); font-weight: bold;">15%</span>
+            </div>
+            <input type="range" id="bh-svg-opp-ring-fill-opacity-slider" min="0" max="100" value="15" step="5" style="width: 100%;">
           </div>
         </div>
+      </div>
 
-        <!-- Speed Ring Live Preview Checkbox & Slider -->
+      <!-- Speed Ring Live Preview Checkbox & Slider -->
+      <div style="padding-top: 6px; border-top: 1px dashed var(--primer-border-default);">
         <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 2px;">
           <label style="display: flex; align-items: center; cursor: pointer;">
             <input type="checkbox" id="bh-svg-ring-preview-check" style="margin-right: 6px;">
