@@ -4,7 +4,7 @@
     <div class="ball-hit-header-left">
       <div class="ball-hit-title-group">
         <span class="ball-hit-badge">2D MAPPING & CALIBRATION ENGINE</span>
-        <h1 class="ball-hit-title">BALL HIT & BOOST INSPECTOR</h1>
+        <h1 class="ball-hit-title">BALL HIT INSPECTOR</h1>
       </div>
       <div class="ball-hit-status-pill">
         <span id="bh-status-dot" class="status-dot bool-on pulsing-dot"></span>
@@ -14,7 +14,7 @@
 
     <!-- Mode Switcher Pills & Recording Toggle -->
     <div class="ball-hit-mode-switcher">
-      <button type="button" id="bh-btn-mode-mapping" class="bh-mode-pill active" title="Telemetry point cloud accumulation for Ball Hits and Boost Pickups">
+      <button type="button" id="bh-btn-mode-mapping" class="bh-mode-pill active" title="Telemetry point cloud accumulation for Ball Hits">
         <span>📅</span>
         <span>Data Mapping Mode</span>
       </button>
@@ -34,10 +34,6 @@
         <span id="bh-total-count" class="bh-chip-val">0</span>
       </div>
       <div class="bh-summary-chip">
-        <span class="bh-chip-label">RECORDED BOOSTS</span>
-        <span id="bh-total-boosts" class="bh-chip-val" style="color: #fbbf24;">0</span>
-      </div>
-      <div class="bh-summary-chip">
         <span class="bh-chip-label">VALID / NOISE</span>
         <div class="bh-chip-split">
           <span id="bh-stats-valid-hits" class="val-green">0</span>
@@ -52,13 +48,13 @@
     </div>
   </div>
 
-  <!-- Awaiting Placeholder Notice (shown when 0 hits or boosts received yet) -->
+  <!-- Awaiting Placeholder Notice (shown when 0 hits received yet) -->
   <div id="bh-awaiting-notice" class="bh-awaiting-card">
     <div class="bh-radar-spinner"></div>
     <div class="bh-awaiting-content">
-      <div class="bh-awaiting-title">AWAITING BALL HIT & BOOST TELEMETRY...</div>
+      <div class="bh-awaiting-title">AWAITING BALL HIT TELEMETRY...</div>
       <div class="bh-awaiting-desc">
-        Listening on active WebSocket stream for BallHit and BoostPickup telemetry. Data points are plotted in real-time on the pitch radar canvas.
+        Listening on active WebSocket stream for BallHit telemetry. Hit locations and post-hit speeds are plotted in real-time on the pitch radar canvas with standard 34 boost pads.
       </div>
     </div>
   </div>
@@ -257,25 +253,17 @@
       <!-- Pitch Toolbar -->
       <div class="bh-pitch-toolbar">
         <div class="bh-toolbar-left">
-          <button type="button" id="bh-btn-export-json" class="bh-btn-secondary" title="Export the 16 control points configuration JSON to clipboard">
+          <button type="button" id="bh-btn-export-json" class="bh-btn-primary" title="Export the 16 control points configuration JSON to clipboard">
             <span>📋</span>
             <span>Copy 16-Pts JSON</span>
           </button>
-          <button type="button" id="bh-btn-export-boost-json" class="bh-btn-primary" title="Export recorded boost pickups as JSON array ({x, y, z, boostType})">
-            <span>⚡</span>
-            <span>Copy Boosts JSON</span>
-          </button>
-          <button type="button" id="bh-btn-import-json" class="bh-btn-secondary" title="Import 16 control points, hit data, or boost data">
+          <button type="button" id="bh-btn-import-json" class="bh-btn-secondary" title="Import 16 control points or hit telemetry data">
             <span>📥</span>
             <span>Import</span>
           </button>
           <button type="button" id="bh-btn-clear-points" class="bh-btn-danger" title="Clear recorded ball hits">
             <span>🗑️</span>
             <span>Clear Hits</span>
-          </button>
-          <button type="button" id="bh-btn-clear-boosts" class="bh-btn-secondary" title="Clear recorded boost pickups">
-            <span>🗑️</span>
-            <span>Clear Boosts</span>
           </button>
         </div>
 
@@ -299,7 +287,7 @@
         </div>
       </div>
 
-      <!-- 2D Canvas Viewport -->
+      <!-- 2D Canvas Viewport with 1:1 isometric proportions -->
       <div class="bh-canvas-stage">
         <canvas id="bh-pitch-canvas" class="bh-radar-canvas"></canvas>
 
@@ -308,7 +296,7 @@
           <div class="legend-item"><span class="legend-dot dot-cyan"></span> 16 Control Points Wireframe</div>
           <div class="legend-item"><span class="legend-dot dot-green"></span> Ball Hits Point Cloud</div>
           <div class="legend-item"><span class="legend-dot dot-yellow"></span> Small Boost Pad (12%)</div>
-          <div class="legend-item"><span class="legend-dot dot-amber"></span> Big Boost (100%)</div>
+          <div class="legend-item"><span class="legend-dot dot-amber"></span> Big Boost Pill (100%)</div>
           <div class="legend-item"><span class="legend-dot dot-red"></span> Latest Hit (Speed Circle)</div>
           <div class="legend-item"><span class="legend-dot dot-gold"></span> Draggable Vertices (P1-P16)</div>
         </div>
@@ -324,7 +312,7 @@
       <!-- Scope note -->
       <div class="bh-scope-footer">
         <span class="bh-info-icon">ℹ️</span>
-        <span>16-point boundary model locks 4 beveled corners (45°) and dual rectangular goal slots. Use Configurator or WASD hotkeys for calibration.</span>
+        <span>1:1 isometric pitch projection with 34 standard boost locations and 16-point boundary skeleton.</span>
       </div>
 
     </div>

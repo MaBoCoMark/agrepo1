@@ -4,6 +4,7 @@ import {
   CalibrationSettings,
   HitPointRecord,
   MappingStats,
+  STANDARD_BOOST_LOCATIONS,
   DEFAULT_CONTROL_POINTS,
   DEFAULT_CALIBRATION,
   SAFETY_MARGINS,
@@ -19,7 +20,7 @@ import {
 
 /**
  * ============================================================================
- * 🎮 Ball Hit & Boost Pickup Inspector & 2D Pitch Mapping Controller
+ * 🎮 Ball Hit Inspector & 2D Pitch Mapping Controller
  * ============================================================================
  */
 
@@ -58,60 +59,6 @@ export interface BallHitWebSocketMessage {
   [key: string]: any;
 }
 
-export interface BoostPickupLocation {
-  X?: number;
-  Y?: number;
-  Z?: number;
-  x?: number;
-  y?: number;
-  z?: number;
-}
-
-export interface BoostPickupPlayer {
-  Name?: string;
-  name?: string;
-  Shortcut?: number | string;
-  shortcut?: number | string;
-  TeamNum?: number | string;
-  teamNum?: number | string;
-  [key: string]: any;
-}
-
-export interface BoostPickupPayloadData {
-  MatchGuid?: string;
-  Player?: BoostPickupPlayer;
-  Location?: BoostPickupLocation;
-  BoostAmount?: number;
-  boostAmount?: number;
-  BoostType?: string;
-  boostType?: string;
-  bReplay?: boolean;
-  [key: string]: any;
-}
-
-export interface BoostPickupWebSocketMessage {
-  Event?: string;
-  Data?: string | BoostPickupPayloadData | any;
-  Location?: BoostPickupLocation;
-  BoostType?: string;
-  BoostAmount?: number;
-  Player?: BoostPickupPlayer;
-  [key: string]: any;
-}
-
-export interface BoostPickupRecord {
-  x: number;
-  y: number;
-  z: number;
-  boostType: string;
-  boostAmount?: number;
-  playerName?: string;
-  shortcut?: number | string;
-  teamNum?: number | string;
-  timestamp: number;
-  isNoise?: boolean;
-}
-
 export interface SessionExtremes {
   minX: number | null;
   maxX: number | null;
@@ -130,19 +77,6 @@ export interface LastBallHitSnapshot {
   preHitSpeed: number;
   postHitSpeed: number;
   speedDelta: number;
-  x: number | null;
-  y: number | null;
-  z: number | null;
-}
-
-export interface LastBoostPickupSnapshot {
-  hasData: boolean;
-  timestamp: string;
-  playerName: string;
-  shortcut: number | string;
-  teamNum: number | string;
-  boostType: string;
-  boostAmount: number;
   x: number | null;
   y: number | null;
   z: number | null;
@@ -174,30 +108,13 @@ export const lastBallHitSnapshot: LastBallHitSnapshot = {
   z: null
 };
 
-export const lastBoostPickupSnapshot: LastBoostPickupSnapshot = {
-  hasData: false,
-  timestamp: '-',
-  playerName: '-',
-  shortcut: '-',
-  teamNum: '-',
-  boostType: '-',
-  boostAmount: 0,
-  x: null,
-  y: null,
-  z: null
-};
-
 export let sessionTotalHits = 0;
-export let sessionTotalBoosts = 0;
 export let isBallHitDirty = true;
 export let isRecordingHits = true;
 export let currentOperationMode: BallHitOperationMode = 'mapping';
 
 export let hitHistoryBuffer: HitPointRecord[] = [];
 export const MAX_HIT_HISTORY = 3000;
-
-export let boostPickupHistoryBuffer: BoostPickupRecord[] = [];
-export const MAX_BOOST_HISTORY = 3000;
 
 export let currentControlPoints: ControlPoint[] = loadSavedControlPoints();
 export let currentCalibration: CalibrationSettings = loadSavedCalibration();
@@ -234,16 +151,8 @@ export function clearHitHistory(): void {
   isBallHitDirty = true;
 }
 
-export function clearBoostHistory(): void {
-  boostPickupHistoryBuffer = [];
-  sessionTotalBoosts = 0;
-  lastBoostPickupSnapshot.hasData = false;
-  isBallHitDirty = true;
-}
-
 export function clearAllPitchData(): void {
   clearHitHistory();
-  clearBoostHistory();
 }
 
 export function updateCalibration(settings: Partial<CalibrationSettings>): void {
@@ -305,57 +214,22 @@ export function importHitsFromJson(jsonString: string): number {
 }
 
 /**
- * Bulk import boost pickups from JSON.
+ * Backward compatibility stubs for legacy boost actions
  */
-export function importBoostsFromJson(jsonString: string): number {
-  try {
-    const data = JSON.parse(jsonString);
-    let addedCount = 0;
-    const array = Array.isArray(data) ? data : (data.boosts || data.boostPickups || []);
-    if (Array.isArray(array)) {
-      for (const item of array) {
-        const x = typeof item.x === 'number' ? item.x : (typeof item.X === 'number' ? item.X : (Array.isArray(item) ? item[0] : null));
-        const y = typeof item.y === 'number' ? item.y : (typeof item.Y === 'number' ? item.Y : (Array.isArray(item) ? item[1] : null));
-        const z = typeof item.z === 'number' ? item.z : (typeof item.Z === 'number' ? item.Z : (Array.isArray(item) ? item[2] : 60));
-        const boostType = item.boostType || item.BoostType || (item.boostAmount > 0.25 ? 'BoostType_Big' : 'BoostType_Pad');
-        if (x !== null && y !== null && !isNaN(x) && !isNaN(y)) {
-          const isNoise = !isPointInsideSafetyBounds(x, y, z ?? 60);
-          boostPickupHistoryBuffer.push({
-            x,
-            y,
-            z: z ?? 60,
-            boostType,
-            boostAmount: typeof item.boostAmount === 'number' ? item.boostAmount : (typeof item.BoostAmount === 'number' ? item.BoostAmount : undefined),
-            timestamp: Date.now(),
-            isNoise
-          });
-          addedCount++;
-        }
-      }
-      if (boostPickupHistoryBuffer.length > MAX_BOOST_HISTORY) {
-        boostPickupHistoryBuffer = boostPickupHistoryBuffer.slice(-MAX_BOOST_HISTORY);
-      }
-      sessionTotalBoosts += addedCount;
-      isBallHitDirty = true;
-      return addedCount;
-    }
-  } catch (err) {
-    console.error('Failed to parse import boosts JSON:', err);
-  }
+export function clearBoostHistory(): void {
+  isBallHitDirty = true;
+}
+
+export function importBoostsFromJson(_jsonString: string): number {
   return 0;
 }
 
-/**
- * Export recorded boost pickups as JSON containing { x, y, z, boostType }.
- */
 export function exportBoostPickupsJson(): string {
-  const exportList = boostPickupHistoryBuffer.map((b) => ({
-    x: Math.round(b.x * 100) / 100,
-    y: Math.round(b.y * 100) / 100,
-    z: Math.round(b.z * 100) / 100,
-    boostType: b.boostType
-  }));
-  return JSON.stringify(exportList, null, 2);
+  return JSON.stringify(STANDARD_BOOST_LOCATIONS, null, 2);
+}
+
+export function processBoostPickupPacket(_raw: any): boolean {
+  return false;
 }
 
 /**
@@ -451,104 +325,6 @@ export function processBallHitPacket(raw: BallHitWebSocketMessage): boolean {
 }
 
 /**
- * Parse incoming WebSocket BoostPickup packet.
- * Payload schema example:
- * {
- *   "Event": "BoostPickup",
- *   "Data": "{\"MatchGuid\":\"\",\"Player\":{\"Name\":\"steamuser\",\"Shortcut\":1,\"TeamNum\":0},\"Location\":{\"X\":-1792.0,\"Y\":-4184.0,\"Z\":61.7},\"BoostAmount\":0.12,\"BoostType\":\"BoostType_Pad\",\"bReplay\":true}"
- * }
- */
-export function processBoostPickupPacket(raw: BoostPickupWebSocketMessage): boolean {
-  if (overlayState.currentActiveScene !== 'ball-hit') {
-    return false;
-  }
-  if (!raw) return false;
-
-  let payloadData: BoostPickupPayloadData;
-  try {
-    if (typeof raw === 'string') {
-      payloadData = JSON.parse(raw);
-    } else if (raw.Data !== undefined) {
-      payloadData = typeof raw.Data === 'string' ? JSON.parse(raw.Data) : raw.Data;
-    } else {
-      payloadData = raw;
-    }
-  } catch (err) {
-    console.error('Failed to parse BoostPickup payload Data string:', err);
-    return false;
-  }
-
-  if (!payloadData || typeof payloadData !== 'object') {
-    return false;
-  }
-
-  const loc = payloadData.Location || (payloadData as any).location || (raw as any).Location;
-  const x = loc ? (typeof loc.X === 'number' ? loc.X : (typeof (loc as any).x === 'number' ? (loc as any).x : null)) : null;
-  const y = loc ? (typeof loc.Y === 'number' ? loc.Y : (typeof (loc as any).y === 'number' ? (loc as any).y : null)) : null;
-  const z = loc ? (typeof loc.Z === 'number' ? loc.Z : (typeof (loc as any).z === 'number' ? (loc as any).z : null)) : null;
-
-  const boostType = payloadData.BoostType || (payloadData as any).boostType || (raw as any).BoostType || 'BoostType_Pad';
-  const boostAmount = typeof payloadData.BoostAmount === 'number'
-    ? payloadData.BoostAmount
-    : (typeof (payloadData as any).boostAmount === 'number' ? (payloadData as any).boostAmount : 0);
-
-  const player = payloadData.Player || (payloadData as any).player;
-  const playerName = player?.Name || player?.name || 'Unknown';
-  const shortcut = player?.Shortcut ?? player?.shortcut ?? '-';
-  const teamNum = player?.TeamNum ?? player?.teamNum ?? '-';
-
-  if (x !== null && !isNaN(x)) {
-    sessionExtremes.minX = sessionExtremes.minX === null ? x : Math.min(sessionExtremes.minX, x);
-    sessionExtremes.maxX = sessionExtremes.maxX === null ? x : Math.max(sessionExtremes.maxX, x);
-  }
-  if (y !== null && !isNaN(y)) {
-    sessionExtremes.minY = sessionExtremes.minY === null ? y : Math.min(sessionExtremes.minY, y);
-    sessionExtremes.maxY = sessionExtremes.maxY === null ? y : Math.max(sessionExtremes.maxY, y);
-  }
-  if (z !== null && !isNaN(z)) {
-    sessionExtremes.minZ = sessionExtremes.minZ === null ? z : Math.min(sessionExtremes.minZ, z);
-    sessionExtremes.maxZ = sessionExtremes.maxZ === null ? z : Math.max(sessionExtremes.maxZ, z);
-  }
-
-  sessionTotalBoosts++;
-  const d = new Date();
-  const timeStr = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}.${d.getMilliseconds().toString().padStart(3, '0')}`;
-
-  lastBoostPickupSnapshot.hasData = true;
-  lastBoostPickupSnapshot.timestamp = timeStr;
-  lastBoostPickupSnapshot.playerName = playerName;
-  lastBoostPickupSnapshot.shortcut = shortcut;
-  lastBoostPickupSnapshot.teamNum = teamNum;
-  lastBoostPickupSnapshot.boostType = boostType;
-  lastBoostPickupSnapshot.boostAmount = boostAmount;
-  lastBoostPickupSnapshot.x = x;
-  lastBoostPickupSnapshot.y = y;
-  lastBoostPickupSnapshot.z = z;
-
-  if (isRecordingHits && x !== null && y !== null && !isNaN(x) && !isNaN(y)) {
-    const isNoise = !isPointInsideSafetyBounds(x, y, z ?? 60);
-    boostPickupHistoryBuffer.push({
-      x,
-      y,
-      z: z ?? 60,
-      boostType,
-      boostAmount,
-      playerName,
-      shortcut,
-      teamNum,
-      timestamp: Date.now(),
-      isNoise
-    });
-    if (boostPickupHistoryBuffer.length > MAX_BOOST_HISTORY) {
-      boostPickupHistoryBuffer.shift();
-    }
-  }
-
-  isBallHitDirty = true;
-  return true;
-}
-
-/**
  * ============================================================================
  * 🚀 DOM Node Caching & Interactive Map Controller
  * ============================================================================
@@ -559,7 +335,6 @@ export interface BallHitDomNodes {
   statusDot: HTMLElement | null;
   statusText: HTMLElement | null;
   totalCount: HTMLElement | null;
-  totalBoosts: HTMLElement | null;
   lastTime: HTMLElement | null;
   awaitingNotice: HTMLElement | null;
 
@@ -610,9 +385,7 @@ export interface BallHitDomNodes {
   calibScaleTag: HTMLElement | null;
   calibInvertTag: HTMLElement | null;
   btnClearPoints: HTMLElement | null;
-  btnClearBoosts: HTMLElement | null;
   btnExportJson: HTMLElement | null;
-  btnExportBoostJson: HTMLElement | null;
   btnImportJson: HTMLElement | null;
   btnResetCalib: HTMLElement | null;
   statsValidHits: HTMLElement | null;
@@ -628,7 +401,6 @@ export function cacheBallHitNodes(): BallHitDomNodes {
     statusDot: document.getElementById('bh-status-dot'),
     statusText: document.getElementById('bh-status-text'),
     totalCount: document.getElementById('bh-total-count'),
-    totalBoosts: document.getElementById('bh-total-boosts'),
     lastTime: document.getElementById('bh-last-time'),
     awaitingNotice: document.getElementById('bh-awaiting-notice'),
 
@@ -677,9 +449,7 @@ export function cacheBallHitNodes(): BallHitDomNodes {
     calibScaleTag: document.getElementById('bh-calib-scale-tag'),
     calibInvertTag: document.getElementById('bh-calib-invert-tag'),
     btnClearPoints: document.getElementById('bh-btn-clear-points'),
-    btnClearBoosts: document.getElementById('bh-btn-clear-boosts'),
     btnExportJson: document.getElementById('bh-btn-export-json'),
-    btnExportBoostJson: document.getElementById('bh-btn-export-boost-json'),
     btnImportJson: document.getElementById('bh-btn-import-json'),
     btnResetCalib: document.getElementById('bh-btn-reset-calib'),
     statsValidHits: document.getElementById('bh-stats-valid-hits'),
@@ -697,6 +467,64 @@ export function getBallHitCache(): BallHitDomNodes | null {
 function formatNum(val: number | null, decimals = 2): string {
   if (val === null || isNaN(val)) return '-';
   return val.toFixed(decimals);
+}
+
+/**
+ * Coordinate Conversion Helpers: World <-> Canvas
+ * Preserves 1:1 isometric aspect ratio (each unreal unit is equal length in X and Y).
+ */
+export function getCanvasDrawBounds(canvasW: number, canvasH: number, padding = 16) {
+  const worldWidth = SAFETY_MARGINS.x[1] - SAFETY_MARGINS.x[0]; // 9000 uu
+  const worldHeight = SAFETY_MARGINS.y[1] - SAFETY_MARGINS.y[0]; // 12000 uu
+
+  const availW = Math.max(10, canvasW - padding * 2);
+  const availH = Math.max(10, canvasH - padding * 2);
+
+  const scale = Math.min(availW / worldWidth, availH / worldHeight);
+  const actualDrawW = worldWidth * scale;
+  const actualDrawH = worldHeight * scale;
+
+  const originX = (canvasW - actualDrawW) / 2;
+  const originY = (canvasH - actualDrawH) / 2;
+
+  return { worldWidth, worldHeight, actualDrawW, actualDrawH, originX, originY, scale };
+}
+
+export function worldToCanvas(
+  wx: number,
+  wy: number,
+  canvasW: number,
+  canvasH: number,
+  cal: CalibrationSettings
+): { x: number; y: number } {
+  const { cx, cy } = applyCalibration(wx, wy, cal);
+  const { worldWidth, worldHeight, actualDrawW, actualDrawH, originX, originY } = getCanvasDrawBounds(canvasW, canvasH);
+
+  const normX = (cx - SAFETY_MARGINS.x[0]) / worldWidth;
+  const normY = (cy - SAFETY_MARGINS.y[0]) / worldHeight;
+
+  const canvasX = originX + normX * actualDrawW;
+  const canvasY = originY + (1 - normY) * actualDrawH;
+  return { x: canvasX, y: canvasY };
+}
+
+export function canvasToWorld(
+  canvasX: number,
+  canvasY: number,
+  canvasW: number,
+  canvasH: number,
+  cal: CalibrationSettings
+): { x: number; y: number } {
+  const { worldWidth, worldHeight, actualDrawW, actualDrawH, originX, originY } = getCanvasDrawBounds(canvasW, canvasH);
+
+  const normX = (canvasX - originX) / actualDrawW;
+  const normY = 1 - (canvasY - originY) / actualDrawH;
+
+  const cx = SAFETY_MARGINS.x[0] + normX * worldWidth;
+  const cy = SAFETY_MARGINS.y[0] + normY * worldHeight;
+
+  const { wx, wy } = unapplyCalibration(cx, cy, cal);
+  return { x: wx, y: wy };
 }
 
 /**
@@ -769,10 +597,6 @@ function bindPitchCanvasEvents(): void {
     clearHitHistory();
   });
 
-  dom.btnClearBoosts?.addEventListener('click', () => {
-    clearBoostHistory();
-  });
-
   dom.btnExportJson?.addEventListener('click', () => {
     const config = generatePitchConfigJson(currentControlPoints, currentCalibration);
     const jsonStr = JSON.stringify(config, null, 2);
@@ -780,14 +604,8 @@ function bindPitchCanvasEvents(): void {
     alert('✅ Pitch Configuration (16 Control Points) copied to clipboard!');
   });
 
-  dom.btnExportBoostJson?.addEventListener('click', () => {
-    const boostJson = exportBoostPickupsJson();
-    void navigator.clipboard.writeText(boostJson);
-    alert(`✅ Exported ${boostPickupHistoryBuffer.length} Boost Pickups to clipboard!`);
-  });
-
   dom.btnImportJson?.addEventListener('click', () => {
-    const input = prompt('Paste Pitch Config JSON, Hit Points JSON, or Boost Pickups JSON:');
+    const input = prompt('Paste Pitch Config JSON or Hit Points JSON:');
     if (input) {
       try {
         const parsed = JSON.parse(input);
@@ -797,9 +615,6 @@ function bindPitchCanvasEvents(): void {
             updateCalibration(parsed.calibration);
           }
           alert('✅ Successfully imported 16 Pitch Control Points & Calibration!');
-        } else if (parsed.boosts || (Array.isArray(parsed) && parsed[0] && (parsed[0].boostType || parsed[0].BoostType))) {
-          const count = importBoostsFromJson(input);
-          alert(`✅ Successfully imported ${count} boost pickup records!`);
         } else {
           const hitsCount = importHitsFromJson(input);
           alert(`✅ Successfully imported ${hitsCount} hit telemetry records!`);
@@ -840,53 +655,7 @@ function bindPitchCanvasEvents(): void {
 }
 
 /**
- * Coordinate Conversion Helpers: World <-> Canvas
- */
-export function worldToCanvas(
-  wx: number,
-  wy: number,
-  canvasW: number,
-  canvasH: number,
-  cal: CalibrationSettings
-): { x: number; y: number } {
-  const { cx, cy } = applyCalibration(wx, wy, cal);
-  // Safe margin coordinates: X in [-4500, 4500], Y in [-6000, 6000]
-  // Y in 2D canvas is inverted (top is 0, bottom is H)
-  const normX = (cx - SAFETY_MARGINS.x[0]) / (SAFETY_MARGINS.x[1] - SAFETY_MARGINS.x[0]);
-  const normY = (cy - SAFETY_MARGINS.y[0]) / (SAFETY_MARGINS.y[1] - SAFETY_MARGINS.y[0]);
-
-  const padding = 20;
-  const drawW = canvasW - padding * 2;
-  const drawH = canvasH - padding * 2;
-
-  const canvasX = padding + normX * drawW;
-  const canvasY = padding + (1 - normY) * drawH;
-  return { x: canvasX, y: canvasY };
-}
-
-export function canvasToWorld(
-  canvasX: number,
-  canvasY: number,
-  canvasW: number,
-  canvasH: number,
-  cal: CalibrationSettings
-): { x: number; y: number } {
-  const padding = 20;
-  const drawW = canvasW - padding * 2;
-  const drawH = canvasH - padding * 2;
-
-  const normX = (canvasX - padding) / drawW;
-  const normY = 1 - (canvasY - padding) / drawH;
-
-  const cx = SAFETY_MARGINS.x[0] + normX * (SAFETY_MARGINS.x[1] - SAFETY_MARGINS.x[0]);
-  const cy = SAFETY_MARGINS.y[0] + normY * (SAFETY_MARGINS.y[1] - SAFETY_MARGINS.y[0]);
-
-  const { wx, wy } = unapplyCalibration(cx, cy, cal);
-  return { x: wx, y: wy };
-}
-
-/**
- * Render 2D Pitch Radar Canvas
+ * Render 2D Pitch Radar Canvas with 1:1 isometric scale and static 34 boost pads
  */
 function drawPitchRadar(canvas: HTMLCanvasElement): void {
   const ctx = canvas.getContext('2d');
@@ -897,45 +666,95 @@ function drawPitchRadar(canvas: HTMLCanvasElement): void {
 
   ctx.clearRect(0, 0, w, h);
 
-  // 1. Radar Grid / Pitch Underlay
+  const bounds = getCanvasDrawBounds(w, h);
+
+  // 1. Radar Grid / Pitch Field Underlay
   ctx.save();
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+  // Bounding outer guideline
+  ctx.strokeStyle = 'rgba(0, 240, 255, 0.12)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(bounds.originX, bounds.originY, bounds.actualDrawW, bounds.actualDrawH);
+
+  // Subtle isometric grid
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
   ctx.lineWidth = 1;
   const gridStep = 40;
-  for (let x = 0; x < w; x += gridStep) {
+  for (let x = bounds.originX; x <= bounds.originX + bounds.actualDrawW; x += gridStep) {
     ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, h);
+    ctx.moveTo(x, bounds.originY);
+    ctx.lineTo(x, bounds.originY + bounds.actualDrawH);
     ctx.stroke();
   }
-  for (let y = 0; y < h; y += gridStep) {
+  for (let y = bounds.originY; y <= bounds.originY + bounds.actualDrawH; y += gridStep) {
     ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(w, y);
+    ctx.moveTo(bounds.originX, y);
+    ctx.lineTo(bounds.originX + bounds.actualDrawW, y);
     ctx.stroke();
   }
 
-  // Pitch centerline and center circle
+  // Pitch centerline (Y = 0) and midline (X = 0)
   const centerScreen = worldToCanvas(0, 0, w, h, currentCalibration);
-  ctx.strokeStyle = 'rgba(0, 240, 255, 0.2)';
+  const leftMid = worldToCanvas(SAFETY_MARGINS.x[0], 0, w, h, currentCalibration);
+  const rightMid = worldToCanvas(SAFETY_MARGINS.x[1], 0, w, h, currentCalibration);
+  const topMid = worldToCanvas(0, SAFETY_MARGINS.y[1], w, h, currentCalibration);
+  const botMid = worldToCanvas(0, SAFETY_MARGINS.y[0], w, h, currentCalibration);
+
+  ctx.strokeStyle = 'rgba(0, 240, 255, 0.22)';
   ctx.setLineDash([4, 4]);
   ctx.beginPath();
-  ctx.moveTo(0, centerScreen.y);
-  ctx.lineTo(w, centerScreen.y);
+  ctx.moveTo(leftMid.x, leftMid.y);
+  ctx.lineTo(rightMid.x, rightMid.y);
   ctx.stroke();
 
   ctx.beginPath();
-  ctx.moveTo(centerScreen.x, 0);
-  ctx.lineTo(centerScreen.x, h);
+  ctx.moveTo(topMid.x, topMid.y);
+  ctx.lineTo(botMid.x, botMid.y);
   ctx.stroke();
 
+  // Pitch center circle (Radius 912 uu in Rocket League standard)
   ctx.setLineDash([]);
+  const centerCircleRadius = 912 * bounds.scale * currentCalibration.scaleX;
   ctx.beginPath();
-  ctx.arc(centerScreen.x, centerScreen.y, 45 * currentCalibration.scaleX, 0, Math.PI * 2);
+  ctx.arc(centerScreen.x, centerScreen.y, centerCircleRadius, 0, Math.PI * 2);
   ctx.stroke();
   ctx.restore();
 
-  // 2. Render Historical Hit Points Cloud (Ball Hits)
+  // 2. Render Static 34 Boost Locations directly on pitch radar
+  ctx.save();
+  for (let i = 0; i < STANDARD_BOOST_LOCATIONS.length; i++) {
+    const bp = STANDARD_BOOST_LOCATIONS[i];
+    const screen = worldToCanvas(bp.x, bp.y, w, h, currentCalibration);
+    const isBig = bp.boostType === 'BoostType_Pill';
+
+    ctx.beginPath();
+    if (isBig) {
+      // Big Boost Pill (100% Boost) - Amber / Golden glowing pill
+      ctx.arc(screen.x, screen.y, 6, 0, Math.PI * 2);
+      ctx.fillStyle = '#f59e0b';
+      ctx.shadowColor = '#fbbf24';
+      ctx.shadowBlur = 9;
+      ctx.fill();
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = '#ffd700';
+      ctx.stroke();
+
+      // Inner white highlight core
+      ctx.beginPath();
+      ctx.arc(screen.x, screen.y, 2, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+    } else {
+      // Small Boost Pad (12% Pad) - Warm yellow circular dot
+      ctx.arc(screen.x, screen.y, 3.2, 0, Math.PI * 2);
+      ctx.fillStyle = '#fbbf24';
+      ctx.shadowColor = '#eab308';
+      ctx.shadowBlur = 5;
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+
+  // 3. Render Historical Hit Points Cloud (Ball Hits)
   if (hitHistoryBuffer.length > 0) {
     ctx.save();
     for (let i = 0; i < hitHistoryBuffer.length; i++) {
@@ -950,39 +769,6 @@ function drawPitchRadar(canvas: HTMLCanvasElement): void {
         ctx.fillStyle = `rgba(0, 255, 136, ${alpha})`;
       }
       ctx.fill();
-    }
-    ctx.restore();
-  }
-
-  // 3. Render Historical Boost Pickups Point Cloud (Separately styled)
-  if (boostPickupHistoryBuffer.length > 0) {
-    ctx.save();
-    for (let i = 0; i < boostPickupHistoryBuffer.length; i++) {
-      const bp = boostPickupHistoryBuffer[i];
-      const screen = worldToCanvas(bp.x, bp.y, w, h, currentCalibration);
-      const isBig = bp.boostType.toLowerCase().includes('big') ||
-                    bp.boostType.toLowerCase().includes('pill') ||
-                    (bp.boostAmount !== undefined && bp.boostAmount > 0.25);
-
-      ctx.beginPath();
-      if (isBig) {
-        // Big Boost: 100 boost pill (Golden/amber glowing ring & circle)
-        ctx.arc(screen.x, screen.y, 5.5, 0, Math.PI * 2);
-        ctx.fillStyle = '#f59e0b';
-        ctx.shadowColor = '#fbbf24';
-        ctx.shadowBlur = 8;
-        ctx.fill();
-        ctx.lineWidth = 1.5;
-        ctx.strokeStyle = '#ffd700';
-        ctx.stroke();
-      } else {
-        // Small Boost Pad: 12% pad (Warm yellow circular dot)
-        ctx.arc(screen.x, screen.y, 3.2, 0, Math.PI * 2);
-        ctx.fillStyle = '#fbbf24';
-        ctx.shadowColor = '#eab308';
-        ctx.shadowBlur = 4;
-        ctx.fill();
-      }
     }
     ctx.restore();
   }
@@ -1038,7 +824,7 @@ function drawPitchRadar(canvas: HTMLCanvasElement): void {
     ctx.restore();
   }
 
-  // 6. Render Latest Ball Hit Ripple & Speed-Scaled Outer Circle
+  // 6. Render Latest Ball Hit Ripple & Speed-Scaled Dynamic Outer Circle
   if (lastBallHitSnapshot.hasData && lastBallHitSnapshot.x !== null && lastBallHitSnapshot.y !== null) {
     const liveScreen = worldToCanvas(lastBallHitSnapshot.x, lastBallHitSnapshot.y, w, h, currentCalibration);
     ctx.save();
@@ -1091,7 +877,6 @@ export function renderBallHitScene(): void {
 
   // 1. Session Counts & Status
   if (dom.totalCount) dom.totalCount.textContent = sessionTotalHits.toString();
-  if (dom.totalBoosts) dom.totalBoosts.textContent = sessionTotalBoosts.toString();
   if (dom.lastTime) dom.lastTime.textContent = lastBallHitSnapshot.timestamp;
 
   // Mode buttons active class
@@ -1130,7 +915,7 @@ export function renderBallHitScene(): void {
 
   // Awaiting notice
   if (dom.awaitingNotice) {
-    dom.awaitingNotice.style.display = (lastBallHitSnapshot.hasData || hitHistoryBuffer.length > 0 || boostPickupHistoryBuffer.length > 0) ? 'none' : 'flex';
+    dom.awaitingNotice.style.display = (lastBallHitSnapshot.hasData || hitHistoryBuffer.length > 0) ? 'none' : 'flex';
   }
 
   // 2. Player Attribution & Speeds
@@ -1214,7 +999,7 @@ export function renderBallHitScene(): void {
     }
   }
 
-  // 4. Render Canvas
+  // 4. Render Canvas with 1:1 isometric scale
   if (dom.pitchCanvas) {
     if (dom.pitchCanvas.width !== dom.pitchCanvas.clientWidth || dom.pitchCanvas.height !== dom.pitchCanvas.clientHeight) {
       dom.pitchCanvas.width = dom.pitchCanvas.clientWidth || 400;

@@ -6,10 +6,11 @@
  * Provides:
  * 1. World coordinate boundary definitions & safety margins
  * 2. 16-Control Point geometric model (chamfers + dual goal slots)
- * 3. Outlier filtering / de-noising algorithm
- * 4. 45-degree rebound tangent fitting & automatic pitch boundary solver
- * 5. Coordinate transformation & calibration matrices (offset, scale, invert)
- * 6. Serialization, JSON import/export, and local persistence
+ * 3. 34 Standard Rocket League boost pad & pill coordinates
+ * 4. Outlier filtering / de-noising algorithm
+ * 5. 45-degree rebound tangent fitting & automatic pitch boundary solver
+ * 6. Coordinate transformation & calibration matrices (offset, scale, invert)
+ * 7. Serialization, JSON import/export, and local persistence
  * ============================================================================
  */
 
@@ -37,6 +38,13 @@ export interface HitPointRecord {
   isNoise?: boolean;
 }
 
+export interface BoostPadDefinition {
+  x: number;
+  y: number;
+  z: number;
+  boostType: 'BoostType_Pad' | 'BoostType_Pill';
+}
+
 export interface PitchConfig {
   version: string;
   name: string;
@@ -60,12 +68,58 @@ export interface MappingStats {
   chamferFitScore: number;
 }
 
-// 🛡️ Safe Developer Margins
+// 🛡️ Safe World Margins (9000 uu width x 12000 uu length, 3:4 aspect ratio)
 export const SAFETY_MARGINS = {
   x: [-4500, 4500] as [number, number],
   y: [-6000, 6000] as [number, number],
   z: [0, 2000] as [number, number]
 };
+
+// ⚡ 34 Standard Rocket League Boost Locations (6 Full Pills + 28 Small Pads)
+export const STANDARD_BOOST_LOCATIONS: readonly BoostPadDefinition[] = [
+  // 6 Big Boost Pills (100% Boost)
+  { x: 3072,  y: 4096,  z: 70.41, boostType: 'BoostType_Pill' },
+  { x: -3072, y: 4096,  z: 70.41, boostType: 'BoostType_Pill' },
+  { x: 3584,  y: 0,     z: 70.41, boostType: 'BoostType_Pill' },
+  { x: -3584, y: 0,     z: 70.41, boostType: 'BoostType_Pill' },
+  { x: 3072,  y: -4096, z: 70.41, boostType: 'BoostType_Pill' },
+  { x: -3072, y: -4096, z: 70.41, boostType: 'BoostType_Pill' },
+
+  // 28 Small Boost Pads (12% Boost)
+  // Centerline / Midfield
+  { x: 0,     y: 4240,  z: 63.71, boostType: 'BoostType_Pad' },
+  { x: 0,     y: 2816,  z: 66.06, boostType: 'BoostType_Pad' },
+  { x: 0,     y: 1024,  z: 65.53, boostType: 'BoostType_Pad' },
+  { x: 0,     y: -1024, z: 65.94, boostType: 'BoostType_Pad' },
+  { x: 0,     y: -2816, z: 66.5,  boostType: 'BoostType_Pad' },
+  { x: 0,     y: -4240, z: 63.37, boostType: 'BoostType_Pad' },
+  { x: 1024,  y: 0,     z: 68.7,  boostType: 'BoostType_Pad' },
+  { x: -1024, y: 0,     z: 67.92, boostType: 'BoostType_Pad' },
+
+  // Perimeter Lanes
+  { x: 1792,  y: 4184,  z: 61.35, boostType: 'BoostType_Pad' },
+  { x: -1792, y: 4184,  z: 60.92, boostType: 'BoostType_Pad' },
+  { x: 3584,  y: 2484,  z: 67.86, boostType: 'BoostType_Pad' },
+  { x: -3584, y: 2484,  z: 67.33, boostType: 'BoostType_Pad' },
+  { x: 3584,  y: -2484, z: 68.36, boostType: 'BoostType_Pad' },
+  { x: -3584, y: -2484, z: 66.78, boostType: 'BoostType_Pad' },
+  { x: 1792,  y: -4184, z: 62.22, boostType: 'BoostType_Pad' },
+  { x: -1792, y: -4184, z: 61.71, boostType: 'BoostType_Pad' },
+
+  // Inner Diagonal Arcs
+  { x: 940,   y: 3308,  z: 60.83, boostType: 'BoostType_Pad' },
+  { x: -940,  y: 3308,  z: 61.05, boostType: 'BoostType_Pad' },
+  { x: 1788,  y: 2302,  z: 67.7,  boostType: 'BoostType_Pad' },
+  { x: -1788, y: 2302,  z: 67.9,  boostType: 'BoostType_Pad' },
+  { x: 2048,  y: 1036,  z: 62.65, boostType: 'BoostType_Pad' },
+  { x: -2048, y: 1036,  z: 62.72, boostType: 'BoostType_Pad' },
+  { x: 2048,  y: -1036, z: 62.35, boostType: 'BoostType_Pad' },
+  { x: -2048, y: -1036, z: 62.65, boostType: 'BoostType_Pad' },
+  { x: 1788,  y: -2302, z: 66.57, boostType: 'BoostType_Pad' },
+  { x: -1788, y: -2302, z: 67.92, boostType: 'BoostType_Pad' },
+  { x: 940,   y: -3308, z: 63.71, boostType: 'BoostType_Pad' },
+  { x: -940,  y: -3308, z: 62.84, boostType: 'BoostType_Pad' }
+];
 
 // 📐 Standard Default 16 Control Points (Clockwise starting from Top-Left Side)
 export const DEFAULT_CONTROL_POINTS: ControlPoint[] = [
@@ -183,12 +237,10 @@ export function solvePitch16ControlPoints(
 
   if (sideHits.length >= 4) {
     const xs = sideHits.map((h) => h.x).sort((a, b) => a - b);
-    // Take robust 1st and 99th percentiles
     minSideX = xs[Math.floor(xs.length * 0.02)] || xs[0];
     maxSideX = xs[Math.floor(xs.length * 0.98)] || xs[xs.length - 1];
   }
 
-  // Clamp side bounds to safety margin
   minSideX = Math.max(-4300, Math.min(-3800, minSideX));
   maxSideX = Math.min(4300, Math.max(3800, maxSideX));
 
@@ -211,7 +263,7 @@ export function solvePitch16ControlPoints(
   const goalAreaHits = validHits.filter((h) => Math.abs(h.x) < 1200);
   let goalBackTopY = 5800.0;
   let goalBackBotY = -5800.0;
-  let goalPostHalfWidth = 892.75;
+  const goalPostHalfWidth = 892.75;
 
   if (goalAreaHits.length >= 2) {
     const topGoalYs = goalAreaHits.filter((h) => h.y > topEndWallY - 200).map((h) => h.y);
@@ -223,12 +275,7 @@ export function solvePitch16ControlPoints(
   goalBackTopY = Math.min(6000, Math.max(topEndWallY + 300, goalBackTopY));
   goalBackBotY = Math.max(-6000, Math.min(botEndWallY - 300, goalBackBotY));
 
-  // 4. 45-degree corner chamfer tangent calculation:
-  // Tangent lines:
-  // TR: x + y = C_tr
-  // TL: -x + y = C_tl
-  // BR: x - y = C_br
-  // BL: -x - y = C_bl
+  // 4. 45-degree corner chamfer tangent calculation
   const cornerHits = validHits.filter((h) => Math.abs(h.x) > 2000 && Math.abs(h.y) > 3000);
 
   let cTR = maxSideX + (topEndWallY - 1120);
@@ -248,28 +295,15 @@ export function solvePitch16ControlPoints(
     if (blVals.length > 0) cBL = Math.max(...blVals);
   }
 
-  // Intersect chamfer lines with end walls (y = topEndWallY / botEndWallY) and side walls (x = minSideX / maxSideX)
-  // TL Chamfer: -x + y = C_tl ->
-  //  End wall contact: y = topEndWallY -> x = -(C_tl - topEndWallY)
-  //  Side wall contact: x = minSideX   -> y = C_tl + minSideX
   const p2_x = Math.max(minSideX + 400, Math.min(-1200, -(cTL - topEndWallY)));
   const p1_y = Math.min(topEndWallY - 400, Math.max(2000, cTL + minSideX));
 
-  // TR Chamfer: x + y = C_tr ->
-  //  End wall contact: y = topEndWallY -> x = C_tr - topEndWallY
-  //  Side wall contact: x = maxSideX   -> y = C_tr - maxSideX
   const p7_x = Math.min(maxSideX - 400, Math.max(1200, cTR - topEndWallY));
   const p8_y = Math.min(topEndWallY - 400, Math.max(2000, cTR - maxSideX));
 
-  // BR Chamfer: x - y = C_br ->
-  //  End wall contact: y = botEndWallY -> x = C_br + botEndWallY
-  //  Side wall contact: x = maxSideX   -> y = maxSideX - C_br
   const p10_x = Math.min(maxSideX - 400, Math.max(1200, cBR + botEndWallY));
   const p9_y = Math.max(botEndWallY + 400, Math.min(-2000, maxSideX - cBR));
 
-  // BL Chamfer: -x - y = C_bl ->
-  //  End wall contact: y = botEndWallY -> x = -(C_bl + botEndWallY)
-  //  Side wall contact: x = minSideX   -> y = -(C_bl - minSideX)
   const p15_x = Math.max(minSideX + 400, Math.min(-1200, -(cBL + botEndWallY)));
   const p16_y = Math.max(botEndWallY + 400, Math.min(-2000, -(cBL + minSideX)));
 
