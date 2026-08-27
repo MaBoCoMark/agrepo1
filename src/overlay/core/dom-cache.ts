@@ -398,7 +398,7 @@ export function buildCompetitiveDomCache(
     const meta = COMPONENT_METAS[inst.componentType];
     const isProportional = meta ? meta.isProportional : false;
     container.innerHTML = `
-      <div class=\"comp-inner ${isProportional ? 'comp-proportional' : 'comp-flexible'}\">
+      <div class="comp-inner ${isProportional ? 'comp-proportional' : 'comp-flexible'}">
         ${createComponentInnerHtml(inst)}
       </div>
     `;
@@ -425,7 +425,7 @@ export function buildCompetitiveDomCache(
 
     const boxElements = Array.from(
       container.querySelectorAll<HTMLElement>(
-        '.dyn-text-box, .el-custom-text-box, .hud-card, .el-system-time-box, .widget-boost-combo-card, .panel-match-header-container, .player-telemetry-panel, .panel-team-roster-container, .panel-sub-card, .el-global-text-indicator-box, .el-ball-speed-box, .el-ball-team-box, .el-boost-alert-box, .el-boost-text-fixed-box, .el-boost-text-box, .el-match-score-box, .el-num-box, .el-name-text-box, .el-score-diff-box, .el-speed-text-box, .el-static-box, .el-time-text-box, .time-hud-card, .status-hud-card, .el-boost-bar-box, .dyn-boost-box, .hud-boost-bar-container, .el-v-boost-bar-box, .dyn-v-boost-box, .el-speed-bar-box, .dyn-speed-box, .el-v-speed-bar-box, .dyn-v-speed-box, .curved-boost-container, .dyn-curved-container, .curved-speed-container, .dyn-curved-speed-container, .el-color-box, .dyn-color-box'
+        '.dyn-text-box, .el-custom-text-box, .hud-card, .el-system-time-box, .widget-boost-combo-card, .panel-match-header-container, .player-telemetry-panel, .panel-team-roster-container, .panel-sub-card, .el-global-text-indicator-box, .el-ball-speed-box, .el-ball-team-box, .el-boost-alert-box, .el-boost-text-fixed-box, .el-boost-text-box, .el-match-score-box, .el-num-box, .el-name-text-box, .el-score-diff-box, .el-speed-text-box, .el-static-box, .el-time-text-box, .time-hud-card, .status-hud-card, .el-boost-bar-box, .dyn-boost-box, .hud-boost-bar-container, .el-v-boost-bar-box, .dyn-v-boost-box, .el-speed-bar-box, .dyn-speed-box, .el-v-speed-bar-box, .dyn-v-speed-box, .curved-boost-container, .dyn-curved-container, .curved-speed-container, .dyn-curved-speed-container, .el-color-box, .dyn-color-box, .el-countdown-indicator-box'
       )
     );
 
@@ -454,14 +454,14 @@ export function buildCompetitiveDomCache(
       instanceId: inst.instanceId,
       inst,
       container,
-      valEl: container.querySelector<HTMLElement>('.dyn-val, .score-diff-val, .dyn-time-val, .dyn-ball-val, .dyn-speed-val, .dyn-boost-val, .hud-val, .dyn-badge'),
+      valEl: container.querySelector<HTMLElement>('.el-countdown-num, .dyn-val, .score-diff-val, .dyn-time-val, .dyn-ball-val, .dyn-speed-val, .dyn-boost-val, .hud-val, .dyn-badge'),
       subValEl: container.querySelector<HTMLElement>('.dyn-sub-val'),
       labelEl: container.querySelector<HTMLElement>('.dyn-label, .hud-label, .dyn-player-label, .widget-tag'),
       badgeEl: container.querySelector<HTMLElement>('.dyn-badge, .hud-player-badge'),
-      boxEl: container.querySelector<HTMLElement>('.dyn-text-box, .el-custom-text-box, .hud-card, .el-system-time-box, .el-boost-alert-box, .el-boost-bar-box, .dyn-boost-box, .hud-boost-bar-container, .el-v-boost-bar-box, .dyn-v-boost-box, .el-speed-bar-box, .dyn-speed-box, .el-v-speed-bar-box, .dyn-v-speed-box, .curved-boost-container, .dyn-curved-container, .curved-speed-container, .dyn-curved-speed-container, .el-color-box, .dyn-color-box'),
+      boxEl: container.querySelector<HTMLElement>('.dyn-text-box, .el-custom-text-box, .hud-card, .el-system-time-box, .el-boost-alert-box, .el-boost-bar-box, .dyn-boost-box, .hud-boost-bar-container, .el-v-boost-bar-box, .dyn-v-boost-box, .el-speed-bar-box, .dyn-speed-box, .el-v-speed-bar-box, .dyn-v-speed-box, .curved-boost-container, .dyn-curved-container, .curved-speed-container, .dyn-curved-speed-container, .el-color-box, .dyn-color-box, .el-countdown-indicator-box'),
       fillEl: container.querySelector<HTMLElement>('.dyn-boost-fill, .el-boost-bar-fill, .hud-boost-bar-fill, .dyn-speed-fill, .el-speed-bar-fill, .dyn-v-boost-fill, .el-v-boost-bar-fill, .dyn-v-speed-fill, .el-v-speed-bar-fill, .widget-bar-fill, .dyn-curved-fill, .curved-progress-bar'),
       bgEl: container.querySelector<SVGCircleElement>('.dyn-curved-bg, .curved-bg-track'),
-      dotEl: container.querySelector<HTMLElement>('.dyn-dot, .status-dot, .el-pure-dot'),
+      dotEl: container.querySelector<HTMLElement>('.dyn-dot, .status-dot, .el-pure-dot, .el-countdown-lamp, .el-countdown-num'),
       digitReel,
       textElements,
       boxElements,

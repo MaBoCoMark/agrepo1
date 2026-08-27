@@ -148,7 +148,7 @@ export function initCompetitiveDesigner(
     // Global Element Card Background Color
     const cardBgCtrl = createRgbaInputControl(
       'Global Card BG Color & Opacity',
-      globalLayoutSettings.cardBgColor || globalLayoutSettings.bgColor,
+      globalLayoutSettings.cardBgColor || globalLayoutSettings.bgColor || "#0a0e17",
       '#0a0e17',
       0.85,
       (val) => {
@@ -319,7 +319,8 @@ export function initCompetitiveDesigner(
     const isStaticText = inst.componentType === 'element-static-text';
     const isTextType = isTextComponent(inst.componentType);
     const isTeamColorBox = inst.componentType === 'element-team-color-box';
-    const isIndicator = (inst.componentType.includes('indicator') || inst.componentType.includes('status')) && !isTextType;
+    const isCountdownIndicator = inst.componentType === 'element-countdown-indicator';
+    const isIndicator = (inst.componentType.includes('indicator') || inst.componentType.includes('status')) && !isTextType && !isCountdownIndicator;
     const isBoostAlertBar = inst.componentType === 'element-boost-alert-bar';
     const isBoostBar = (inst.componentType.includes('boost-bar') || inst.componentType.includes('boost-combo')) && !inst.componentType.includes('curved') && !isBoostAlertBar;
     const isBoostText = inst.componentType === 'element-boost-text' || inst.componentType.includes('boost-val');
@@ -588,6 +589,111 @@ export function initCompetitiveDesigner(
       );
     }
 
+    // Countdown Indicator Controls
+    if (isCountdownIndicator) {
+      propsBox.appendChild(
+        createRgbaInputControl(
+          'Countdown Color (4/3/2/1)',
+          inst.customProps?.countdownColor || '#ef4444',
+          '#ef4444',
+          1.0,
+          (val) => {
+            inst.customProps!.countdownColor = val;
+            saveAndEmit();
+          }
+        )
+      );
+      propsBox.appendChild(
+        createRgbaInputControl(
+          'Round Started Color (0)',
+          inst.customProps?.roundStartColor || '#22c55e',
+          '#22c55e',
+          1.0,
+          (val) => {
+            inst.customProps!.roundStartColor = val;
+            saveAndEmit();
+          }
+        )
+      );
+      propsBox.appendChild(
+        createSliderControl(
+          'Digit Fade Duration (s)',
+          0.1,
+          3.0,
+          0.1,
+          Number(inst.customProps?.fadeDuration ?? 0.5),
+          's',
+          (val) => {
+            inst.customProps!.fadeDuration = val;
+            saveAndEmit();
+          }
+        )
+      );
+      propsBox.appendChild(
+        createCheckboxControl(
+          "Show '4' on Countdown Begin / 显示初始 '4'",
+          inst.customProps?.showInitialFour !== false,
+          (val) => {
+            inst.customProps!.showInitialFour = val;
+            saveAndEmit();
+          }
+        )
+      );
+
+      const testBtnGroup = document.createElement('div');
+      testBtnGroup.style.display = 'flex';
+      testBtnGroup.style.flexDirection = 'column';
+      testBtnGroup.style.gap = '6px';
+      testBtnGroup.style.marginTop = '8px';
+
+      const row1 = document.createElement('div');
+      row1.style.display = 'flex';
+      row1.style.gap = '6px';
+
+      const testCountdownBtn = document.createElement('button');
+      testCountdownBtn.className = 'btn btn-sm';
+      testCountdownBtn.style.flex = '1';
+      testCountdownBtn.style.background = '#ef4444';
+      testCountdownBtn.style.color = '#ffffff';
+      testCountdownBtn.style.fontSize = '11px';
+      testCountdownBtn.style.padding = '4px 6px';
+      testCountdownBtn.textContent = 'Test Countdown (4-3-2-1)';
+      testCountdownBtn.onclick = () => {
+        emitTo('overlay', 'trigger-countdown-begin');
+      };
+
+      const testRoundStartBtn = document.createElement('button');
+      testRoundStartBtn.className = 'btn btn-sm';
+      testRoundStartBtn.style.flex = '1';
+      testRoundStartBtn.style.background = '#22c55e';
+      testRoundStartBtn.style.color = '#ffffff';
+      testRoundStartBtn.style.fontSize = '11px';
+      testRoundStartBtn.style.padding = '4px 6px';
+      testRoundStartBtn.textContent = 'Test Round Start (0)';
+      testRoundStartBtn.onclick = () => {
+        emitTo('overlay', 'trigger-round-start');
+      };
+
+      row1.appendChild(testCountdownBtn);
+      row1.appendChild(testRoundStartBtn);
+
+      const testFullBtn = document.createElement('button');
+      testFullBtn.className = 'btn btn-sm btn-primary';
+      testFullBtn.style.fontSize = '11px';
+      testFullBtn.style.padding = '4px 6px';
+      testFullBtn.textContent = '▶ Simulate Match Countdown (4 → 3 → 2 → 1 → 0)';
+      testFullBtn.onclick = () => {
+        emitTo('overlay', 'trigger-countdown-begin');
+        setTimeout(() => {
+          emitTo('overlay', 'trigger-round-start');
+        }, 4000);
+      };
+
+      testBtnGroup.appendChild(row1);
+      testBtnGroup.appendChild(testFullBtn);
+      propsBox.appendChild(testBtnGroup);
+    }
+
     // Indicators (Six-Color Active Mode)
     if (isIndicator) {
       propsBox.appendChild(
@@ -640,14 +746,14 @@ export function initCompetitiveDesigner(
       const isAlign = meta.supportsAlignment === true || inst.componentType.includes('text');
 
       const tierBadge = meta.tier === 'element'
-        ? '<span class="comp-type-tag" style="background: #8250df;">ELEMENT</span>'
+        ? '<span class=\"comp-type-tag\" style=\"background: #8250df;\">ELEMENT</span>'
         : meta.tier === 'panel'
-        ? '<span class="comp-type-tag" style="background: #0969da;">PANEL</span>'
-        : '<span class="comp-type-tag" style="background: #1f883d;">WIDGET</span>';
+        ? '<span class=\"comp-type-tag\" style=\"background: #0969da;\">PANEL</span>'
+        : '<span class=\"comp-type-tag\" style=\"background: #1f883d;\">WIDGET</span>';
 
       const playerBadge = isPlayer
-        ? `<span class="comp-type-tag" style="background: #bc4c00;">${(inst.targetPlayer || 'p1').toUpperCase()}</span>`
-        : '<span class="comp-type-tag" style="background: #656d76;">GLOBAL</span>';
+        ? `<span class=\"comp-type-tag\" style=\"background: #bc4c00;\">${(inst.targetPlayer || 'p1').toUpperCase()}</span>`
+        : '<span class=\"comp-type-tag\" style=\"background: #656d76;\">GLOBAL</span>';
 
       const isFirst = index === 0;
       const isLast = index === competitiveLayout.length - 1;

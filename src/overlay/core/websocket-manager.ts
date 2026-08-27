@@ -5,7 +5,7 @@ import { latestData, overlayState } from './telemetry-state';
 import { switchSceneMode } from './scene-manager';
 import { processGoalScored, enterReplayView, willEndReplayView, immediateEndReplayView } from './replay-controller';
 import { DEFAULT_LOW_FREQ_TRIGGERS, DEFAULT_TIMELINE_EVENTS } from './rl-events';
-import { applyAutoHideNonExistingPlayers } from './competitive-renderer';
+import { applyAutoHideNonExistingPlayers, triggerCountdownIndicator } from './competitive-renderer';
 
 /**
  * ============================================================================
@@ -89,6 +89,7 @@ export let captureTargetEvents: string[] = ['UpdateState'];
 
 // 2. Timeline Console Logger state (Defaults to OFF, never persisted)
 export let isTimelineCaptureEnabled = false;
+export let isTimelineTimestampEnabled = false;
 export let timelineCaptureEvents: string[] = [...DEFAULT_TIMELINE_EVENTS];
 
 // 3. Low-Frequency Telemetry Synchronization state
@@ -123,11 +124,18 @@ export function setCaptureTargetEvents(events: string[]): void {
   }
 }
 
-export function setTimelineCaptureState(enabled: boolean, events?: string[]): void {
+export function setTimelineCaptureState(enabled: boolean, events?: string[], includeTimestamp?: boolean): void {
   isTimelineCaptureEnabled = enabled;
   if (events && events.length > 0) {
     timelineCaptureEvents = events;
   }
+  if (includeTimestamp !== undefined) {
+    isTimelineTimestampEnabled = includeTimestamp;
+  }
+}
+
+export function setTimelineTimestampEnabled(enabled: boolean): void {
+  isTimelineTimestampEnabled = enabled;
 }
 
 export function setTimelineCaptureEvents(events: string[]): void {
@@ -236,19 +244,19 @@ export function processLowFrequencyData(data: RLStateData): void {
     if (!oppTeamObj && data.Game.Teams[1]) oppTeamObj = data.Game.Teams[1];
 
     if (myTeamObj?.ColorPrimary) {
-      const hex = myTeamObj.ColorPrimary.startsWith('#') ? myTeamObj.ColorPrimary : `#${myTeamObj.ColorPrimary}` ;
+      const hex = myTeamObj.ColorPrimary.startsWith('#') ? myTeamObj.ColorPrimary : `#${myTeamObj.ColorPrimary}`;
       latestData.myPrimaryColor = hex;
     }
     if (myTeamObj?.ColorSecondary) {
-      const hex = myTeamObj.ColorSecondary.startsWith('#') ? myTeamObj.ColorSecondary : `#${myTeamObj.ColorSecondary}` ;
+      const hex = myTeamObj.ColorSecondary.startsWith('#') ? myTeamObj.ColorSecondary : `#${myTeamObj.ColorSecondary}`;
       latestData.mySecondaryColor = hex;
     }
     if (oppTeamObj?.ColorPrimary) {
-      const hex = oppTeamObj.ColorPrimary.startsWith('#') ? oppTeamObj.ColorPrimary : `#${oppTeamObj.ColorPrimary}` ;
+      const hex = oppTeamObj.ColorPrimary.startsWith('#') ? oppTeamObj.ColorPrimary : `#${oppTeamObj.ColorPrimary}`;
       latestData.oppPrimaryColor = hex;
     }
     if (oppTeamObj?.ColorSecondary) {
-      const hex = oppTeamObj.ColorSecondary.startsWith('#') ? oppTeamObj.ColorSecondary : `#${oppTeamObj.ColorSecondary}` ;
+      const hex = oppTeamObj.ColorSecondary.startsWith('#') ? oppTeamObj.ColorSecondary : `#${oppTeamObj.ColorSecondary}`;
       latestData.oppSecondaryColor = hex;
     }
   }
@@ -455,7 +463,16 @@ export function handleIncomingMessage(raw: RLWebSocketMessage): void {
 
   // 1. Timeline Capture Console Logger (Browser Console collapses consecutive identical lines)
   if (isTimelineCaptureEnabled && eventName && (timelineCaptureEvents.includes(eventName) || timelineCaptureEvents.includes('*'))) {
-    console.log(eventName);
+    if (isTimelineTimestampEnabled) {
+      const now = new Date();
+      const h = String(now.getHours()).padStart(2, '0');
+      const m = String(now.getMinutes()).padStart(2, '0');
+      const s = String(now.getSeconds()).padStart(2, '0');
+      const ms = String(now.getMilliseconds()).padStart(3, '0');
+      console.log(`[${h}:${m}:${s}.${ms}] ${eventName}`);
+    } else {
+      console.log(eventName);
+    }
   }
 
   // 2. Packet Inspector Capture
@@ -550,9 +567,28 @@ export function handleIncomingMessage(raw: RLWebSocketMessage): void {
       break;
     }
 
-    case 'CountdownBegin':
+    case 'CountdownBegin': {
+      overlayState.hasReceivedDataSinceConnected = true;
+      triggerCountdownIndicator('countdown');
+      if (overlayState.isAutoSceneControl && overlayState.currentActiveScene === 'replay-viewer') {
+        immediateEndReplayView();
+      }
+      if (!raw.Data) return;
+      let data: RLStateData;
+      try {
+        data = typeof raw.Data === 'string' ? JSON.parse(raw.Data) : raw.Data;
+      } catch {
+        return;
+      }
+      if (!overlayState.isSimulating && data && typeof data === 'object' && ((data.Players && data.Players.length > 0) || data.Game)) {
+        processUpdateState(data);
+      }
+      break;
+    }
+
     case 'RoundStarted': {
       overlayState.hasReceivedDataSinceConnected = true;
+      triggerCountdownIndicator('round-start');
       if (overlayState.isAutoSceneControl && overlayState.currentActiveScene === 'replay-viewer') {
         immediateEndReplayView();
       }

@@ -60,8 +60,8 @@ export class DraggerController {
     const inner = container.querySelector('.comp-proportional') as HTMLElement | null;
     if (!inner) return;
 
-    const baseW = meta.baseWidthPx;
-    const baseH = meta.baseHeightPx;
+    const baseW = meta.baseWidthPx ?? 100;
+    const baseH = meta.baseHeightPx ?? 100;
     const containerW = container.clientWidth;
     const containerH = container.clientHeight;
 
@@ -192,7 +192,7 @@ export class DraggerController {
 
         // Follow / Lock Original Aspect Ratio if enabled
         if (inst.followAspectRatio) {
-          const baseRatio = (this.startWidthVw / this.startHeightVw) || (meta ? meta.baseWidthPx / meta.baseHeightPx : 1);
+          const baseRatio = (this.startWidthVw / this.startHeightVw) || (meta && meta.baseWidthPx && meta.baseHeightPx ? meta.baseWidthPx / meta.baseHeightPx : 1);
           if (this.dragMode.includes('e') || this.dragMode.includes('w')) {
             const adjustedH = curWidthVw / baseRatio;
             if (this.dragMode.includes('n')) {

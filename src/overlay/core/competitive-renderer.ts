@@ -140,6 +140,100 @@ let matchScoreListeners: VoidListener[] = [];
 let myScoreListeners: NumberListener[] = [];
 let oppScoreListeners: NumberListener[] = [];
 let teamColorsListeners: VoidListener[] = [];
+export interface CountdownIndicatorHandler {
+  numEl: HTMLElement;
+  countdownColor: string;
+  roundStartColor: string;
+  fadeDuration: number;
+  showInitialFour: boolean;
+}
+
+let countdownIndicatorHandlers: CountdownIndicatorHandler[] = [];
+let activeCountdownRaf: number | null = null;
+let activeCountdownStartTime: number = 0;
+let activeCountdownStepDone: [boolean, boolean, boolean] = [false, false, false];
+
+function displayCountdownDigit(handler: CountdownIndicatorHandler, digit: string, color: string, duration: number) {
+  const el = handler.numEl;
+  el.textContent = digit;
+  el.style.setProperty('--indicator-color', color);
+  el.style.setProperty('--indicator-duration', `${duration}s`);
+  el.classList.remove('countdown-active');
+  void el.offsetWidth; // Force reflow to re-trigger CSS animation
+  el.classList.add('countdown-active');
+}
+
+export function cancelCountdownIndicator(): void {
+  if (activeCountdownRaf !== null) {
+    cancelAnimationFrame(activeCountdownRaf);
+    activeCountdownRaf = null;
+  }
+}
+
+export function triggerCountdownIndicator(type: 'countdown' | 'round-start'): void {
+  if (type === 'round-start') {
+    cancelCountdownIndicator();
+    for (let i = 0; i < countdownIndicatorHandlers.length; i++) {
+      const h = countdownIndicatorHandlers[i];
+      displayCountdownDigit(h, '0', h.roundStartColor, h.fadeDuration);
+    }
+    return;
+  }
+
+  if (type === 'countdown') {
+    cancelCountdownIndicator();
+    activeCountdownStartTime = performance.now();
+    activeCountdownStepDone = [false, false, false];
+
+    // Step 0: "4" immediately (if showInitialFour is enabled)
+    for (let i = 0; i < countdownIndicatorHandlers.length; i++) {
+      const h = countdownIndicatorHandlers[i];
+      if (h.showInitialFour !== false) {
+        displayCountdownDigit(h, '4', h.countdownColor, h.fadeDuration);
+      }
+    }
+
+    // High-precision requestAnimationFrame countdown scheduler for 3, 2, 1
+    function countdownLoop(now: number) {
+      const elapsed = now - activeCountdownStartTime;
+
+      // Step 1: 1000ms -> "3"
+      if (elapsed >= 1000 && !activeCountdownStepDone[0]) {
+        activeCountdownStepDone[0] = true;
+        for (let i = 0; i < countdownIndicatorHandlers.length; i++) {
+          const h = countdownIndicatorHandlers[i];
+          displayCountdownDigit(h, '3', h.countdownColor, h.fadeDuration);
+        }
+      }
+
+      // Step 2: 2000ms -> "2"
+      if (elapsed >= 2000 && !activeCountdownStepDone[1]) {
+        activeCountdownStepDone[1] = true;
+        for (let i = 0; i < countdownIndicatorHandlers.length; i++) {
+          const h = countdownIndicatorHandlers[i];
+          displayCountdownDigit(h, '2', h.countdownColor, h.fadeDuration);
+        }
+      }
+
+      // Step 3: 3000ms -> "1"
+      if (elapsed >= 3000 && !activeCountdownStepDone[2]) {
+        activeCountdownStepDone[2] = true;
+        for (let i = 0; i < countdownIndicatorHandlers.length; i++) {
+          const h = countdownIndicatorHandlers[i];
+          displayCountdownDigit(h, '1', h.countdownColor, h.fadeDuration);
+        }
+      }
+
+      if (elapsed < 3950) {
+        activeCountdownRaf = requestAnimationFrame(countdownLoop);
+      } else {
+        activeCountdownRaf = null;
+      }
+    }
+
+    activeCountdownRaf = requestAnimationFrame(countdownLoop);
+  }
+}
 
 // P1
 let p1SpeedListeners: NumberListener[] = [];
@@ -258,6 +352,8 @@ export function bindCompetitiveDomCache(
   myScoreListeners = [];
   oppScoreListeners = [];
   teamColorsListeners = [];
+  cancelCountdownIndicator();
+  countdownIndicatorHandlers = [];
 
   p1SpeedListeners = [];
   p1BoostListeners = [];
@@ -304,6 +400,26 @@ export function bindCompetitiveDomCache(
     // Component Handlers
     // ------------------------------------------------------------------------
     switch (type) {
+      // Countdown Indicator (4-3-2-1-0 with glowing stroke)
+      case 'element-countdown-indicator': {
+        const numEl = cached.valEl || cached.container.querySelector<HTMLElement>('.el-countdown-num, .dyn-val');
+        if (numEl) {
+          const countdownColor = inst.customProps?.countdownColor || '#ef4444';
+          const roundStartColor = inst.customProps?.roundStartColor || '#22c55e';
+          const fadeDuration = Number(inst.customProps?.fadeDuration ?? 0.5);
+          const showInitialFour = inst.customProps?.showInitialFour !== false;
+
+          countdownIndicatorHandlers.push({
+            numEl,
+            countdownColor,
+            roundStartColor,
+            fadeDuration,
+            showInitialFour
+          });
+        }
+        break;
+      }
+
       // 1. Boost Text (Digit Slot Transform Reel - 0 DOM Layout)
       case 'element-boost-text':
       case 'element-boost-text-fixed': {

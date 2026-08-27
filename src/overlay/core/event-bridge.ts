@@ -19,6 +19,7 @@ import {
   setCaptureTargetEvents,
   setAutoRetryDisabled,
   setTimelineCaptureState,
+  setTimelineTimestampEnabled,
   setTimelineCaptureEvents,
   setLowFreqTriggerEvents,
   requestLowFrequencySync,
@@ -33,7 +34,7 @@ import {
 } from './replay-controller';
 import { startBenchmark } from './benchmark-recorder';
 import { getCompetitiveDomCache, applyStaticComponentStyles } from './dom-cache';
-import { updateOverlayGlobalSettings, applyAutoHideNonExistingPlayers } from './competitive-renderer';
+import { updateOverlayGlobalSettings, applyAutoHideNonExistingPlayers, triggerCountdownIndicator } from './competitive-renderer';
 import {
   updateCalibration,
   updateControlPoints,
@@ -234,8 +235,12 @@ export async function setupOverlayEventListeners(): Promise<void> {
   });
 
   // 8. Timeline Console Logger IPC Controls
-  await listen<{ enabled: boolean; events?: string[] }>('toggle-timeline-capture', (e) => {
-    setTimelineCaptureState(e.payload.enabled, e.payload.events);
+  await listen<{ enabled: boolean; events?: string[]; includeTimestamp?: boolean }>('toggle-timeline-capture', (e) => {
+    setTimelineCaptureState(e.payload.enabled, e.payload.events, e.payload.includeTimestamp);
+  });
+
+  await listen<{ enabled: boolean }>('toggle-timeline-timestamp', (e) => {
+    setTimelineTimestampEnabled(Boolean(e.payload?.enabled));
   });
 
   await listen<{ events: string[] }>('set-timeline-capture-events', (e) => {
@@ -346,6 +351,20 @@ export async function setupOverlayEventListeners(): Promise<void> {
     if (typeof e.payload?.targetTeam === 'number') {
       setBallHitSvgTargetTeam(e.payload.targetTeam);
     }
+  });
+
+  // 13. Countdown Indicator IPC Triggers
+  await listen<any>('trigger-countdown-indicator', (e) => {
+    const type = typeof e.payload === 'string' ? e.payload : (e.payload?.type || 'countdown');
+    triggerCountdownIndicator(type as 'countdown' | 'round-start');
+  });
+
+  await listen<void>('trigger-countdown-begin', () => {
+    triggerCountdownIndicator('countdown');
+  });
+
+  await listen<void>('trigger-round-start', () => {
+    triggerCountdownIndicator('round-start');
   });
 
   // Window Resize & Initialization Events

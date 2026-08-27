@@ -1537,9 +1537,13 @@
     <div style="font-size: 11px; color: var(--primer-fg-muted); margin-bottom: 8px;">
       Pushes incoming WebSocket event names to DevTools console in real-time. Modern WebViews automatically aggregate consecutive identical events (e.g. <code>UpdateState x120</code>), producing a clean match timeline.
     </div>
-    <label style="display: flex; align-items: center; cursor: pointer; font-weight: bold; color: var(--primer-accent-fg); font-size: 12px; margin-bottom: 8px;">
+    <label style="display: flex; align-items: center; cursor: pointer; font-weight: bold; color: var(--primer-accent-fg); font-size: 12px; margin-bottom: 6px;">
       <input type="checkbox" id="timeline-capture-check" style="margin-right: 8px; cursor: pointer; transform: scale(1.15);">
       Capture Event Timeline to Console
+    </label>
+    <label style="display: flex; align-items: center; cursor: pointer; font-weight: 500; color: var(--primer-fg-default); font-size: 11px; margin-bottom: 8px; margin-left: 2px;">
+      <input type="checkbox" id="timeline-timestamp-check" style="margin-right: 6px; cursor: pointer;">
+      Include Absolute Timestamp (包含绝对时间戳 [HH:mm:ss.SSS])
     </label>
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px;">
       <span id="timeline-capture-status" style="color: var(--primer-fg-muted); font-size: 11px;">Status: Disabled (Always default OFF)</span>

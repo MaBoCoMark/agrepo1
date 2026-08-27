@@ -456,7 +456,12 @@ export function createNewComponentInstance(
 
   const customProps: ComponentInstanceCustomProps = {};
 
-  if (componentType === "element-boost-alert-bar") {
+  if (componentType === "element-countdown-indicator") {
+    customProps.countdownColor = "#ef4444";
+    customProps.roundStartColor = "#22c55e";
+    customProps.fadeDuration = 0.5;
+    customProps.showInitialFour = true;
+  } else if (componentType === "element-boost-alert-bar") {
     customProps.threshold = 12;
     customProps.borderRadius = 4;
     customProps.alertColor = "#ef4444";

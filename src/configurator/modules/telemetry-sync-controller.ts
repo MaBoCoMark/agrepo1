@@ -169,6 +169,7 @@ export function initTelemetrySyncController(): void {
   // NOTE: Checkbox is strictly ALWAYS default unchecked (false), NEVER saved to storage.
   // --------------------------------------------------------------------------
   const timelineCaptureCheck = document.getElementById('timeline-capture-check') as HTMLInputElement | null;
+  const timelineTimestampCheck = document.getElementById('timeline-timestamp-check') as HTMLInputElement | null;
   const timelineCaptureStatus = document.getElementById('timeline-capture-status');
   const timelineEventsCount = document.getElementById('timeline-events-count');
   const btnOpenTimelineMgr = document.getElementById('btn-open-timeline-mgr');
@@ -183,9 +184,12 @@ export function initTelemetrySyncController(): void {
   const timelineCheckboxContainer = document.getElementById('timeline-checkbox-container');
   const timelineSelectedSummary = document.getElementById('timeline-selected-summary');
 
-  // Strict requirement: Always start false
+  // Strict requirement: Always start false for capture check
   if (timelineCaptureCheck) {
     timelineCaptureCheck.checked = false;
+  }
+  if (timelineTimestampCheck) {
+    timelineTimestampCheck.checked = localStorage.getItem('saved_timeline_timestamp') === 'true';
   }
 
   let activeTimelineEvents: string[] = [...DEFAULT_TIMELINE_EVENTS];
@@ -271,7 +275,8 @@ export function initTelemetrySyncController(): void {
     if (timelineCaptureCheck) {
       emitTo('overlay', 'toggle-timeline-capture', {
         enabled: timelineCaptureCheck.checked,
-        events: activeTimelineEvents
+        events: activeTimelineEvents,
+        includeTimestamp: timelineTimestampCheck?.checked ?? false
       });
     }
     updateTimelineStatusSummary();
@@ -281,9 +286,22 @@ export function initTelemetrySyncController(): void {
     const isEnabled = timelineCaptureCheck.checked;
     emitTo('overlay', 'toggle-timeline-capture', {
       enabled: isEnabled,
-      events: activeTimelineEvents
+      events: activeTimelineEvents,
+      includeTimestamp: timelineTimestampCheck?.checked ?? false
     });
     updateTimelineStatusSummary();
+  });
+
+  timelineTimestampCheck?.addEventListener('change', () => {
+    localStorage.setItem('saved_timeline_timestamp', timelineTimestampCheck.checked ? 'true' : 'false');
+    emitTo('overlay', 'toggle-timeline-timestamp', { enabled: timelineTimestampCheck.checked });
+    if (timelineCaptureCheck) {
+      emitTo('overlay', 'toggle-timeline-capture', {
+        enabled: timelineCaptureCheck.checked,
+        events: activeTimelineEvents,
+        includeTimestamp: timelineTimestampCheck.checked
+      });
+    }
   });
 
   btnOpenTimelineMgr?.addEventListener('click', () => {
