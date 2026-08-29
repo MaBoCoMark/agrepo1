@@ -1,6 +1,5 @@
 import { TelemetryBuffer } from './component-types';
-import { overlayState } from './telemetry-state';
-import { processBallHitPacket } from './ball-hit-tracker';
+import { processMiniMapBallHitPacket } from './websocket-manager';
 
 /**
  * ============================================================================
@@ -119,80 +118,30 @@ export function updateMockStream(latestData: TelemetryBuffer): void {
     latestData.p3Powersliding = Math.random() > 0.85;
   }
 
-  // 9. Realistic Mock BallHit generation for Ball Hit Inspector scene
-  if (overlayState.currentActiveScene === 'ball-hit' && mockSimState.frameCount % 45 === 0) {
-    let mockX: number;
-    let mockY: number;
-    let mockZ = 40.96 + Math.random() * 1200;
-
-    const pattern = Math.random();
-    if (pattern < 0.25) {
-      // Field interior / center
-      mockX = -3000 + Math.random() * 6000;
-      mockY = -4000 + Math.random() * 8000;
-    } else if (pattern < 0.45) {
-      // Side walls (±4075)
-      mockX = (Math.random() > 0.5 ? 4075 : -4075) + (Math.random() * 20 - 10);
-      mockY = -3500 + Math.random() * 7000;
-      mockZ = 100 + Math.random() * 800;
-    } else if (pattern < 0.65) {
-      // End walls (±5120) outside goals
-      mockX = (Math.random() > 0.5 ? 1 : -1) * (1400 + Math.random() * 1400);
-      mockY = (Math.random() > 0.5 ? 5120 : -5120) + (Math.random() * 20 - 10);
-    } else if (pattern < 0.82) {
-      // 45-degree chamfered corners
-      const t = Math.random();
-      const quad = Math.floor(Math.random() * 4);
-      if (quad === 0) {
-        mockX = 2950 + t * (4075 - 2950) + (Math.random() * 20 - 10);
-        mockY = 5120 - t * (5120 - 4000) + (Math.random() * 20 - 10);
-      } else if (quad === 1) {
-        mockX = -2950 - t * (4075 - 2950) + (Math.random() * 20 - 10);
-        mockY = 5120 - t * (5120 - 4000) + (Math.random() * 20 - 10);
-      } else if (quad === 2) {
-        mockX = 2950 + t * (4075 - 2950) + (Math.random() * 20 - 10);
-        mockY = -5120 + t * (5120 - 4000) + (Math.random() * 20 - 10);
-      } else {
-        mockX = -2950 - t * (4075 - 2950) + (Math.random() * 20 - 10);
-        mockY = -5120 + t * (5120 - 4000) + (Math.random() * 20 - 10);
-      }
-    } else if (pattern < 0.95) {
-      // Goal slots (recess back to ±5800)
-      mockX = -850 + Math.random() * 1700;
-      mockY = (Math.random() > 0.5 ? 1 : -1) * (5200 + Math.random() * 600);
-      mockZ = 50 + Math.random() * 550;
-    } else {
-      // Occasional extreme / test noise
-      mockX = (Math.random() > 0.5 ? 4600 : -4600);
-      mockY = (Math.random() > 0.5 ? 6200 : -6200);
-      mockZ = 2100;
-    }
-
-    const preSpd = Math.round((Math.random() * 40) * 100) / 100;
-    const postSpd = Math.round((Math.random() * 110) * 100) / 100;
-    processBallHitPacket({
+  // 9. Mock BallHit generation for Mini-Map Widget instances
+  if (mockSimState.frameCount % 180 === 0) {
+    const mockX = -3500 + Math.random() * 7000;
+    const mockY = -4500 + Math.random() * 9000;
+    const postSpd = Math.round((40 + Math.random() * 70) * 10) / 10;
+    processMiniMapBallHitPacket({
       Event: 'BallHit',
       Data: {
         MatchGuid: 'SIM_MATCH_GUID',
         Players: [
           {
-            Name: Math.random() > 0.5 ? 'Antigravity' : 'Zenith',
-            Shortcut: Math.random() > 0.5 ? 1 : 2,
+            Name: Math.random() > 0.5 ? 'steamuser' : 'Opponent',
             TeamNum: Math.random() > 0.5 ? 0 : 1
           }
         ],
         Ball: {
-          PreHitSpeed: preSpd,
           PostHitSpeed: postSpd,
           Location: {
-            X: Math.round(mockX * 10) / 10,
-            Y: Math.round(mockY * 10) / 10,
-            Z: Math.round(mockZ * 10) / 10
+            X: Math.round(mockX),
+            Y: Math.round(mockY),
+            Z: 70
           }
         }
       }
     });
   }
-
-
 }

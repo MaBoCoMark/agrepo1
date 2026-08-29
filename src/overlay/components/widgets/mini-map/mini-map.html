@@ -5,47 +5,125 @@
   "tier": "widget",
   "category": "global",
   "isProportional": true,
+  "supportsSpeedUnit": false,
+  "supportsAlignment": false,
+  "supportsGlobalStyle": false,
   "defaultWidthVw": 18,
   "defaultHeightVw": 24,
   "minWidthVw": 8,
   "minHeightVw": 10.67,
   "baseWidthPx": 240,
-  "baseHeightPx": 320
+  "baseHeightPx": 320,
+  "customProperties": [
+    { "key": "containerBgColor", "label": "Container BG Color", "type": "color", "default": "#04070e" },
+    { "key": "containerBgOpacity", "label": "Container BG Opacity (%)", "type": "number", "min": 0, "max": 100, "step": 5, "unit": "%", "default": 85 },
+    { "key": "bgFillColor", "label": "Pitch Field BG Color", "type": "color", "default": "#0a0f19" },
+    { "key": "bgFillOpacity", "label": "Pitch Field Opacity (%)", "type": "number", "min": 0, "max": 100, "step": 5, "unit": "%", "default": 70 },
+    { "key": "borderStrokeWidth", "label": "Boundary Border Width", "type": "number", "min": 10, "max": 250, "step": 5, "default": 75 },
+    { "key": "borderColor", "label": "Boundary Border Color", "type": "color", "default": "#00f0ff" },
+    { "key": "borderOpacity", "label": "Boundary Border Opacity (%)", "type": "number", "min": 0, "max": 100, "step": 5, "unit": "%", "default": 85 },
+    { "key": "pitchLineColor", "label": "Pitch Markings Color", "type": "color", "default": "#ffffff" },
+    { "key": "pitchLineOpacity", "label": "Pitch Markings Opacity (%)", "type": "number", "min": 0, "max": 100, "step": 2, "unit": "%", "default": 22 },
+    { "key": "padRadius", "label": "Small Pad Radius (uu)", "type": "number", "min": 30, "max": 200, "step": 5, "default": 90 },
+    { "key": "padColor", "label": "Small Pad Color", "type": "color", "default": "#fbbf24" },
+    { "key": "padOpacity", "label": "Small Pad Opacity (%)", "type": "number", "min": 0, "max": 100, "step": 5, "unit": "%", "default": 80 },
+    { "key": "pillRadiusScale", "label": "Big Pill Radius Scale (%)", "type": "number", "min": 100, "max": 1000, "step": 20, "unit": "%", "default": 280 },
+    { "key": "pillColor", "label": "Big Pill Color", "type": "color", "default": "#f59e0b" },
+    { "key": "pillOpacity", "label": "Big Pill Opacity (%)", "type": "number", "min": 0, "max": 100, "step": 5, "unit": "%", "default": 90 },
+    { "key": "dotRadius", "label": "Hit Center Dot Radius (px)", "type": "number", "min": 2, "max": 20, "step": 1, "unit": "px", "default": 5 },
+    { "key": "myTeamDotColor", "label": "Our Hit Dot Color", "type": "color", "default": "#00ff88" },
+    { "key": "myTeamDotOpacity", "label": "Our Hit Dot Opacity (%)", "type": "number", "min": 0, "max": 100, "step": 5, "unit": "%", "default": 100 },
+    { "key": "oppTeamDotColor", "label": "Opponent Hit Dot Color", "type": "color", "default": "#ff3366" },
+    { "key": "oppTeamDotOpacity", "label": "Opponent Hit Dot Opacity (%)", "type": "number", "min": 0, "max": 100, "step": 5, "unit": "%", "default": 100 },
+    { "key": "ringMaxPercent", "label": "Speed Ring Max Diameter (%)", "type": "number", "min": 10, "max": 100, "step": 5, "unit": "%", "default": 100 },
+    { "key": "ringBorderWidth", "label": "Speed Ring Border Width (px)", "type": "number", "min": 1, "max": 8, "step": 1, "unit": "px", "default": 2 },
+    { "key": "myTeamRingBorderColor", "label": "Our Ring Border Color", "type": "color", "default": "#00ff88" },
+    { "key": "myTeamRingBorderOpacity", "label": "Our Ring Border Opacity (%)", "type": "number", "min": 0, "max": 100, "step": 5, "unit": "%", "default": 85 },
+    { "key": "myTeamRingFillColor", "label": "Our Ring Fill Color", "type": "color", "default": "#00ff88" },
+    { "key": "myTeamRingFillOpacity", "label": "Our Ring Fill Opacity (%)", "type": "number", "min": 0, "max": 100, "step": 5, "unit": "%", "default": 15 },
+    { "key": "oppTeamRingBorderColor", "label": "Opp Ring Border Color", "type": "color", "default": "#ff3366" },
+    { "key": "oppTeamRingBorderOpacity", "label": "Opp Ring Border Opacity (%)", "type": "number", "min": 0, "max": 100, "step": 5, "unit": "%", "default": 85 },
+    { "key": "oppTeamRingFillColor", "label": "Opp Ring Fill Color", "type": "color", "default": "#ff3366" },
+    { "key": "oppTeamRingFillOpacity", "label": "Opp Ring Fill Opacity (%)", "type": "number", "min": 0, "max": 100, "step": 5, "unit": "%", "default": 15 },
+    { "key": "animHoldDuration", "label": "Hit Hold Duration (s)", "type": "number", "min": 0, "max": 3, "step": 0.05, "unit": "s", "default": 0.5 },
+    { "key": "animFadeDuration", "label": "Hit Fade Duration (s)", "type": "number", "min": 0.1, "max": 5, "step": 0.05, "unit": "s", "default": 1.0 },
+    { "key": "animEasingType", "label": "Fade Easing Curve", "type": "select", "default": "ease-out", "options": [
+      { "label": "ease-out (Smooth Deceleration)", "value": "ease-out" },
+      { "label": "linear (Uniform Speed)", "value": "linear" },
+      { "label": "ease-in (Accelerate Out)", "value": "ease-in" },
+      { "label": "ease-in-out (Smooth S-Curve)", "value": "ease-in-out" },
+      { "label": "Custom cubic-bezier", "value": "custom" }
+    ]},
+    { "key": "animCustomEasing", "label": "Custom Cubic Bezier", "type": "string", "default": "cubic-bezier(0.4, 0, 0.2, 1)" },
+    { "key": "autoFlip180", "label": "Auto 180° Flip on Orange Team", "type": "boolean", "default": true }
+  ]
 }
 </script>
 
 <template id="component-template">
-  <div class="mini-map-box">
-    <div class="mini-map-stage">
-      <svg class="mini-map-svg" viewBox="-4500 -6000 9000 12000" preserveAspectRatio="xMidYMid meet">
-        <polygon class="pitch-field-bg" points="-4075,-4000 -2950,-5120 -892.75,-5120 -892.75,-5800 892.75,-5800 892.75,-5120 2950,-5120 4075,-4000 4075,4000 2950,5120 892.75,5120 892.75,5800 -892.75,5800 -892.75,5120 -2950,5120 -4075,4000" />
-        <g class="pitch-markings">
-          <line x1="-4075" y1="0" x2="4075" y2="0" class="pitch-line" />
-          <line x1="0" y1="-5120" x2="0" y2="5120" class="pitch-line pitch-line-dashed" />
-          <circle cx="0" cy="0" r="912" class="pitch-circle" />
+  <div class="mini-map-box dyn-mini-map-box">
+    <div class="mini-map-stage dyn-mini-map-stage">
+      <svg class="mini-map-svg dyn-mini-map-svg" viewBox="-4500 -6000 9000 12000" preserveAspectRatio="xMidYMid meet">
+        <!-- Pitch Field Background -->
+        <polygon class="pitch-field-bg dyn-pitch-bg" points="-4075,-4000 -2950,-5120 -892.75,-5120 -892.75,-5800 892.75,-5800 892.75,-5120 2950,-5120 4075,-4000 4075,4000 2950,5120 892.75,5120 892.75,5800 -892.75,5800 -892.75,5120 -2950,5120 -4075,4000" />
+        
+        <!-- Pitch Markings (Lines & Center Circle) -->
+        <g class="pitch-markings dyn-pitch-markings">
+          <line x1="-4075" y1="0" x2="4075" y2="0" class="pitch-line pitch-centerline dyn-pitch-line" />
+          <line x1="0" y1="-5120" x2="0" y2="5120" class="pitch-line pitch-midline pitch-line-dashed dyn-pitch-line" />
+          <circle cx="0" cy="0" r="912" class="pitch-circle pitch-center-circle dyn-pitch-line" />
         </g>
-        <g class="pitch-boosts">
-          <circle cx="3072" cy="-4096" r="280" class="boost-pill" />
-          <circle cx="-3072" cy="-4096" r="280" class="boost-pill" />
-          <circle cx="3584" cy="0" r="280" class="boost-pill" />
-          <circle cx="-3584" cy="0" r="280" class="boost-pill" />
-          <circle cx="3072" cy="4096" r="280" class="boost-pill" />
-          <circle cx="-3072" cy="4096" r="280" class="boost-pill" />
-          <circle cx="0" cy="-4240" r="100" class="boost-pad" />
-          <circle cx="0" cy="-2816" r="100" class="boost-pad" />
-          <circle cx="0" cy="-1024" r="100" class="boost-pad" />
-          <circle cx="0" cy="1024" r="100" class="boost-pad" />
-          <circle cx="0" cy="2816" r="100" class="boost-pad" />
-          <circle cx="0" cy="4240" r="100" class="boost-pad" />
-          <circle cx="1024" cy="0" r="100" class="boost-pad" />
-          <circle cx="-1024" cy="0" r="100" class="boost-pad" />
+
+        <!-- 34 Standard Boost Locations Layer -->
+        <g class="pitch-boosts dyn-pitch-boosts">
+          <!-- 6 Big Boost Pills -->
+          <circle cx="3072" cy="-4096" r="252" class="boost-pill" />
+          <circle cx="-3072" cy="-4096" r="252" class="boost-pill" />
+          <circle cx="3584" cy="0" r="252" class="boost-pill" />
+          <circle cx="-3584" cy="0" r="252" class="boost-pill" />
+          <circle cx="3072" cy="4096" r="252" class="boost-pill" />
+          <circle cx="-3072" cy="4096" r="252" class="boost-pill" />
+
+          <!-- 28 Small Boost Pads -->
+          <circle cx="0" cy="4240" r="90" class="boost-pad" />
+          <circle cx="0" cy="2816" r="90" class="boost-pad" />
+          <circle cx="0" cy="1024" r="90" class="boost-pad" />
+          <circle cx="0" cy="-1024" r="90" class="boost-pad" />
+          <circle cx="0" cy="-2816" r="90" class="boost-pad" />
+          <circle cx="0" cy="-4240" r="90" class="boost-pad" />
+          <circle cx="1024" cy="0" r="90" class="boost-pad" />
+          <circle cx="-1024" cy="0" r="90" class="boost-pad" />
+          <circle cx="1792" cy="4184" r="90" class="boost-pad" />
+          <circle cx="-1792" cy="4184" r="90" class="boost-pad" />
+          <circle cx="3584" cy="2484" r="90" class="boost-pad" />
+          <circle cx="-3584" cy="2484" r="90" class="boost-pad" />
+          <circle cx="3584" cy="-2484" r="90" class="boost-pad" />
+          <circle cx="-3584" cy="-2484" r="90" class="boost-pad" />
+          <circle cx="1792" cy="-4184" r="90" class="boost-pad" />
+          <circle cx="-1792" cy="-4184" r="90" class="boost-pad" />
+          <circle cx="940" cy="3308" r="90" class="boost-pad" />
+          <circle cx="-940" cy="3308" r="90" class="boost-pad" />
+          <circle cx="1788" cy="2302" r="90" class="boost-pad" />
+          <circle cx="-1788" cy="2302" r="90" class="boost-pad" />
+          <circle cx="2048" cy="1036" r="90" class="boost-pad" />
+          <circle cx="-2048" cy="1036" r="90" class="boost-pad" />
+          <circle cx="2048" cy="-1036" r="90" class="boost-pad" />
+          <circle cx="-2048" cy="-1036" r="90" class="boost-pad" />
+          <circle cx="1788" cy="-2302" r="90" class="boost-pad" />
+          <circle cx="-1788" cy="-2302" r="90" class="boost-pad" />
+          <circle cx="940" cy="-3308" r="90" class="boost-pad" />
+          <circle cx="-940" cy="-3308" r="90" class="boost-pad" />
         </g>
-        <polygon class="pitch-boundary-polygon" points="-4075,-4000 -2950,-5120 -892.75,-5120 -892.75,-5800 892.75,-5800 892.75,-5120 2950,-5120 4075,-4000 4075,4000 2950,5120 892.75,5120 892.75,5800 -892.75,5800 -892.75,5120 -2950,5120 -4075,4000" />
+
+        <!-- Pitch Boundary Polygon -->
+        <polygon class="pitch-boundary-polygon dyn-pitch-boundary" points="-4075,-4000 -2950,-5120 -892.75,-5120 -892.75,-5800 892.75,-5800 892.75,-5120 2950,-5120 4075,-4000 4075,4000 2950,5120 892.75,5120 892.75,5800 -892.75,5800 -892.75,5120 -2950,5120 -4075,4000" />
       </svg>
-      <div class="mini-map-hit-layer">
-        <div class="mini-map-hit-indicator" style="transform: translate3d(50%, 50%, 0) translate(-50%, -50%);">
-          <div class="hit-outer-ring" style="width: 36px; height: 36px;"></div>
-          <div class="hit-center-dot"></div>
+
+      <!-- GPU-Accelerated Ball Hit Indicator Layer -->
+      <div class="mini-map-hit-layer dyn-mini-map-hit-layer">
+        <div class="mini-map-hit-indicator dyn-mini-map-hit-indicator" style="display: none; opacity: 0;">
+          <div class="hit-outer-ring dyn-hit-outer-ring"></div>
+          <div class="hit-center-dot dyn-hit-center-dot"></div>
         </div>
       </div>
     </div>
@@ -58,14 +136,14 @@
   height: 100%;
   position: relative;
   box-sizing: border-box;
-  background: rgba(4, 7, 14, 0.85);
-  border: 1px solid rgba(0, 240, 255, 0.35);
+  background-color: rgba(4, 7, 14, 0.85);
   border-radius: 6px;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
 }
+
 .mini-map-stage {
   width: 100%;
   height: 100%;
@@ -73,48 +151,67 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  transform-origin: 50% 50%;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
 }
+
 .mini-map-svg {
   width: 100%;
   height: 100%;
   display: block;
 }
+
 .pitch-field-bg {
-  fill: rgba(10, 15, 25, 0.6);
+  fill: #0a0f19;
+  fill-opacity: 0.7;
 }
+
 .pitch-boundary-polygon {
   fill: none;
   stroke: #00f0ff;
-  stroke-width: 80;
+  stroke-width: 75px;
+  stroke-opacity: 0.85;
   stroke-linejoin: round;
   stroke-linecap: round;
 }
+
 .pitch-line {
-  stroke: rgba(255, 255, 255, 0.25);
-  stroke-width: 45;
+  stroke: #ffffff;
+  stroke-width: 45px;
+  stroke-opacity: 0.22;
 }
+
 .pitch-line-dashed {
   stroke-dasharray: 120 120;
 }
+
 .pitch-circle {
   fill: none;
-  stroke: rgba(255, 255, 255, 0.25);
-  stroke-width: 45;
+  stroke: #ffffff;
+  stroke-width: 45px;
+  stroke-opacity: 0.22;
 }
+
 .boost-pill {
   fill: #f59e0b;
   opacity: 0.9;
 }
+
 .boost-pad {
   fill: #fbbf24;
   opacity: 0.8;
 }
+
 .mini-map-hit-layer {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
   contain: layout style;
 }
+
 .mini-map-hit-indicator {
   position: absolute;
   top: 0;
@@ -126,19 +223,22 @@
   will-change: transform, opacity;
   contain: layout style;
 }
+
 .hit-outer-ring {
   position: absolute;
   border-radius: 50%;
-  border: 2px solid #00f0ff;
-  background: rgba(0, 240, 255, 0.15);
   box-sizing: border-box;
   pointer-events: none;
+  border: 2px solid #00ff88;
+  background-color: rgba(0, 255, 136, 0.15);
+  box-shadow: 0 0 8px rgba(0, 255, 136, 0.4);
 }
+
 .hit-center-dot {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  background: #00ff88;
+  background-color: #00ff88;
   box-shadow: 0 0 8px #00ff88;
   position: relative;
   z-index: 2;

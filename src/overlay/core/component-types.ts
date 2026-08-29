@@ -109,6 +109,46 @@ export interface ComponentInstanceCustomProps {
   roundStartColor?: string;
   fadeDuration?: number;
   showInitialFour?: boolean;
+
+  // Mini-Map & Ball Hit Widget Custom Props
+  containerBgColor?: string;
+  containerBgOpacity?: number;
+  bgFillColor?: string;
+  bgFillOpacity?: number;
+  borderStrokeWidth?: number;
+  borderColor?: string;
+  borderOpacity?: number;
+  pitchLineColor?: string;
+  pitchLineOpacity?: number;
+  padRadius?: number;
+  padColor?: string;
+  padOpacity?: number;
+  pillRadiusScale?: number;
+  pillColor?: string;
+  pillOpacity?: number;
+  dotRadius?: number;
+  myTeamDotColor?: string;
+  myTeamDotOpacity?: number;
+  oppTeamDotColor?: string;
+  oppTeamDotOpacity?: number;
+  ringMaxPercent?: number;
+  ringBorderWidth?: number;
+  myTeamRingBorderColor?: string;
+  myTeamRingBorderOpacity?: number;
+  myTeamRingFillColor?: string;
+  myTeamRingFillOpacity?: number;
+  oppTeamRingBorderColor?: string;
+  oppTeamRingBorderOpacity?: number;
+  oppTeamRingFillColor?: string;
+  oppTeamRingFillOpacity?: number;
+  animHoldDuration?: number;
+  animFadeDuration?: number;
+  animEasingType?: 'linear' | 'ease-in' | 'ease-out' | 'ease-in-out' | 'custom';
+  animCustomEasing?: string;
+  autoFlip180?: boolean;
+  ringPreviewActive?: boolean;
+  ringPreviewSpeed?: number;
+
   [key: string]: any;
 }
 

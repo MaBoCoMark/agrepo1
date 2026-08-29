@@ -34,32 +34,13 @@ import {
 } from './replay-controller';
 import { startBenchmark } from './benchmark-recorder';
 import { getCompetitiveDomCache, applyStaticComponentStyles } from './dom-cache';
-import { updateOverlayGlobalSettings, applyAutoHideNonExistingPlayers, triggerCountdownIndicator } from './competitive-renderer';
 import {
-  updateCalibration,
-  updateControlPoints,
-  setOperationMode,
-  setRecordingState,
-  clearHitHistory,
-  clearBoostHistory,
-  clearAllPitchData,
-  importHitsFromJson,
-  importBoostsFromJson,
-  markBallHitDirty,
-  setOnlyLatestHit,
-  setSpeedRingPercent,
-  setTargetTeam,
-  setPreviewSpeedRing,
-  setPreviewSpeedKph,
-  BallHitOperationMode
-} from './ball-hit-tracker';
-import {
-  updateBallHitSvgConfig,
-  simulateBallHitSvg,
-  setBallHitSvgTargetTeam,
-  BallHitSvgConfig
-} from './ball-hit-svg-tracker';
-import { CalibrationSettings, ControlPoint } from './pitch-geometry';
+  updateOverlayGlobalSettings,
+  applyAutoHideNonExistingPlayers,
+  triggerCountdownIndicator,
+  triggerBallHitOnMiniMaps,
+  simulateWidgetBallHit
+} from './competitive-renderer';
 
 /**
  * ============================================================================
@@ -261,99 +242,16 @@ export async function setupOverlayEventListeners(): Promise<void> {
     startBenchmark();
   });
 
-  // 11. Ball Hit 2D Pitch Mapping & Calibration IPC Controls
-  await listen<{ calibration: CalibrationSettings }>('pitch-calibration-update', (e) => {
-    if (e.payload?.calibration) {
-      updateCalibration(e.payload.calibration);
+  // 11. Mini-Map & Ball Hit Widget IPC Simulation Triggers
+  await listen<{ x?: number; y?: number; speed?: number; isMyTeam?: boolean }>('simulate-widget-ball-hit', (e) => {
+    if (typeof e.payload?.x === 'number' && typeof e.payload?.y === 'number') {
+      triggerBallHitOnMiniMaps(e.payload.x, e.payload.y, e.payload?.speed ?? 85, e.payload?.isMyTeam ?? true);
+    } else {
+      simulateWidgetBallHit(e.payload?.isMyTeam ?? true, e.payload?.speed ?? 85);
     }
   });
 
-  await listen<{ controlPoints: ControlPoint[] }>('pitch-control-points-update', (e) => {
-    if (e.payload?.controlPoints) {
-      updateControlPoints(e.payload.controlPoints);
-    }
-  });
-
-  await listen<{ mode: BallHitOperationMode }>('pitch-change-mode', (e) => {
-    if (e.payload?.mode) {
-      setOperationMode(e.payload.mode);
-    }
-  });
-
-  await listen<{ recording: boolean }>('pitch-toggle-record', (e) => {
-    if (e.payload !== undefined) {
-      setRecordingState(Boolean(e.payload.recording));
-    }
-  });
-
-  await listen<void>('pitch-clear-data', () => {
-    clearHitHistory();
-  });
-
-  await listen<void>('pitch-clear-boosts', () => {
-    clearBoostHistory();
-  });
-
-  await listen<void>('pitch-clear-all', () => {
-    clearAllPitchData();
-  });
-
-  await listen<{ onlyLatest: boolean }>('pitch-toggle-latest-only', (e) => {
-    if (e.payload?.onlyLatest !== undefined) {
-      setOnlyLatestHit(Boolean(e.payload.onlyLatest));
-    }
-  });
-
-  await listen<{ percent?: number; maxRadius?: number; preview?: boolean; previewSpeed?: number }>('pitch-speed-ring-update', (e) => {
-    if (typeof e.payload?.percent === 'number') {
-      setSpeedRingPercent(e.payload.percent);
-    }
-    if (e.payload?.preview !== undefined) {
-      setPreviewSpeedRing(Boolean(e.payload.preview), e.payload.previewSpeed);
-    } else if (typeof e.payload?.previewSpeed === 'number') {
-      setPreviewSpeedKph(e.payload.previewSpeed);
-    }
-  });
-
-  await listen<{ targetTeam: number }>('pitch-target-team-update', (e) => {
-    if (typeof e.payload?.targetTeam === 'number') {
-      setTargetTeam(e.payload.targetTeam);
-    }
-  });
-
-  await listen<{ raw: string }>('pitch-import-data', (e) => {
-    if (e.payload?.raw) {
-      try {
-        const parsed = JSON.parse(e.payload.raw);
-        if (parsed.boosts || (Array.isArray(parsed) && parsed[0] && (parsed[0].boostType || parsed[0].BoostType))) {
-          importBoostsFromJson(e.payload.raw);
-        } else {
-          importHitsFromJson(e.payload.raw);
-        }
-      } catch {
-        importHitsFromJson(e.payload.raw);
-      }
-    }
-  });
-
-  // 12. Ball Hit SVG & Pitch MiniMap IPC Controls
-  await listen<{ config: Partial<BallHitSvgConfig> }>('ball-hit-svg-config-update', (e) => {
-    if (e.payload?.config) {
-      updateBallHitSvgConfig(e.payload.config);
-    }
-  });
-
-  await listen<{ x?: number; y?: number; speed?: number; isMyTeam?: boolean }>('ball-hit-svg-simulate', (e) => {
-    simulateBallHitSvg(e.payload?.x ?? 0, e.payload?.y ?? 0, e.payload?.speed ?? 85, e.payload?.isMyTeam ?? true);
-  });
-
-  await listen<{ targetTeam: number }>('ball-hit-svg-target-team', (e) => {
-    if (typeof e.payload?.targetTeam === 'number') {
-      setBallHitSvgTargetTeam(e.payload.targetTeam);
-    }
-  });
-
-  // 13. Countdown Indicator IPC Triggers
+  // 12. Countdown Indicator IPC Triggers
   await listen<any>('trigger-countdown-indicator', (e) => {
     const type = typeof e.payload === 'string' ? e.payload : (e.payload?.type || 'countdown');
     triggerCountdownIndicator(type as 'countdown' | 'round-start');
@@ -370,7 +268,6 @@ export async function setupOverlayEventListeners(): Promise<void> {
   // Window Resize & Initialization Events
   window.addEventListener('resize', () => {
     updateDimensions();
-    markBallHitDirty();
   });
 
   // Initial Sync to Configurator

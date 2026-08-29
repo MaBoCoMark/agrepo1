@@ -1,11 +1,9 @@
-import { processBallHitPacket, processBoostPickupPacket, setTargetTeam } from './ball-hit-tracker';
-import { processBallHitSvgPacket, setBallHitSvgTargetTeam } from './ball-hit-svg-tracker';
 import { emitTo } from '@tauri-apps/api/event';
 import { latestData, overlayState } from './telemetry-state';
 import { switchSceneMode } from './scene-manager';
 import { processGoalScored, enterReplayView, willEndReplayView, immediateEndReplayView } from './replay-controller';
 import { DEFAULT_LOW_FREQ_TRIGGERS, DEFAULT_TIMELINE_EVENTS } from './rl-events';
-import { applyAutoHideNonExistingPlayers, triggerCountdownIndicator } from './competitive-renderer';
+import { applyAutoHideNonExistingPlayers, triggerCountdownIndicator, triggerBallHitOnMiniMaps } from './competitive-renderer';
 
 /**
  * ============================================================================
@@ -233,8 +231,6 @@ export function processLowFrequencyData(data: RLStateData): void {
   // 2. Team Colors & Target Team
   const effectiveTargetTeam = targetTeam !== null ? targetTeam : (p1?.TeamNum !== undefined ? p1.TeamNum : 0);
   latestData.myTeamNum = effectiveTargetTeam;
-  setTargetTeam(effectiveTargetTeam);
-  setBallHitSvgTargetTeam(effectiveTargetTeam);
 
   if (data.Game?.Teams && Array.isArray(data.Game.Teams) && data.Game.Teams.length > 0) {
     let myTeamObj = data.Game.Teams.find((t) => t.TeamNum === effectiveTargetTeam);
@@ -383,8 +379,6 @@ export function processUpdateState(data: RLStateData): void {
 
   const effectiveUpdateTargetTeam = targetTeam !== null ? targetTeam : (p1?.TeamNum !== undefined ? p1.TeamNum : 0);
   latestData.myTeamNum = effectiveUpdateTargetTeam;
-  setTargetTeam(effectiveUpdateTargetTeam);
-  setBallHitSvgTargetTeam(effectiveUpdateTargetTeam);
 
   // P1 Fast Numerical/Boolean State
   if (p1) {
@@ -458,6 +452,75 @@ export function processUpdateState(data: RLStateData): void {
   }
 }
 
+/**
+ * Parses BallHit packet and triggers animation on mini-map widget instances
+ */
+export function processMiniMapBallHitPacket(packet: any): void {
+  if (!packet) return;
+
+  let payloadData: any = packet;
+  try {
+    if (typeof packet === 'string') {
+      payloadData = JSON.parse(packet);
+    } else if (packet.Data !== undefined) {
+      payloadData = typeof packet.Data === 'string' ? JSON.parse(packet.Data) : packet.Data;
+    } else {
+      payloadData = packet;
+    }
+  } catch {
+    return;
+  }
+
+  if (!payloadData || typeof payloadData !== 'object') return;
+
+  // Extract Ball Location
+  const ball = payloadData.Ball || payloadData.ball;
+  const loc = ball?.Location || ball?.location || payloadData.Location || payloadData.location;
+
+  let hitX = 0;
+  let hitY = 0;
+  if (loc) {
+    hitX = Number(loc.X ?? loc.x ?? 0);
+    hitY = Number(loc.Y ?? loc.y ?? 0);
+  }
+
+  // Extract Ball Speed
+  let speed = 60;
+  const rawSpd =
+    ball?.PostHitSpeed ??
+    ball?.postHitSpeed ??
+    ball?.Speed ??
+    ball?.speed ??
+    payloadData.postHitSpeed ??
+    payloadData.PostHitSpeed;
+  if (rawSpd !== undefined && rawSpd !== null) {
+    const numSpd = Number(rawSpd);
+    speed = numSpd > 150 ? numSpd * 0.036 : numSpd;
+  }
+
+  // Extract Player Team
+  const players = payloadData.Players || payloadData.players || [];
+  const primaryPlayer =
+    (Array.isArray(players) && players.length > 0 ? players[0] : null) ||
+    payloadData.Player ||
+    payloadData.player;
+  const hitTeamNum =
+    primaryPlayer?.TeamNum ??
+    primaryPlayer?.teamNum ??
+    payloadData.TeamNum ??
+    payloadData.teamNum;
+
+  const myTeam = latestData.myTeamNum;
+  let isMyTeam = true;
+  if (hitTeamNum !== undefined && hitTeamNum !== null && hitTeamNum !== '-') {
+    isMyTeam = (Number(hitTeamNum) === myTeam || String(hitTeamNum) === String(myTeam));
+  } else {
+    isMyTeam = myTeam === 0;
+  }
+
+  triggerBallHitOnMiniMaps(hitX, hitY, speed, isMyTeam);
+}
+
 export function handleIncomingMessage(raw: RLWebSocketMessage): void {
   const eventName = raw.Event;
 
@@ -495,8 +558,7 @@ export function handleIncomingMessage(raw: RLWebSocketMessage): void {
     case 'Ball_Hit': {
       overlayState.hasReceivedDataSinceConnected = true;
       if (raw.Data !== undefined || (raw as any).Ball !== undefined) {
-        processBallHitPacket(raw);
-        processBallHitSvgPacket(raw);
+        processMiniMapBallHitPacket(raw);
       }
       break;
     }
@@ -505,9 +567,6 @@ export function handleIncomingMessage(raw: RLWebSocketMessage): void {
     case 'boost_pickup':
     case 'Boost_Pickup': {
       overlayState.hasReceivedDataSinceConnected = true;
-      if (raw.Data !== undefined || (raw as any).Location !== undefined || (raw as any).BoostType !== undefined) {
-        processBoostPickupPacket(raw);
-      }
       break;
     }
 

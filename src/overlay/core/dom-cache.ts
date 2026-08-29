@@ -2,10 +2,11 @@ import { ComponentInstance, GlobalLayoutSettings, TelemetryBuffer } from './comp
 import { COMPONENT_METAS, createComponentInnerHtml } from './component-registry';
 import { getScreenHeightVw, calculateElementTopLeft, loadGlobalLayoutSettings } from './layout-store';
 import { DraggerController } from './dragger';
-import { resolveEffectiveColor } from './team-colors';
+import { resolveEffectiveColor, hexToRgba } from './team-colors';
 import { BoostTierState, createInitialBoostTierState } from './boost-meter';
 import { bindCompetitiveDomCache } from './competitive-renderer';
 import { resetPreviousData, latestData } from './telemetry-state';
+import { STANDARD_BOOST_LOCATIONS } from './pitch-geometry';
 
 /**
  * ============================================================================
@@ -115,6 +116,17 @@ export interface CachedComponentInstance {
   bgEl: SVGCircleElement | null;
   dotEl: HTMLElement | null;
 
+  // Mini-Map specific cached nodes
+  miniMapStage: HTMLElement | null;
+  miniMapHitIndicator: HTMLElement | null;
+  hitCenterDot: HTMLElement | null;
+  hitOuterRing: HTMLElement | null;
+  pitchBoundary: SVGPolygonElement | null;
+  pitchFieldBg: SVGPolygonElement | null;
+  pitchBoostsLayer: SVGGElement | null;
+  pitchLines: (SVGLineElement | SVGCircleElement)[];
+  miniMapAnim: Animation | null;
+
   // Cached Digit Slot Reel references for 0 Layout DOM updates
   digitReel: CachedDigitReel | null;
 
@@ -169,6 +181,7 @@ export interface CachedComponentInstance {
   lastColor: string;
   lastGlow: boolean;
   lastCurvedDash: string;
+  lastTargetTeam: number;
 }
 
 let devDomCache: DevDashboardDomNodes | null = null;
@@ -364,6 +377,67 @@ export function applyStaticComponentStyles(
       cached.fillEl.style.transformOrigin = '50px 50px';
     }
   }
+
+  // 6. Mini-Map & Ball Hit Pitch Widget Static Setup
+  if (inst.componentType === 'widget-mini-map' || inst.componentType === 'mini-map') {
+    const custom = inst.customProps || {};
+
+    // Container Background
+    const containerBg = hexToRgba(custom.containerBgColor || '#04070e', (custom.containerBgOpacity ?? 85) / 100);
+    if (cached.boxEl) {
+      cached.boxEl.style.backgroundColor = containerBg;
+    }
+
+    // Pitch Field Background
+    if (cached.pitchFieldBg) {
+      cached.pitchFieldBg.style.fill = custom.bgFillColor || '#0a0f19';
+      cached.pitchFieldBg.style.fillOpacity = ((custom.bgFillOpacity ?? 70) / 100).toString();
+    }
+
+    // Pitch Boundary Polygon
+    if (cached.pitchBoundary) {
+      cached.pitchBoundary.style.stroke = custom.borderColor || '#00f0ff';
+      cached.pitchBoundary.style.strokeWidth = `${custom.borderStrokeWidth ?? 75}px`;
+      cached.pitchBoundary.style.strokeOpacity = ((custom.borderOpacity ?? 85) / 100).toString();
+      cached.pitchBoundary.style.fill = 'none';
+    }
+
+    // Pitch Markings (Lines & Center Circle)
+    if (cached.pitchLines && cached.pitchLines.length > 0) {
+      const lineCol = custom.pitchLineColor || '#ffffff';
+      const lineOp = ((custom.pitchLineOpacity ?? 22) / 100).toString();
+      cached.pitchLines.forEach((l) => {
+        l.style.stroke = lineCol;
+        l.style.strokeOpacity = lineOp;
+      });
+    }
+
+    // Boost Resources Layer (34 Boost pads & pills)
+    if (cached.pitchBoostsLayer) {
+      const padR = custom.padRadius ?? 90;
+      const pillR = padR * ((custom.pillRadiusScale ?? 280) / 100);
+      const padCol = custom.padColor || '#fbbf24';
+      const padOp = ((custom.padOpacity ?? 80) / 100).toString();
+      const pillCol = custom.pillColor || '#f59e0b';
+      const pillOp = ((custom.pillOpacity ?? 90) / 100).toString();
+
+      cached.pitchBoostsLayer.innerHTML = STANDARD_BOOST_LOCATIONS.map((bp, idx) => {
+        const isPill = bp.boostType === 'BoostType_Pill';
+        const r = isPill ? pillR : padR;
+        const cls = isPill ? 'boost-pill' : 'boost-pad';
+        const fill = isPill ? pillCol : padCol;
+        const op = isPill ? pillOp : padOp;
+        return `<circle id="boost-item-${idx}" cx="${bp.x}" cy="${-bp.y}" r="${r}" class="${cls}" fill="${fill}" opacity="${op}" />`;
+      }).join('');
+    }
+
+    // Team Orientation Transform (Auto 180° Flip)
+    if (cached.miniMapStage) {
+      const autoFlip = custom.autoFlip180 !== false;
+      const teamNum = telemetry ? telemetry.myTeamNum : latestData.myTeamNum;
+      cached.miniMapStage.style.transform = (autoFlip && teamNum === 1) ? 'rotate(180deg)' : 'none';
+    }
+  }
 }
 
 /**
@@ -425,9 +499,19 @@ export function buildCompetitiveDomCache(
 
     const boxElements = Array.from(
       container.querySelectorAll<HTMLElement>(
-        '.dyn-text-box, .el-custom-text-box, .hud-card, .el-system-time-box, .widget-boost-combo-card, .panel-match-header-container, .player-telemetry-panel, .panel-team-roster-container, .panel-sub-card, .el-global-text-indicator-box, .el-ball-speed-box, .el-ball-team-box, .el-boost-alert-box, .el-boost-text-fixed-box, .el-boost-text-box, .el-match-score-box, .el-num-box, .el-name-text-box, .el-score-diff-box, .el-speed-text-box, .el-static-box, .el-time-text-box, .time-hud-card, .status-hud-card, .el-boost-bar-box, .dyn-boost-box, .hud-boost-bar-container, .el-v-boost-bar-box, .dyn-v-boost-box, .el-speed-bar-box, .dyn-speed-box, .el-v-speed-bar-box, .dyn-v-speed-box, .curved-boost-container, .dyn-curved-container, .curved-speed-container, .dyn-curved-speed-container, .el-color-box, .dyn-color-box, .el-countdown-indicator-box'
+        '.dyn-text-box, .el-custom-text-box, .hud-card, .el-system-time-box, .widget-boost-combo-card, .panel-match-header-container, .player-telemetry-panel, .panel-team-roster-container, .panel-sub-card, .el-global-text-indicator-box, .el-ball-speed-box, .el-ball-team-box, .el-boost-alert-box, .el-boost-text-fixed-box, .el-boost-text-box, .el-match-score-box, .el-num-box, .el-name-text-box, .el-score-diff-box, .el-speed-text-box, .el-static-box, .el-time-text-box, .time-hud-card, .status-hud-card, .el-boost-bar-box, .dyn-boost-box, .hud-boost-bar-container, .el-v-boost-bar-box, .dyn-v-boost-box, .el-speed-bar-box, .dyn-speed-box, .el-v-speed-bar-box, .dyn-v-speed-box, .curved-boost-container, .dyn-curved-container, .curved-speed-container, .dyn-curved-speed-container, .el-color-box, .dyn-color-box, .el-countdown-indicator-box, .mini-map-box, .dyn-mini-map-box'
       )
     );
+
+    // Mini-map specific nodes
+    const miniMapStage = container.querySelector<HTMLElement>('.mini-map-stage, .dyn-mini-map-stage');
+    const miniMapHitIndicator = container.querySelector<HTMLElement>('.mini-map-hit-indicator, .dyn-mini-map-hit-indicator');
+    const hitCenterDot = container.querySelector<HTMLElement>('.hit-center-dot, .dyn-hit-center-dot');
+    const hitOuterRing = container.querySelector<HTMLElement>('.hit-outer-ring, .dyn-hit-outer-ring');
+    const pitchBoundary = container.querySelector<SVGPolygonElement>('.pitch-boundary-polygon, .dyn-pitch-boundary');
+    const pitchFieldBg = container.querySelector<SVGPolygonElement>('.pitch-field-bg, .dyn-pitch-bg');
+    const pitchBoostsLayer = container.querySelector<SVGGElement>('.pitch-boosts, .dyn-pitch-boosts');
+    const pitchLines = Array.from(container.querySelectorAll<SVGLineElement | SVGCircleElement>('.pitch-line, .pitch-circle, .dyn-pitch-line'));
 
     // Cache digit reel slots if component uses digit roller
     let digitReel: CachedDigitReel | null = null;
@@ -458,10 +542,21 @@ export function buildCompetitiveDomCache(
       subValEl: container.querySelector<HTMLElement>('.dyn-sub-val'),
       labelEl: container.querySelector<HTMLElement>('.dyn-label, .hud-label, .dyn-player-label, .widget-tag'),
       badgeEl: container.querySelector<HTMLElement>('.dyn-badge, .hud-player-badge'),
-      boxEl: container.querySelector<HTMLElement>('.dyn-text-box, .el-custom-text-box, .hud-card, .el-system-time-box, .el-boost-alert-box, .el-boost-bar-box, .dyn-boost-box, .hud-boost-bar-container, .el-v-boost-bar-box, .dyn-v-boost-box, .el-speed-bar-box, .dyn-speed-box, .el-v-speed-bar-box, .dyn-v-speed-box, .curved-boost-container, .dyn-curved-container, .curved-speed-container, .dyn-curved-speed-container, .el-color-box, .dyn-color-box, .el-countdown-indicator-box'),
+      boxEl: container.querySelector<HTMLElement>('.dyn-text-box, .el-custom-text-box, .hud-card, .el-system-time-box, .el-boost-alert-box, .el-boost-bar-box, .dyn-boost-box, .hud-boost-bar-container, .el-v-boost-bar-box, .dyn-v-boost-box, .el-speed-bar-box, .dyn-speed-box, .el-v-speed-bar-box, .dyn-v-speed-box, .curved-boost-container, .dyn-curved-container, .curved-speed-container, .dyn-curved-speed-container, .el-color-box, .dyn-color-box, .el-countdown-indicator-box, .mini-map-box, .dyn-mini-map-box'),
       fillEl: container.querySelector<HTMLElement>('.dyn-boost-fill, .el-boost-bar-fill, .hud-boost-bar-fill, .dyn-speed-fill, .el-speed-bar-fill, .dyn-v-boost-fill, .el-v-boost-bar-fill, .dyn-v-speed-fill, .el-v-speed-bar-fill, .widget-bar-fill, .dyn-curved-fill, .curved-progress-bar'),
       bgEl: container.querySelector<SVGCircleElement>('.dyn-curved-bg, .curved-bg-track'),
       dotEl: container.querySelector<HTMLElement>('.dyn-dot, .status-dot, .el-pure-dot, .el-countdown-lamp, .el-countdown-num'),
+
+      miniMapStage,
+      miniMapHitIndicator,
+      hitCenterDot,
+      hitOuterRing,
+      pitchBoundary,
+      pitchFieldBg,
+      pitchBoostsLayer,
+      pitchLines,
+      miniMapAnim: null,
+
       digitReel,
       textElements,
       boxElements,
@@ -509,7 +604,8 @@ export function buildCompetitiveDomCache(
       lastDisplay: '',
       lastColor: '',
       lastGlow: false,
-      lastCurvedDash: ''
+      lastCurvedDash: '',
+      lastTargetTeam: -1
     };
 
     // Pre-apply static visual styles once on creation

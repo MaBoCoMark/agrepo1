@@ -148,15 +148,13 @@ export function resetPreviousData(): void {
   previousData.p3OnWall = false;
   previousData.p3Powersliding = false;
   previousData.p3Demolished = false;
-  previousData.p3Supersonic = false;
+  previousData.p3Supersonic = false
 }
 
 export interface OverlayState {
   isSimulating: boolean;
   isDevDashboardVisible: boolean;
   isCompetitiveVisible: boolean;
-  isBallHitVisible: boolean;
-  isBallHitSvgVisible: boolean;
   isLayoutEditing: boolean;
   isAutoSceneControl: boolean;
   hasReceivedDataSinceConnected: boolean;
@@ -167,8 +165,6 @@ export const overlayState: OverlayState = {
   isSimulating: false,
   isDevDashboardVisible: false,
   isCompetitiveVisible: false,
-  isBallHitVisible: false,
-  isBallHitSvgVisible: false,
   isLayoutEditing: false,
   isAutoSceneControl: true,
   hasReceivedDataSinceConnected: false,
@@ -178,12 +174,12 @@ export const overlayState: OverlayState = {
 export async function setOverlayClickThrough(ignore: boolean): Promise<void> {
   try {
     await invoke('set_overlay_click_through', { ignore });
-  } catch (err) {
+  } catch {
     // fallback
   }
   try {
     await emit('toggle-overlay-click-through', { ignore });
-  } catch (err) {
+  } catch {
     // ignore
   }
 }

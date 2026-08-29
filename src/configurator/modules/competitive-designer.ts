@@ -24,6 +24,7 @@ import {
 import { setOverlayClickThrough } from '../../overlay/core/telemetry-state';
 import {
   matchesRegexOrQuery,
+  parseRgbaString,
   createRgbaInputControl,
   createColorModeControl,
   createSliderControl,
@@ -327,6 +328,7 @@ export function initCompetitiveDesigner(
     const isSpeedBar = inst.componentType.includes('speed-bar') && !inst.componentType.includes('curved');
     const isCurvedBoost = inst.componentType === 'element-curved-boost-bar';
     const isCurvedSpeed = inst.componentType === 'element-curved-speedometer';
+    const isMiniMap = inst.componentType === 'widget-mini-map' || inst.componentType === 'mini-map';
 
     // 🎨 Six-Color System for Team Color Box
     if (isTeamColorBox) {
@@ -721,6 +723,430 @@ export function initCompetitiveDesigner(
           saveAndEmit();
         })
       );
+    }
+
+    // Mini-Map & Ball Hit Pitch Widget
+    if (isMiniMap) {
+      const miniMapHeader = document.createElement('div');
+      miniMapHeader.style.fontSize = '11px';
+      miniMapHeader.style.fontWeight = 'bold';
+      miniMapHeader.style.color = 'var(--primer-accent-fg)';
+      miniMapHeader.style.borderBottom = '1px solid var(--primer-border-muted)';
+      miniMapHeader.style.paddingBottom = '4px';
+      miniMapHeader.style.marginTop = '6px';
+      miniMapHeader.textContent = 'Mini-Map & Ball Hit Tuning:';
+      propsBox.appendChild(miniMapHeader);
+
+      // Simulation Triggers
+      const simRow = document.createElement('div');
+      simRow.style.display = 'flex';
+      simRow.style.gap = '6px';
+      simRow.style.marginTop = '4px';
+      simRow.style.marginBottom = '6px';
+
+      const simMyBtn = document.createElement('button');
+      simMyBtn.className = 'primer-btn primer-btn-sm';
+      simMyBtn.style.flex = '1';
+      simMyBtn.style.fontSize = '10px';
+      simMyBtn.style.color = '#00ff88';
+      simMyBtn.textContent = '⚡ Sim Our Hit';
+      simMyBtn.addEventListener('click', () => {
+        emitTo('overlay', 'simulate-widget-ball-hit', { isMyTeam: true, speed: 85 });
+      });
+
+      const simOppBtn = document.createElement('button');
+      simOppBtn.className = 'primer-btn primer-btn-sm';
+      simOppBtn.style.flex = '1';
+      simOppBtn.style.fontSize = '10px';
+      simOppBtn.style.color = '#ff3366';
+      simOppBtn.textContent = '⚡ Sim Opp Hit';
+      simOppBtn.addEventListener('click', () => {
+        emitTo('overlay', 'simulate-widget-ball-hit', { isMyTeam: false, speed: 85 });
+      });
+
+      simRow.appendChild(simMyBtn);
+      simRow.appendChild(simOppBtn);
+      propsBox.appendChild(simRow);
+
+      // Auto Flip 180°
+      propsBox.appendChild(
+        createCheckboxControl('Auto 180° Flip on Orange Team', inst.customProps.autoFlip180 !== false, (val) => {
+          inst.customProps!.autoFlip180 = val;
+          saveAndEmit();
+        })
+      );
+
+      // Container BG
+      propsBox.appendChild(
+        createRgbaInputControl(
+          'Container Background',
+          inst.customProps.containerBgColor || '#04070e',
+          '#04070e',
+          (inst.customProps.containerBgOpacity ?? 85) / 100,
+          (rgba) => {
+            const p = parseRgbaString(rgba, '#04070e', 0.85);
+            inst.customProps!.containerBgColor = p.hex;
+            inst.customProps!.containerBgOpacity = Math.round(p.alpha * 100);
+            saveAndEmit();
+          }
+        )
+      );
+
+      // Pitch Field Fill
+      propsBox.appendChild(
+        createRgbaInputControl(
+          'Pitch Field Fill',
+          inst.customProps.bgFillColor || '#0a0f19',
+          '#0a0f19',
+          (inst.customProps.bgFillOpacity ?? 70) / 100,
+          (rgba) => {
+            const p = parseRgbaString(rgba, '#0a0f19', 0.70);
+            inst.customProps!.bgFillColor = p.hex;
+            inst.customProps!.bgFillOpacity = Math.round(p.alpha * 100);
+            saveAndEmit();
+          }
+        )
+      );
+
+      // Pitch Boundary
+      propsBox.appendChild(
+        createSliderControl(
+          'Boundary Width (uu)',
+          10,
+          250,
+          5,
+          inst.customProps.borderStrokeWidth ?? 75,
+          'uu',
+          (val) => {
+            inst.customProps!.borderStrokeWidth = val;
+            saveAndEmit();
+          }
+        )
+      );
+
+      propsBox.appendChild(
+        createRgbaInputControl(
+          'Boundary Color',
+          inst.customProps.borderColor || '#00f0ff',
+          '#00f0ff',
+          (inst.customProps.borderOpacity ?? 85) / 100,
+          (rgba) => {
+            const p = parseRgbaString(rgba, '#00f0ff', 0.85);
+            inst.customProps!.borderColor = p.hex;
+            inst.customProps!.borderOpacity = Math.round(p.alpha * 100);
+            saveAndEmit();
+          }
+        )
+      );
+
+      // Pitch Markings
+      propsBox.appendChild(
+        createRgbaInputControl(
+          'Pitch Markings Color',
+          inst.customProps.pitchLineColor || '#ffffff',
+          '#ffffff',
+          (inst.customProps.pitchLineOpacity ?? 22) / 100,
+          (rgba) => {
+            const p = parseRgbaString(rgba, '#ffffff', 0.22);
+            inst.customProps!.pitchLineColor = p.hex;
+            inst.customProps!.pitchLineOpacity = Math.round(p.alpha * 100);
+            saveAndEmit();
+          }
+        )
+      );
+
+      // Boost Resources
+      const boostHeader = document.createElement('div');
+      boostHeader.style.fontSize = '10px';
+      boostHeader.style.fontWeight = 'bold';
+      boostHeader.style.color = '#f59e0b';
+      boostHeader.style.marginTop = '6px';
+      boostHeader.textContent = 'Boost Resources:';
+      propsBox.appendChild(boostHeader);
+
+      propsBox.appendChild(
+        createSliderControl(
+          'Small Pad Radius',
+          30,
+          200,
+          5,
+          inst.customProps.padRadius ?? 90,
+          'uu',
+          (val) => {
+            inst.customProps!.padRadius = val;
+            saveAndEmit();
+          }
+        )
+      );
+
+      propsBox.appendChild(
+        createRgbaInputControl(
+          'Small Pad Color',
+          inst.customProps.padColor || '#fbbf24',
+          '#fbbf24',
+          (inst.customProps.padOpacity ?? 80) / 100,
+          (rgba) => {
+            const p = parseRgbaString(rgba, '#fbbf24', 0.80);
+            inst.customProps!.padColor = p.hex;
+            inst.customProps!.padOpacity = Math.round(p.alpha * 100);
+            saveAndEmit();
+          }
+        )
+      );
+
+      propsBox.appendChild(
+        createSliderControl(
+          'Big Pill Scale',
+          100,
+          600,
+          20,
+          inst.customProps.pillRadiusScale ?? 280,
+          '%',
+          (val) => {
+            inst.customProps!.pillRadiusScale = val;
+            saveAndEmit();
+          }
+        )
+      );
+
+      propsBox.appendChild(
+        createRgbaInputControl(
+          'Big Pill Color',
+          inst.customProps.pillColor || '#f59e0b',
+          '#f59e0b',
+          (inst.customProps.pillOpacity ?? 90) / 100,
+          (rgba) => {
+            const p = parseRgbaString(rgba, '#f59e0b', 0.90);
+            inst.customProps!.pillColor = p.hex;
+            inst.customProps!.pillOpacity = Math.round(p.alpha * 100);
+            saveAndEmit();
+          }
+        )
+      );
+
+      // Center Hit Dot
+      const dotHeader = document.createElement('div');
+      dotHeader.style.fontSize = '10px';
+      dotHeader.style.fontWeight = 'bold';
+      dotHeader.style.color = '#38bdf8';
+      dotHeader.style.marginTop = '6px';
+      dotHeader.textContent = 'Ball Hit Center Dot:';
+      propsBox.appendChild(dotHeader);
+
+      propsBox.appendChild(
+        createSliderControl(
+          'Center Dot Radius',
+          2,
+          20,
+          1,
+          inst.customProps.dotRadius ?? 5,
+          'px',
+          (val) => {
+            inst.customProps!.dotRadius = val;
+            saveAndEmit();
+          }
+        )
+      );
+
+      propsBox.appendChild(
+        createRgbaInputControl(
+          'Our Team Hit Dot',
+          inst.customProps.myTeamDotColor || '#00ff88',
+          '#00ff88',
+          (inst.customProps.myTeamDotOpacity ?? 100) / 100,
+          (rgba) => {
+            const p = parseRgbaString(rgba, '#00ff88', 1.0);
+            inst.customProps!.myTeamDotColor = p.hex;
+            inst.customProps!.myTeamDotOpacity = Math.round(p.alpha * 100);
+            saveAndEmit();
+          }
+        )
+      );
+
+      propsBox.appendChild(
+        createRgbaInputControl(
+          'Opp Team Hit Dot',
+          inst.customProps.oppTeamDotColor || '#ff3366',
+          '#ff3366',
+          (inst.customProps.oppTeamDotOpacity ?? 100) / 100,
+          (rgba) => {
+            const p = parseRgbaString(rgba, '#ff3366', 1.0);
+            inst.customProps!.oppTeamDotColor = p.hex;
+            inst.customProps!.oppTeamDotOpacity = Math.round(p.alpha * 100);
+            saveAndEmit();
+          }
+        )
+      );
+
+      // Outer Speed Ring
+      const ringHeader = document.createElement('div');
+      ringHeader.style.fontSize = '10px';
+      ringHeader.style.fontWeight = 'bold';
+      ringHeader.style.color = '#a855f7';
+      ringHeader.style.marginTop = '6px';
+      ringHeader.textContent = 'Ball Speed Outer Ring:';
+      propsBox.appendChild(ringHeader);
+
+      propsBox.appendChild(
+        createSliderControl(
+          'Max Ring Diameter',
+          10,
+          100,
+          5,
+          inst.customProps.ringMaxPercent ?? 100,
+          '%',
+          (val) => {
+            inst.customProps!.ringMaxPercent = val;
+            saveAndEmit();
+          }
+        )
+      );
+
+      propsBox.appendChild(
+        createSliderControl(
+          'Ring Border Width',
+          1,
+          8,
+          1,
+          inst.customProps.ringBorderWidth ?? 2,
+          'px',
+          (val) => {
+            inst.customProps!.ringBorderWidth = val;
+            saveAndEmit();
+          }
+        )
+      );
+
+      propsBox.appendChild(
+        createRgbaInputControl(
+          'Our Ring Border',
+          inst.customProps.myTeamRingBorderColor || '#00ff88',
+          '#00ff88',
+          (inst.customProps.myTeamRingBorderOpacity ?? 85) / 100,
+          (rgba) => {
+            const p = parseRgbaString(rgba, '#00ff88', 0.85);
+            inst.customProps!.myTeamRingBorderColor = p.hex;
+            inst.customProps!.myTeamRingBorderOpacity = Math.round(p.alpha * 100);
+            saveAndEmit();
+          }
+        )
+      );
+
+      propsBox.appendChild(
+        createRgbaInputControl(
+          'Our Ring Fill',
+          inst.customProps.myTeamRingFillColor || '#00ff88',
+          '#00ff88',
+          (inst.customProps.myTeamRingFillOpacity ?? 15) / 100,
+          (rgba) => {
+            const p = parseRgbaString(rgba, '#00ff88', 0.15);
+            inst.customProps!.myTeamRingFillColor = p.hex;
+            inst.customProps!.myTeamRingFillOpacity = Math.round(p.alpha * 100);
+            saveAndEmit();
+          }
+        )
+      );
+
+      propsBox.appendChild(
+        createRgbaInputControl(
+          'Opp Ring Border',
+          inst.customProps.oppTeamRingBorderColor || '#ff3366',
+          '#ff3366',
+          (inst.customProps.oppTeamRingBorderOpacity ?? 85) / 100,
+          (rgba) => {
+            const p = parseRgbaString(rgba, '#ff3366', 0.85);
+            inst.customProps!.oppTeamRingBorderColor = p.hex;
+            inst.customProps!.oppTeamRingBorderOpacity = Math.round(p.alpha * 100);
+            saveAndEmit();
+          }
+        )
+      );
+
+      propsBox.appendChild(
+        createRgbaInputControl(
+          'Opp Ring Fill',
+          inst.customProps.oppTeamRingFillColor || '#ff3366',
+          '#ff3366',
+          (inst.customProps.oppTeamRingFillOpacity ?? 15) / 100,
+          (rgba) => {
+            const p = parseRgbaString(rgba, '#ff3366', 0.15);
+            inst.customProps!.oppTeamRingFillColor = p.hex;
+            inst.customProps!.oppTeamRingFillOpacity = Math.round(p.alpha * 100);
+            saveAndEmit();
+          }
+        )
+      );
+
+      // Animation & Fade Timing
+      const animHeader = document.createElement('div');
+      animHeader.style.fontSize = '10px';
+      animHeader.style.fontWeight = 'bold';
+      animHeader.style.color = '#ec4899';
+      animHeader.style.marginTop = '6px';
+      animHeader.textContent = 'Hit Marker Fade Animation:';
+      propsBox.appendChild(animHeader);
+
+      propsBox.appendChild(
+        createSliderControl(
+          'Hold Duration',
+          0.0,
+          3.0,
+          0.05,
+          Number(inst.customProps.animHoldDuration ?? 0.5),
+          's',
+          (val) => {
+            inst.customProps!.animHoldDuration = val;
+            saveAndEmit();
+          }
+        )
+      );
+
+      propsBox.appendChild(
+        createSliderControl(
+          'Fade Duration',
+          0.1,
+          5.0,
+          0.05,
+          Number(inst.customProps.animFadeDuration ?? 1.0),
+          's',
+          (val) => {
+            inst.customProps!.animFadeDuration = val;
+            saveAndEmit();
+          }
+        )
+      );
+
+      propsBox.appendChild(
+        createSelectControl(
+          'Fade Easing Curve',
+          [
+            { label: 'Ease Out', value: 'ease-out' },
+            { label: 'Ease In', value: 'ease-in' },
+            { label: 'Ease In Out', value: 'ease-in-out' },
+            { label: 'Linear', value: 'linear' },
+            { label: 'Custom Cubic Bezier', value: 'custom' }
+          ],
+          inst.customProps.animEasingType || 'ease-out',
+          (val) => {
+            inst.customProps!.animEasingType = val as any;
+            saveAndEmit();
+          }
+        )
+      );
+
+      if (inst.customProps.animEasingType === 'custom') {
+        propsBox.appendChild(
+          createTextInputControl(
+            'Cubic Bezier Definition',
+            inst.customProps.animCustomEasing || 'cubic-bezier(0.4, 0, 0.2, 1)',
+            'e.g. cubic-bezier(0.4, 0, 0.2, 1)',
+            (val) => {
+              inst.customProps!.animCustomEasing = val;
+              saveAndEmit();
+            }
+          )
+        );
+      }
     }
   }
 

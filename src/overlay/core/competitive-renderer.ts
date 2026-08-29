@@ -12,6 +12,7 @@ import {
   calcNonlinearSpeedProgress,
   calcSpeedColor
 } from './speed-meter';
+import { hexToRgba } from './team-colors';
 
 /**
  * ============================================================================
@@ -123,6 +124,23 @@ function resolveColor(
   return fallback;
 }
 
+function resolveEasingString(type?: string, customBezier?: string): string {
+  switch (type) {
+    case 'linear':
+      return 'linear';
+    case 'ease-in':
+      return 'ease-in';
+    case 'ease-out':
+      return 'ease-out';
+    case 'ease-in-out':
+      return 'ease-in-out';
+    case 'custom':
+      return customBezier || 'cubic-bezier(0.4, 0, 0.2, 1)';
+    default:
+      return 'ease-out';
+  }
+}
+
 // ----------------------------------------------------------------------------
 // Property Listeners
 // ----------------------------------------------------------------------------
@@ -135,6 +153,7 @@ let timeSecondsListeners: NumberListener[] = [];
 let bOvertimeListeners: BoolListener[] = [];
 let ballSpeedListeners: NumberListener[] = [];
 let ballTeamListeners: NumberListener[] = [];
+let myTeamNumListeners: NumberListener[] = [];
 let scoreDiffListeners: NumberListener[] = [];
 let matchScoreListeners: VoidListener[] = [];
 let myScoreListeners: NumberListener[] = [];
@@ -233,6 +252,117 @@ export function triggerCountdownIndicator(type: 'countdown' | 'round-start'): vo
 
     activeCountdownRaf = requestAnimationFrame(countdownLoop);
   }
+}
+
+// ----------------------------------------------------------------------------
+// Mini-Map Ball Hit Dispatcher
+// ----------------------------------------------------------------------------
+export function triggerBallHitOnMiniMaps(
+  hitX: number,
+  hitY: number,
+  speedKph: number,
+  isMyTeam: boolean
+): void {
+  const instances = boundCachedInstances;
+  if (!instances || instances.length === 0) return;
+
+  const clampedX = Math.max(-4500, Math.min(4500, hitX));
+  const clampedY = Math.max(-6000, Math.min(6000, hitY));
+  const normX = (4500 - clampedX) / 9000;
+  const normY = (6000 - clampedY) / 12000;
+
+  for (let i = 0; i < instances.length; i++) {
+    const cached = instances[i];
+    const inst = cached.inst;
+    if (inst.componentType !== 'widget-mini-map' && inst.componentType !== 'mini-map') continue;
+
+    const indicator = cached.miniMapHitIndicator;
+    const dot = cached.hitCenterDot;
+    const ring = cached.hitOuterRing;
+    if (!indicator || !dot || !ring) continue;
+
+    const custom = inst.customProps || {};
+
+    // 1. Position indicator on SVG normalized percentage
+    indicator.style.display = 'flex';
+    indicator.style.left = `${normX * 100}%`;
+    indicator.style.top = `${normY * 100}%`;
+    indicator.style.transform = 'translate(-50%, -50%)';
+
+    // 2. Center dot styling
+    const dotColor = isMyTeam ? (custom.myTeamDotColor || '#00ff88') : (custom.oppTeamDotColor || '#ff3366');
+    const dotOpacity = isMyTeam ? ((custom.myTeamDotOpacity ?? 100) / 100) : ((custom.oppTeamDotOpacity ?? 100) / 100);
+    const dotD = Math.max(2, (custom.dotRadius ?? 5) * 2);
+    dot.style.width = `${dotD}px`;
+    dot.style.height = `${dotD}px`;
+    const dotRgba = hexToRgba(dotColor, dotOpacity);
+    dot.style.backgroundColor = dotRgba;
+    dot.style.boxShadow = `0 0 8px ${dotRgba}`;
+
+    // 3. Outer speed ring styling
+    const ringBorderColor = isMyTeam ? (custom.myTeamRingBorderColor || '#00ff88') : (custom.oppTeamRingBorderColor || '#ff3366');
+    const ringBorderOpacity = isMyTeam ? ((custom.myTeamRingBorderOpacity ?? 85) / 100) : ((custom.oppTeamRingBorderOpacity ?? 85) / 100);
+    const ringFillColor = isMyTeam ? (custom.myTeamRingFillColor || '#00ff88') : (custom.oppTeamRingFillColor || '#ff3366');
+    const ringFillOpacity = isMyTeam ? ((custom.myTeamRingFillOpacity ?? 15) / 100) : ((custom.oppTeamRingFillOpacity ?? 15) / 100);
+    const ringBorderWidth = custom.ringBorderWidth ?? 2;
+
+    const containerW = cached.container.clientWidth || 240;
+    const speedFraction = Math.max(0, Math.min(1.0, speedKph / 110));
+    const maxRingDiameter = containerW * ((custom.ringMaxPercent ?? 100) / 100);
+    const ringDiameter = Math.max(0, maxRingDiameter * speedFraction);
+
+    ring.style.width = `${ringDiameter}px`;
+    ring.style.height = `${ringDiameter}px`;
+    ring.style.border = `${ringBorderWidth}px solid ${hexToRgba(ringBorderColor, ringBorderOpacity)}`;
+    ring.style.backgroundColor = hexToRgba(ringFillColor, ringFillOpacity);
+    ring.style.boxShadow = `0 0 8px ${hexToRgba(ringBorderColor, ringBorderOpacity * 0.5)}`;
+    ring.style.borderRadius = '50%';
+    ring.style.opacity = '1';
+
+    // 4. Web Animations API keyframes
+    const holdSec = Math.max(0, custom.animHoldDuration ?? 0.5);
+    const fadeSec = Math.max(0.01, custom.animFadeDuration ?? 1.0);
+    const totalSec = holdSec + fadeSec;
+    const totalMs = totalSec * 1000;
+    const holdFraction = totalSec > 0 ? holdSec / totalSec : 0;
+    const easingCurve = resolveEasingString(custom.animEasingType, custom.animCustomEasing);
+
+    if (cached.miniMapAnim) {
+      cached.miniMapAnim.cancel();
+      cached.miniMapAnim = null;
+    }
+
+    try {
+      cached.miniMapAnim = indicator.animate(
+        [
+          { opacity: 1, offset: 0 },
+          { opacity: 1, offset: holdFraction, easing: easingCurve },
+          { opacity: 0, offset: 1.0 }
+        ],
+        {
+          duration: totalMs,
+          fill: 'forwards'
+        }
+      );
+      cached.miniMapAnim.onfinish = () => {
+        indicator.style.opacity = '0';
+        indicator.style.display = 'none';
+        cached.miniMapAnim = null;
+      };
+    } catch {
+      indicator.style.opacity = '1';
+      setTimeout(() => {
+        indicator.style.opacity = '0';
+        indicator.style.display = 'none';
+      }, totalMs);
+    }
+  }
+}
+
+export function simulateWidgetBallHit(isMyTeam: boolean = true, speedKph: number = 85): void {
+  const rx = (Math.random() - 0.5) * 6000;
+  const ry = (Math.random() - 0.5) * 8000;
+  triggerBallHitOnMiniMaps(rx, ry, speedKph, isMyTeam);
 }
 
 // P1
@@ -347,6 +477,7 @@ export function bindCompetitiveDomCache(
   bOvertimeListeners = [];
   ballSpeedListeners = [];
   ballTeamListeners = [];
+  myTeamNumListeners = [];
   scoreDiffListeners = [];
   matchScoreListeners = [];
   myScoreListeners = [];
@@ -400,6 +531,21 @@ export function bindCompetitiveDomCache(
     // Component Handlers
     // ------------------------------------------------------------------------
     switch (type) {
+      // Mini-Map (SVG Pitch + Ball Hit Indicator)
+      case 'widget-mini-map':
+      case 'mini-map': {
+        if (cached.miniMapStage) {
+          const stage = cached.miniMapStage;
+          const autoFlip = inst.customProps?.autoFlip180 !== false;
+          myTeamNumListeners.push((teamNum: number) => {
+            if (autoFlip) {
+              stage.style.transform = teamNum === 1 ? 'rotate(180deg)' : 'none';
+            }
+          });
+        }
+        break;
+      }
+
       // Countdown Indicator (4-3-2-1-0 with glowing stroke)
       case 'element-countdown-indicator': {
         const numEl = cached.valEl || cached.container.querySelector<HTMLElement>('.el-countdown-num, .dyn-val');
@@ -1661,6 +1807,13 @@ export function renderCompetitiveSceneSelective(
     const v = latestData.ballTeamNum;
     for (let i = 0; i < ballTeamListeners.length; i++) ballTeamListeners[i](v);
     previousData.ballTeamNum = v;
+  }
+
+  // 5b. Target Team (Auto 180° Flip on Mini-Map)
+  if (previousData.myTeamNum !== latestData.myTeamNum) {
+    const v = latestData.myTeamNum;
+    for (let i = 0; i < myTeamNumListeners.length; i++) myTeamNumListeners[i](v);
+    previousData.myTeamNum = v;
   }
 
   // 6. Match Scores & Diff

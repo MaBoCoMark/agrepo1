@@ -44,6 +44,25 @@ export const COLOR_SOURCE_OPTIONS: { label: string; value: ColorSource }[] = [
 ];
 
 /**
+ * Converts Hex color string (#rrggbb or #rgb) and alpha (0..1) to rgba(...) CSS string
+ */
+export function hexToRgba(color: string, opacity: number = 1): string {
+  if (!color) return `rgba(0, 240, 255, ${opacity})`;
+  if (color.startsWith('rgba') || color.startsWith('rgb')) {
+    return color;
+  }
+  let hex = color.replace('#', '').trim();
+  if (hex.length === 3) {
+    hex = hex.split('').map((c) => c + c).join('');
+  }
+  const r = parseInt(hex.substring(0, 2), 16) || 0;
+  const g = parseInt(hex.substring(2, 4), 16) || 0;
+  const b = parseInt(hex.substring(4, 6), 16) || 0;
+  const clampedAlpha = Math.max(0, Math.min(1, opacity));
+  return `rgba(${r}, ${g}, ${b}, ${clampedAlpha})`;
+}
+
+/**
  * 统一解析组件生效颜色函数 (Resolve Effective Color)
  * 优先级规则:
  * 1. 若显式指定队伍颜色模式 ('my-primary' | 'my-secondary' | 'opp-primary' | 'opp-secondary')，返回对应队伍颜色
