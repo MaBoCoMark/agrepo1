@@ -366,6 +366,42 @@ export function simulateWidgetBallHit(isMyTeam: boolean = true, speedKph: number
   triggerBallHitOnMiniMaps(rx, ry, speedKph, isMyTeam);
 }
 
+export interface RespawnTimerHandler {
+  container: HTMLElement;
+  timeoutId: any;
+}
+
+let respawnTimerHandlers: RespawnTimerHandler[] = [];
+
+export function triggerRespawnTimerAnimation(): void {
+  for (let i = 0; i < respawnTimerHandlers.length; i++) {
+    const h = respawnTimerHandlers[i];
+    if (h.timeoutId) {
+      clearTimeout(h.timeoutId);
+      h.timeoutId = null;
+    }
+    h.container.classList.remove('respawn-active');
+    void h.container.offsetWidth; // Force reflow to re-trigger CSS keyframe animations
+    h.container.classList.add('respawn-active');
+    h.timeoutId = setTimeout(() => {
+      h.container.classList.remove('respawn-active');
+      h.timeoutId = null;
+    }, 3000);
+  }
+}
+
+export function resetRespawnTimerAnimation(): void {
+  for (let i = 0; i < respawnTimerHandlers.length; i++) {
+    const h = respawnTimerHandlers[i];
+    if (h.timeoutId) {
+      clearTimeout(h.timeoutId);
+      h.timeoutId = null;
+    }
+    h.container.classList.remove('respawn-active');
+  }
+}
+
+
 // P1
 let p1SpeedListeners: NumberListener[] = [];
 let p1BoostListeners: NumberListener[] = [];
@@ -486,6 +522,7 @@ export function bindCompetitiveDomCache(
   teamColorsListeners = [];
   cancelCountdownIndicator();
   countdownIndicatorHandlers = [];
+  respawnTimerHandlers = [];
 
   p1SpeedListeners = [];
   p1BoostListeners = [];
@@ -1454,6 +1491,22 @@ export function bindCompetitiveDomCache(
         break;
       }
 
+      // 25b. Respawn Timer (Demolition) Widget
+      case 'widget-respawn-timer':
+      case 'respawn-timer': {
+        const timerEl = cached.respawnTimerEl || cached.container.querySelector<HTMLElement>('.dyn-respawn-timer, .respawn-timer-widget');
+        if (timerEl) {
+          respawnTimerHandlers.push({
+            container: timerEl,
+            timeoutId: null
+          });
+          if (latestData.p1Demolished) {
+            timerEl.classList.add('respawn-active');
+          }
+        }
+        break;
+      }
+
       // 25. Boost Val Widget
       case 'boost-val':
       case 'player-boost-val':
@@ -1734,6 +1787,12 @@ export function renderCompetitiveSceneSelective(
     }
     if (previousData.p1Demolished !== latestData.p1Demolished) {
       const v = latestData.p1Demolished;
+      const prev = previousData.p1Demolished;
+      if (v === true && prev === false) {
+        triggerRespawnTimerAnimation();
+      } else if (v === false && prev === true) {
+        resetRespawnTimerAnimation();
+      }
       for (let i = 0; i < p1DemolishedListeners.length; i++) p1DemolishedListeners[i](v);
       previousData.p1Demolished = v;
     }

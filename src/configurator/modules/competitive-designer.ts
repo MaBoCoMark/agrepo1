@@ -368,6 +368,7 @@ export function initCompetitiveDesigner(
     const isCurvedBoost = inst.componentType === 'element-curved-boost-bar';
     const isCurvedSpeed = inst.componentType === 'element-curved-speedometer';
     const isMiniMap = inst.componentType === 'widget-mini-map' || inst.componentType === 'mini-map';
+    const isRespawnTimer = inst.componentType === 'widget-respawn-timer' || inst.componentType === 'respawn-timer';
 
     // 🎨 Six-Color System for Team Color Box
     if (isTeamColorBox) {
@@ -1196,6 +1197,107 @@ export function initCompetitiveDesigner(
         );
       }
     }
+
+    // Respawn Timer (Demolition) Tuning
+    if (isRespawnTimer) {
+      const respawnHeader = document.createElement('div');
+      respawnHeader.style.fontSize = '11px';
+      respawnHeader.style.fontWeight = 'bold';
+      respawnHeader.style.color = 'var(--primer-accent-fg)';
+      respawnHeader.style.borderBottom = '1px solid var(--primer-border-muted)';
+      respawnHeader.style.paddingBottom = '4px';
+      respawnHeader.style.marginTop = '6px';
+      respawnHeader.textContent = 'Respawn Timer & Demolition Tuning:';
+      propsBox.appendChild(respawnHeader);
+
+      // Simulation Trigger
+      const simRow = document.createElement('div');
+      simRow.style.display = 'flex';
+      simRow.style.gap = '6px';
+      simRow.style.marginTop = '4px';
+      simRow.style.marginBottom = '6px';
+
+      const simBtn = document.createElement('button');
+      simBtn.className = 'primer-btn primer-btn-sm';
+      simBtn.style.flex = '1';
+      simBtn.style.fontSize = '11px';
+      simBtn.style.color = 'var(--primer-accent-fg)';
+      simBtn.textContent = '▶ Test Respawn Animation (3s)';
+      simBtn.addEventListener('click', () => {
+        emitTo('overlay', 'trigger-respawn-timer');
+      });
+      simRow.appendChild(simBtn);
+      propsBox.appendChild(simRow);
+
+      // Sizing (vw units)
+      propsBox.appendChild(
+        createSliderControl('Bar Height / Thickness', 0.1, 2.0, 0.05, Number(inst.customProps?.barHeight ?? 0.5), 'vw', (val) => {
+          inst.customProps!.barHeight = val;
+          saveAndEmit();
+        })
+      );
+
+      propsBox.appendChild(
+        createSliderControl('Bar Corner Radius', 0, 1.0, 0.02, Number(inst.customProps?.barRadius ?? 0.15), 'vw', (val) => {
+          inst.customProps!.barRadius = val;
+          saveAndEmit();
+        })
+      );
+
+      propsBox.appendChild(
+        createSliderControl('Hourglass Gap / Spacing', 0, 2.0, 0.05, Number(inst.customProps?.barGap ?? 0.4), 'vw', (val) => {
+          inst.customProps!.barGap = val;
+          saveAndEmit();
+        })
+      );
+
+      propsBox.appendChild(
+        createRgbaInputControl('Track Background Color', inst.customProps?.trackBgColor || 'rgba(255, 255, 255, 0.15)', '#ffffff', 0.15, (val) => {
+          inst.customProps!.trackBgColor = val;
+          saveAndEmit();
+        })
+      );
+
+      // Color Stages Tuning
+      const stagesHeader = document.createElement('div');
+      stagesHeader.style.fontSize = '10px';
+      stagesHeader.style.fontWeight = 'bold';
+      stagesHeader.style.color = '#f59e0b';
+      stagesHeader.style.marginTop = '6px';
+      stagesHeader.textContent = 'Color Stages Tuning:';
+      propsBox.appendChild(stagesHeader);
+
+      propsBox.appendChild(
+        createRgbaInputControl('Stage 1 Color (3s)', inst.customProps?.color3s || '#ffffff', '#ffffff', 1.0, (val) => {
+          inst.customProps!.color3s = val;
+          saveAndEmit();
+        })
+      );
+
+      propsBox.appendChild(
+        createRgbaInputControl('Stage 2 Color (2s)', inst.customProps?.color2s || '#ffd60a', '#ffd60a', 1.0, (val) => {
+          inst.customProps!.color2s = val;
+          saveAndEmit();
+        })
+      );
+
+      propsBox.appendChild(
+        createRgbaInputControl('Stage 3 Bar Color (1s)', inst.customProps?.color1s || '#ef4444', '#ef4444', 1.0, (val) => {
+          inst.customProps!.color1s = val;
+          saveAndEmit();
+        })
+      );
+
+      propsBox.appendChild(
+        createRgbaInputControl('Stage 3 Hourglass Color', inst.customProps?.hourglassRedColor || '#ef4444', '#ef4444', 1.0, (val) => {
+          inst.customProps!.hourglassRedColor = val;
+          saveAndEmit();
+        })
+      );
+
+
+    }
+
   }
 
   function renderComponentList() {
@@ -1222,7 +1324,8 @@ export function initCompetitiveDesigner(
         supportsAlignment: false
       };
 
-      const isPlayer = inst.category === 'player' || meta.category === 'player' || Boolean(inst.targetPlayer);
+      const isRespawnTimer = inst.componentType === 'widget-respawn-timer' || inst.componentType === 'respawn-timer';
+      const isPlayer = (inst.category === 'player' || meta.category === 'player' || Boolean(inst.targetPlayer)) && !isRespawnTimer;
       const targetP = (inst.targetPlayer || (isPlayer ? 'p1' : 'global')).toLowerCase();
       const customStr = inst.customProps?.customText || inst.customProps?.staticText || '';
 
@@ -1302,7 +1405,8 @@ export function initCompetitiveDesigner(
       card.className = `comp-item-card ${inst.instanceId === selectedCompId ? 'selected' : ''}`;
       card.setAttribute('data-id', inst.instanceId);
 
-      const isPlayer = inst.category === 'player' || meta.category === 'player' || Boolean(inst.targetPlayer);
+      const isRespawnTimer = inst.componentType === 'widget-respawn-timer' || inst.componentType === 'respawn-timer';
+      const isPlayer = (inst.category === 'player' || meta.category === 'player' || Boolean(inst.targetPlayer)) && !isRespawnTimer;
       const isSpeed = meta.supportsSpeedUnit === true || inst.componentType.includes('speed');
       const isAlign = meta.supportsAlignment === true || inst.componentType.includes('text');
 

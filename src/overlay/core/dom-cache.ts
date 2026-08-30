@@ -127,6 +127,12 @@ export interface CachedComponentInstance {
   pitchLines: (SVGLineElement | SVGCircleElement)[];
   miniMapAnim: Animation | null;
 
+  // Respawn Timer (Demolition) specific cached nodes
+  respawnTimerEl: HTMLElement | null;
+  respawnLeftFill: HTMLElement | null;
+  respawnRightFill: HTMLElement | null;
+  respawnHourglass: HTMLElement | null;
+
   // Cached Digit Slot Reel references for 0 Layout DOM updates
   digitReel: CachedDigitReel | null;
 
@@ -264,8 +270,8 @@ export function applyStaticComponentStyles(
 ): void {
   const inst = cached.inst;
   const meta = COMPONENT_METAS[inst.componentType];
-  const supportsGlobal = meta?.supportsGlobalStyle !== false;
-  const followGlobal = supportsGlobal && (inst.followGlobal !== false);
+  const supportsGlobal = meta ? meta.supportsGlobalStyle !== false : true;
+  const followGlobal = supportsGlobal && inst.followGlobal !== false;
 
   // 0. Update container opacity dynamically
   const effectiveOpacity = (inst.followGlobal !== false)
@@ -444,6 +450,31 @@ export function applyStaticComponentStyles(
       cached.miniMapStage.style.transform = (autoFlip && teamNum === 1) ? 'rotate(180deg)' : 'none';
     }
   }
+
+  // 7. Respawn Timer (Demolition) Static Setup (vw units & stage colors)
+  if (inst.componentType === 'widget-respawn-timer' || inst.componentType === 'respawn-timer') {
+    const custom = inst.customProps || {};
+    const barHeight = custom.barHeight ?? 0.5;
+    const barRadius = custom.barRadius ?? 0.15;
+    const barGap = custom.barGap ?? 0.4;
+    const trackBg = custom.trackBgColor || 'rgba(255, 255, 255, 0.15)';
+    const color3s = custom.color3s || '#ffffff';
+    const color2s = custom.color2s || '#ffd60a';
+    const color1s = custom.color1s || '#ef4444';
+    const hourglassRed = custom.hourglassRedColor || '#ef4444';
+
+    const timerEl = cached.respawnTimerEl || cached.container.querySelector<HTMLElement>('.dyn-respawn-timer, .respawn-timer-widget');
+    if (timerEl) {
+      timerEl.style.setProperty('--bar-height', `${barHeight}vw`);
+      timerEl.style.setProperty('--bar-radius', `${barRadius}vw`);
+      timerEl.style.setProperty('--bar-gap', `${barGap}vw`);
+      timerEl.style.setProperty('--track-bg', trackBg);
+      timerEl.style.setProperty('--color-3s', color3s);
+      timerEl.style.setProperty('--color-2s', color2s);
+      timerEl.style.setProperty('--color-1s', color1s);
+      timerEl.style.setProperty('--hourglass-red-color', hourglassRed);
+    }
+  }
 }
 
 /**
@@ -519,6 +550,12 @@ export function buildCompetitiveDomCache(
     const pitchBoostsLayer = container.querySelector<SVGGElement>('.pitch-boosts, .dyn-pitch-boosts');
     const pitchLines = Array.from(container.querySelectorAll<SVGLineElement | SVGCircleElement>('.pitch-line, .pitch-circle, .dyn-pitch-line'));
 
+    // Respawn timer specific nodes
+    const respawnTimerEl = container.querySelector<HTMLElement>('.dyn-respawn-timer, .respawn-timer-widget');
+    const respawnLeftFill = container.querySelector<HTMLElement>('.dyn-respawn-left, .left-fill');
+    const respawnRightFill = container.querySelector<HTMLElement>('.dyn-respawn-right, .right-fill');
+    const respawnHourglass = container.querySelector<HTMLElement>('.dyn-respawn-hourglass, .respawn-hourglass-wrapper');
+
     // Cache digit reel slots if component uses digit roller
     let digitReel: CachedDigitReel | null = null;
     const slotElements = container.querySelectorAll<HTMLElement>('.digit-slot');
@@ -562,6 +599,11 @@ export function buildCompetitiveDomCache(
       pitchBoostsLayer,
       pitchLines,
       miniMapAnim: null,
+
+      respawnTimerEl,
+      respawnLeftFill,
+      respawnRightFill,
+      respawnHourglass,
 
       digitReel,
       textElements,

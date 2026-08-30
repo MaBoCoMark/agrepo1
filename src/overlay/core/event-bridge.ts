@@ -39,7 +39,9 @@ import {
   applyAutoHideNonExistingPlayers,
   triggerCountdownIndicator,
   triggerBallHitOnMiniMaps,
-  simulateWidgetBallHit
+  simulateWidgetBallHit,
+  triggerRespawnTimerAnimation,
+  resetRespawnTimerAnimation
 } from './competitive-renderer';
 
 /**
@@ -263,6 +265,15 @@ export async function setupOverlayEventListeners(): Promise<void> {
 
   await listen<void>('trigger-round-start', () => {
     triggerCountdownIndicator('round-start');
+  });
+
+  // 13. Respawn Timer (Demolition) IPC Trigger
+  await listen<void>('trigger-respawn-timer', () => {
+    triggerRespawnTimerAnimation();
+  });
+
+  await listen<void>('reset-respawn-timer', () => {
+    resetRespawnTimerAnimation();
   });
 
   // Window Resize & Initialization Events

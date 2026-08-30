@@ -149,6 +149,17 @@ export interface ComponentInstanceCustomProps {
   ringPreviewActive?: boolean;
   ringPreviewSpeed?: number;
 
+  // Respawn Timer (Demolition) Widget Custom Props
+  barHeight?: number;
+  barRadius?: number;
+  barGap?: number;
+  trackBgColor?: string;
+  color3s?: string;
+  color2s?: string;
+  color1s?: string;
+  hourglassRedColor?: string;
+  totalDuration?: number;
+
   [key: string]: any;
 }
 

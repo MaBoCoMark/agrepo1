@@ -1194,6 +1194,32 @@ export function updateComponentInstanceDom(
       break;
     }
 
+    case "widget-respawn-timer":
+    case "respawn-timer": {
+      const timerEl = container.querySelector<HTMLElement>(".dyn-respawn-timer, .respawn-timer-widget");
+      if (timerEl) {
+        const custom = inst.customProps || {};
+        const barHeight = custom.barHeight ?? 0.5;
+        const barRadius = custom.barRadius ?? 0.15;
+        const barGap = custom.barGap ?? 0.4;
+        const trackBg = custom.trackBgColor || "rgba(255, 255, 255, 0.15)";
+        const color3s = custom.color3s || "#ffffff";
+        const color2s = custom.color2s || "#ffd60a";
+        const color1s = custom.color1s || "#ef4444";
+        const hourglassRed = custom.hourglassRedColor || "#ef4444";
+
+        timerEl.style.setProperty("--bar-height", `${barHeight}vw`);
+        timerEl.style.setProperty("--bar-radius", `${barRadius}vw`);
+        timerEl.style.setProperty("--bar-gap", `${barGap}vw`);
+        timerEl.style.setProperty("--track-bg", trackBg);
+        timerEl.style.setProperty("--color-3s", color3s);
+        timerEl.style.setProperty("--color-2s", color2s);
+        timerEl.style.setProperty("--color-1s", color1s);
+        timerEl.style.setProperty("--hourglass-red-color", hourglassRed);
+      }
+      break;
+    }
+
     // Panels
     case "panel-match-header": {
       const diffVal = container.querySelector<HTMLElement>(".dyn-diff-val, .score-diff-val");

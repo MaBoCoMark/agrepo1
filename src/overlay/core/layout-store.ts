@@ -456,7 +456,16 @@ export function createNewComponentInstance(
 
   const customProps: ComponentInstanceCustomProps = {};
 
-  if (componentType === "element-countdown-indicator") {
+  if (componentType === "widget-respawn-timer" || componentType === "respawn-timer") {
+    customProps.barHeight = 0.5;
+    customProps.barRadius = 0.15;
+    customProps.barGap = 0.4;
+    customProps.trackBgColor = "rgba(255, 255, 255, 0.15)";
+    customProps.color3s = "#ffffff";
+    customProps.color2s = "#ffd60a";
+    customProps.color1s = "#ef4444";
+    customProps.hourglassRedColor = "#ef4444";
+  } else if (componentType === "element-countdown-indicator") {
     customProps.countdownColor = "#ef4444";
     customProps.roundStartColor = "#22c55e";
     customProps.fadeDuration = 0.5;
@@ -560,7 +569,7 @@ export function createNewComponentInstance(
     componentType: meta.id,
     tier: meta.tier,
     category: meta.category,
-    targetPlayer: meta.category === "player" ? targetPlayer : undefined,
+    targetPlayer: (meta.id === "widget-respawn-timer" || meta.id === "respawn-timer") ? "p1" : (meta.category === "player" ? targetPlayer : undefined),
     speedUnit: meta.supportsSpeedUnit ? speedUnit : undefined,
     textAlign: meta.supportsAlignment ? textAlign : undefined,
     followAspectRatio: followAspect !== undefined ? followAspect : meta.isProportional,

@@ -1,0 +1,212 @@
+<script type="application/json" id="component-manifest">
+{
+  "id": "widget-respawn-timer",
+  "displayName": "Respawn Timer (Demolition)",
+  "tier": "widget",
+  "category": "player",
+  "isProportional": false,
+  "supportsSpeedUnit": false,
+  "supportsAlignment": false,
+  "supportsGlobalStyle": false,
+  "defaultWidthVw": 12.0,
+  "defaultHeightVw": 2.2,
+  "minWidthVw": 4.0,
+  "minHeightVw": 0.8,
+  "baseWidthPx": 192,
+  "baseHeightPx": 35,
+  "customProperties": [
+    { "key": "barHeight", "label": "Bar Height (vw)", "type": "number", "min": 0.1, "max": 2.0, "step": 0.05, "unit": "vw", "default": 0.5 },
+    { "key": "barRadius", "label": "Bar Corner Radius (vw)", "type": "number", "min": 0, "max": 1.0, "step": 0.02, "unit": "vw", "default": 0.15 },
+    { "key": "barGap", "label": "Hourglass Spacing / Gap (vw)", "type": "number", "min": 0, "max": 2.0, "step": 0.05, "unit": "vw", "default": 0.4 },
+    { "key": "trackBgColor", "label": "Track Background Color", "type": "color", "default": "rgba(255, 255, 255, 0.15)" },
+    { "key": "color3s", "label": "Stage 1 Color (3s)", "type": "color", "default": "#ffffff" },
+    { "key": "color2s", "label": "Stage 2 Color (2s)", "type": "color", "default": "#ffd60a" },
+    { "key": "color1s", "label": "Stage 3 Bar Color (1s)", "type": "color", "default": "#ef4444" },
+    { "key": "hourglassRedColor", "label": "Stage 3 Hourglass Color", "type": "color", "default": "#ef4444" }
+  ]
+}
+</script>
+
+<template id="component-template">
+  <div class="respawn-timer-widget dyn-respawn-timer">
+    <div class="respawn-bar-track left-track">
+      <div class="respawn-bar-fill left-fill dyn-respawn-left"></div>
+    </div>
+    <div class="respawn-hourglass-wrapper dyn-respawn-hourglass">
+      <svg class="respawn-hourglass-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path class="hourglass-path" d="M6 2h12v6l-4 4 4 4v6H6v-6l4-4-4-4V2zm10 14.5l-4-4-4 4V20h8v-3.5zm-8-9V4h8v3.5l-4 4-4-4z" fill="currentColor"/>
+      </svg>
+    </div>
+    <div class="respawn-bar-track right-track">
+      <div class="respawn-bar-fill right-fill dyn-respawn-right"></div>
+    </div>
+  </div>
+</template>
+
+<style>
+  :root {
+    --bar-height: 0.5vw;
+    --bar-radius: 0.15vw;
+    --bar-gap: 0.4vw;
+    --track-bg: rgba(255, 255, 255, 0.15);
+    --color-3s: #ffffff;
+    --color-2s: #ffd60a;
+    --color-1s: #ef4444;
+    --hourglass-red-color: #ef4444;
+  }
+
+  .respawn-timer-widget {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    gap: var(--bar-gap, 0.4vw);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease-out;
+  }
+
+  .respawn-timer-widget.respawn-active {
+    opacity: 1;
+    animation: respawnWidgetFade 3s linear forwards;
+  }
+
+  body.layout-editing .respawn-timer-widget,
+  .catalog-preview .respawn-timer-widget,
+  #catalog-mount .respawn-timer-widget {
+    opacity: 1;
+  }
+
+  .respawn-bar-track {
+    flex: 1;
+    height: var(--bar-height, 0.5vw);
+    background: var(--track-bg, rgba(255, 255, 255, 0.15));
+    border-radius: var(--bar-radius, 0.15vw);
+    overflow: hidden;
+    position: relative;
+    box-sizing: border-box;
+  }
+
+  .respawn-bar-fill {
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    background-color: var(--color-3s, #ffffff);
+    transform: scaleX(1);
+    will-change: transform, background-color;
+  }
+
+  .left-fill {
+    transform-origin: 100% 50%;
+  }
+
+  .right-fill {
+    transform-origin: 0% 50%;
+  }
+
+  .respawn-hourglass-wrapper {
+    height: 100%;
+    max-height: 100%;
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--color-3s, #ffffff);
+  }
+
+  .respawn-hourglass-svg {
+    height: 100%;
+    width: 100%;
+    display: block;
+    overflow: visible;
+  }
+
+  .hourglass-path {
+    fill: currentColor;
+    transition: fill 0.1s ease;
+  }
+
+  /* Keyframe Animations (Strict 3s Duration: 100% -> 67% -> 33% -> 0% -> Disappear) */
+  @keyframes respawnBarAnim {
+    0% {
+      transform: scaleX(1);
+      background-color: var(--color-3s, #ffffff);
+    }
+    33.33% {
+      transform: scaleX(0.6666);
+      background-color: var(--color-3s, #ffffff);
+    }
+    33.34% {
+      transform: scaleX(0.6666);
+      background-color: var(--color-2s, #ffd60a);
+    }
+    66.66% {
+      transform: scaleX(0.3333);
+      background-color: var(--color-2s, #ffd60a);
+    }
+    66.67% {
+      transform: scaleX(0.3333);
+      background-color: var(--color-1s, #ef4444);
+    }
+    99.9% {
+      transform: scaleX(0);
+      background-color: var(--color-1s, #ef4444);
+    }
+    100% {
+      transform: scaleX(0);
+      background-color: var(--color-1s, #ef4444);
+    }
+  }
+
+  @keyframes respawnHourglassAnim {
+    0%, 33.33% {
+      color: var(--color-3s, #ffffff);
+      fill: var(--color-3s, #ffffff);
+      filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.7));
+    }
+    33.34%, 66.66% {
+      color: var(--color-2s, #ffd60a);
+      fill: var(--color-2s, #ffd60a);
+      filter: drop-shadow(0 0 5px rgba(255, 214, 10, 0.7));
+    }
+    66.67%, 100% {
+      color: var(--hourglass-red-color, #ef4444);
+      fill: var(--hourglass-red-color, #ef4444);
+      filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.8));
+    }
+  }
+
+  @keyframes respawnWidgetFade {
+    0%, 96% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  .respawn-timer-widget.respawn-active .left-fill,
+  .respawn-timer-widget.respawn-active .right-fill {
+    animation: respawnBarAnim 3s linear forwards;
+  }
+
+  .respawn-timer-widget.respawn-active .respawn-hourglass-wrapper {
+    animation: respawnHourglassAnim 3s linear forwards;
+  }
+
+  /* Static preview in editor / catalog preview */
+  body.layout-editing .respawn-timer-widget:not(.respawn-active) .respawn-bar-fill,
+  #catalog-mount .respawn-timer-widget:not(.respawn-active) .respawn-bar-fill {
+    transform: scaleX(1);
+    background-color: var(--color-3s, #ffffff);
+  }
+
+  body.layout-editing .respawn-timer-widget:not(.respawn-active) .respawn-hourglass-wrapper,
+  #catalog-mount .respawn-timer-widget:not(.respawn-active) .respawn-hourglass-wrapper {
+    color: var(--color-3s, #ffffff);
+  }
+</style>
