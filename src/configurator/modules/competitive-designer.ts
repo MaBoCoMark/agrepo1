@@ -566,13 +566,13 @@ export function initCompetitiveDesigner(
 
     if (isCurvedBoost || isCurvedSpeed) {
       propsBox.appendChild(
-        createSliderControl('Arc Gap Angle (Degrees)', 0, 180, 5, Number(inst.customProps?.gap ?? 90), '°', (val) => {
+        createSliderControl('Arc Gap Angle (Degrees)', 0, 360, 5, Number(inst.customProps?.gap ?? 90), '°', (val) => {
           inst.customProps!.gap = val;
           saveAndEmit();
         })
       );
       propsBox.appendChild(
-        createSliderControl('Gauge Thickness', 2, 20, 1, Number(inst.customProps?.thickness ?? 8), '', (val) => {
+        createSliderControl('Gauge Thickness (%)', 0, 50, 1, Number(inst.customProps?.thickness ?? 8), '%', (val) => {
           inst.customProps!.thickness = val;
           saveAndEmit();
         })

@@ -1109,19 +1109,19 @@ export function bindCompetitiveDomCache(
       case 'element-curved-boost-bar': {
         const fill = cached.fillEl as SVGCircleElement | null;
         if (fill) {
-          const thick = Number(inst.customProps?.thickness ?? 8);
-          const gap = Number(inst.customProps?.gap ?? 90);
+          const thick = Math.max(0, Math.min(50, Number(inst.customProps?.thickness ?? 8)));
+          const gap = Math.max(0, Math.min(360, Number(inst.customProps?.gap ?? 90)));
           const orient = Number(inst.customProps?.orientation ?? 90);
-          const radius = 50 - (thick / 2);
+          const radius = Math.max(0, 50 - (thick / 2));
           const perimeter = 2 * Math.PI * radius;
-          const activeAngle = 360 - gap;
+          const activeAngle = Math.max(0, 360 - gap);
           const totalDash = perimeter * (activeAngle / 360);
           const colorHigh = inst.customProps?.colorHigh || '#10b981';
           const colorMid = inst.customProps?.colorMid || '#f59e0b';
           const colorLow = inst.customProps?.colorLow || '#ef4444';
           const enableBlink = inst.customProps?.enableBlink !== false;
 
-          addBoostListener(p, (boost: number) => {
+          const onBoostChange = (boost: number) => {
             const progressDash = totalDash * Math.max(0, Math.min(1, boost / 100));
             const dashStr = `${progressDash} ${perimeter}`;
 
@@ -1147,7 +1147,11 @@ export function bindCompetitiveDomCache(
               fill.setAttribute('stroke', color);
               fill.classList.toggle('danger-blink', blink);
             }
-          });
+          };
+
+          addBoostListener(p, onBoostChange);
+          const curBoost = p === 'p1' ? latestData.p1Boost : p === 'p2' ? latestData.p2Boost : latestData.p3Boost;
+          onBoostChange(curBoost >= 0 ? curBoost : 100);
         }
         break;
       }
@@ -1156,19 +1160,19 @@ export function bindCompetitiveDomCache(
       case 'element-curved-speedometer': {
         const fill = cached.fillEl as SVGCircleElement | null;
         if (fill) {
-          const thick = Number(inst.customProps?.thickness ?? 8);
-          const gap = Number(inst.customProps?.gap ?? 90);
+          const thick = Math.max(0, Math.min(50, Number(inst.customProps?.thickness ?? 8)));
+          const gap = Math.max(0, Math.min(360, Number(inst.customProps?.gap ?? 90)));
           const orient = Number(inst.customProps?.orientation ?? 90);
-          const radius = 50 - (thick / 2);
+          const radius = Math.max(0, 50 - (thick / 2));
           const perimeter = 2 * Math.PI * radius;
-          const activeAngle = 360 - gap;
+          const activeAngle = Math.max(0, 360 - gap);
           const totalDash = perimeter * (activeAngle / 360);
           const split1410Pos = Number(inst.customProps?.split1410Pos ?? inst.customProps?.pos1410 ?? 40);
           const colorLow = inst.customProps?.colorLow || '#d4af37';
           const colorMidStart = inst.customProps?.colorMidStart || '#77ca7a';
           const colorMidEnd = inst.customProps?.colorMidEnd || '#59f168';
 
-          addSpeedListener(p, (speed: number) => {
+          const onSpeedChange = (speed: number) => {
             const uuSpeed = toRealUuSpeed(speed);
             const pct = calcNonlinearSpeedProgress(uuSpeed, split1410Pos);
             const progressDash = totalDash * (pct / 100);
@@ -1191,7 +1195,11 @@ export function bindCompetitiveDomCache(
               fill.setAttribute('stroke', color);
               fill.classList.toggle('curved-supersonic', isSupersonic);
             }
-          });
+          };
+
+          addSpeedListener(p, onSpeedChange);
+          const curSpeed = p === 'p1' ? latestData.p1Speed : p === 'p2' ? latestData.p2Speed : latestData.p3Speed;
+          onSpeedChange(curSpeed >= 0 ? curSpeed : 0);
         }
         break;
       }

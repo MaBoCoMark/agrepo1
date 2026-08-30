@@ -904,13 +904,13 @@ export function updateComponentInstanceDom(
       const fill = container.querySelector<SVGCircleElement>(".dyn-curved-fill, .curved-progress-bar");
       const bg = container.querySelector<SVGCircleElement>(".dyn-curved-bg, .curved-bg-track");
       if (fill && bg) {
-        const thick = Number(inst.customProps?.thickness ?? inst.customProps?.arcThickness ?? 8);
-        const gap = Number(inst.customProps?.gap ?? (inst.customProps?.sweepAngle ? 360 - inst.customProps.sweepAngle : 90));
+        const thick = Math.max(0, Math.min(50, Number(inst.customProps?.thickness ?? inst.customProps?.arcThickness ?? 8)));
+        const gap = Math.max(0, Math.min(360, Number(inst.customProps?.gap ?? (inst.customProps?.sweepAngle ? 360 - inst.customProps.sweepAngle : 90))));
         const orient = Number(inst.customProps?.orientation ?? inst.customProps?.startAngle ?? 90);
         const trackColor = inst.customProps?.trackColor || "rgba(255, 255, 255, 0.15)";
-        const radius = 50 - (thick / 2);
+        const radius = Math.max(0, 50 - (thick / 2));
         const perimeter = 2 * Math.PI * radius;
-        const activeAngle = 360 - gap;
+        const activeAngle = Math.max(0, 360 - gap);
         const totalDash = perimeter * (activeAngle / 360);
         const pct = Math.max(0, Math.min(1, boost / 100));
         const progressDash = totalDash * pct;
@@ -957,13 +957,13 @@ export function updateComponentInstanceDom(
       const fill = container.querySelector<SVGCircleElement>(".dyn-curved-fill, .curved-progress-bar");
       const bg = container.querySelector<SVGCircleElement>(".dyn-curved-bg, .curved-bg-track");
       if (fill && bg) {
-        const thick = Number(inst.customProps?.thickness ?? inst.customProps?.arcThickness ?? 8);
-        const gap = Number(inst.customProps?.gap ?? (inst.customProps?.sweepAngle ? 360 - inst.customProps.sweepAngle : 90));
+        const thick = Math.max(0, Math.min(50, Number(inst.customProps?.thickness ?? inst.customProps?.arcThickness ?? 8)));
+        const gap = Math.max(0, Math.min(360, Number(inst.customProps?.gap ?? (inst.customProps?.sweepAngle ? 360 - inst.customProps.sweepAngle : 90))));
         const orient = Number(inst.customProps?.orientation ?? inst.customProps?.startAngle ?? 90);
         const trackColor = inst.customProps?.trackColor || "rgba(255, 255, 255, 0.15)";
-        const radius = 50 - (thick / 2);
+        const radius = Math.max(0, 50 - (thick / 2));
         const perimeter = 2 * Math.PI * radius;
-        const activeAngle = 360 - gap;
+        const activeAngle = Math.max(0, 360 - gap);
         const totalDash = perimeter * (activeAngle / 360);
         const uuSpeed = toRealUuSpeed(speed);
         const split1410Pos = Number(inst.customProps?.split1410Pos ?? inst.customProps?.pos1410 ?? 40);

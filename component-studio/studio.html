@@ -770,7 +770,7 @@
   "baseWidthPx": 160,
   "baseHeightPx": 160,
   "customProperties": [
-    { "key": "thickness", "label": "Gauge Thickness", "type": "number", "min": 2, "max": 20, "default": 8 },
+    { "key": "thickness", "label": "Gauge Thickness", "type": "number", "min": 0, "max": 50, "unit": "%", "default": 8 },
     { "key": "gap", "label": "Arc Gap Angle", "type": "number", "min": 0, "max": 360, "unit": "deg", "default": 90 },
     { "key": "orientation", "label": "Orientation", "type": "number", "min": 0, "max": 360, "unit": "deg", "default": 90 },
     { "key": "trackColor", "label": "Background Track Color", "type": "color", "default": "rgba(255, 255, 255, 0.15)" },
@@ -1297,7 +1297,7 @@
       const curvedFill = componentMount.querySelector(".dyn-curved-fill");
       const curvedBg = componentMount.querySelector(".dyn-curved-bg");
       if (curvedFill && curvedBg) {
-        const thick = Number(currentCustomProps.thickness || 8);
+        const thick = Math.max(0, Math.min(50, Number(currentCustomProps.thickness || 8)));
         const gap = Number(currentCustomProps.gap || 90);
         const orient = Number(currentCustomProps.orientation || 90);
         const radius = 50 - (thick / 2);

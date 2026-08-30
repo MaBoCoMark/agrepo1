@@ -357,13 +357,13 @@ export function applyStaticComponentStyles(
 
   // 5. Curved Gauges SVG Static Setup (thickness, gap, orientation, trackColor)
   if (inst.componentType === 'element-curved-boost-bar' || inst.componentType === 'element-curved-speedometer') {
-    const thick = Number(inst.customProps?.thickness ?? 8);
-    const gap = Number(inst.customProps?.gap ?? 90);
+    const thick = Math.max(0, Math.min(50, Number(inst.customProps?.thickness ?? 8)));
+    const gap = Math.max(0, Math.min(360, Number(inst.customProps?.gap ?? 90)));
     const orient = Number(inst.customProps?.orientation ?? 90);
     const trackColor = inst.customProps?.trackColor || 'rgba(255, 255, 255, 0.15)';
-    const radiusVal = 50 - (thick / 2);
+    const radiusVal = Math.max(0, 50 - (thick / 2));
     const perimeter = 2 * Math.PI * radiusVal;
-    const activeAngle = 360 - gap;
+    const activeAngle = Math.max(0, 360 - gap);
     const totalDash = perimeter * (activeAngle / 360);
     const rotate = orient + (gap / 2);
 
