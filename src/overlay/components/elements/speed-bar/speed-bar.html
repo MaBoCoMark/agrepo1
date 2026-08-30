@@ -15,7 +15,7 @@
   "baseWidthPx": 256,
   "baseHeightPx": 24,
   "customProperties": [
-    { "key": "borderRadius", "label": "Border Radius", "type": "number", "min": 0, "max": 20, "unit": "px", "default": 4 },
+    { "key": "borderRadius", "label": "Border Radius", "type": "number", "min": 0, "max": 2.0, "step": 0.05, "unit": "vw", "default": 0.25 },
     { "key": "bgColor", "label": "Background Color", "type": "color", "default": "rgba(0, 0, 0, 0.65)" },
     { "key": "split1410Pos", "label": "1410 Speed Position (%)", "type": "number", "min": 10, "max": 60, "unit": "%", "default": 40 },
     { "key": "colorLow", "label": "Low Speed Color", "type": "color", "default": "#d4af37" },
@@ -38,12 +38,12 @@
   height: 100%;
   box-sizing: border-box;
   background: rgba(0, 0, 0, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 0.08vw solid rgba(255, 255, 255, 0.2);
   overflow: hidden;
   position: relative;
   display: flex;
   align-items: center;
-  border-radius: 4px;
+  border-radius: 0.25vw;
   container-type: size;
 }
 
@@ -53,7 +53,7 @@
   transform-origin: left center;
   transform: scaleX(0);
   background-color: #d4af37;
-  border-radius: 4px;
+  border-radius: 0.25vw;
   transition: none !important;
 }
 
@@ -61,7 +61,7 @@
   position: absolute;
   left: 85%;
   top: 0;
-  width: 2px;
+  width: 0.1vw;
   height: 100%;
   background: rgba(255, 255, 255, 0.4);
   z-index: 2;

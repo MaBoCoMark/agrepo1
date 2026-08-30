@@ -261,10 +261,10 @@ export function applyTextStyles(
     }
 
     if (strokeWidth > 0 && strokeColor) {
-      valEl.style.setProperty("-webkit-text-stroke", strokeWidth + "px " + strokeColor);
+      valEl.style.setProperty("-webkit-text-stroke", strokeWidth + "vw " + strokeColor);
       valEl.style.setProperty("paint-order", "stroke fill");
     } else {
-      valEl.style.setProperty("-webkit-text-stroke", "0px transparent");
+      valEl.style.setProperty("-webkit-text-stroke", "0vw transparent");
       valEl.style.setProperty("paint-order", "normal");
     }
   });
@@ -293,7 +293,7 @@ export function applyTextStyles(
     } else {
       box.style.backgroundColor = "";
     }
-    box.style.borderRadius = radius + "px";
+    box.style.borderRadius = radius + "vw";
   });
 }
 
@@ -671,8 +671,8 @@ export function updateComponentInstanceDom(
           myTeamColor
         );
         box.style.backgroundColor = boxColor || myTeamColor;
-        const radius = inst.customProps?.borderRadius ?? inst.customProps?.bgRadius ?? 4;
-        box.style.borderRadius = `${radius}px`;
+        const radius = inst.customProps?.borderRadius ?? inst.customProps?.bgRadius ?? 0.25;
+        box.style.borderRadius = `${radius}vw`;
       }
       break;
     }
@@ -718,8 +718,8 @@ export function updateComponentInstanceDom(
           "rgba(0, 0, 0, 0.65)"
         );
         if (effectiveBg) box.style.backgroundColor = effectiveBg;
-        const radius = inst.customProps?.borderRadius ?? inst.customProps?.bgRadius ?? 4;
-        box.style.borderRadius = `${radius}px`;
+        const radius = inst.customProps?.borderRadius ?? inst.customProps?.bgRadius ?? 0.25;
+        box.style.borderRadius = `${radius}vw`;
       }
       if (fill) {
         fill.style.width = boost + "%";
@@ -758,8 +758,8 @@ export function updateComponentInstanceDom(
           "rgba(0, 0, 0, 0.65)"
         );
         if (effectiveBg) box.style.backgroundColor = effectiveBg;
-        const radius = inst.customProps?.borderRadius ?? inst.customProps?.bgRadius ?? 4;
-        box.style.borderRadius = `${radius}px`;
+        const radius = inst.customProps?.borderRadius ?? inst.customProps?.bgRadius ?? 0.25;
+        box.style.borderRadius = `${radius}vw`;
       }
       if (fill) {
         fill.style.height = boost + "%";
@@ -789,14 +789,14 @@ export function updateComponentInstanceDom(
       const box = container.querySelector<HTMLElement>(".el-boost-alert-box, .dyn-boost-alert-box");
       const threshold = Number(inst.customProps?.threshold ?? 12);
       const alertColor = inst.customProps?.alertColor || inst.customProps?.basicColor || "#ef4444";
-      const radius = Number(inst.customProps?.borderRadius ?? inst.customProps?.bgRadius ?? 4);
-      const borderWidth = Number(inst.customProps?.borderWidth ?? 2);
+      const radius = Number(inst.customProps?.borderRadius ?? inst.customProps?.bgRadius ?? 0.25);
+      const borderWidth = Number(inst.customProps?.borderWidth ?? 0.1);
       const enableBlink = inst.customProps?.enableBlink !== false;
 
       if (box) {
         box.style.backgroundColor = "transparent";
-        box.style.borderRadius = `${radius}px`;
-        box.style.borderWidth = `${borderWidth}px`;
+        box.style.borderRadius = `${radius}vw`;
+        box.style.borderWidth = `${borderWidth}vw`;
         box.style.setProperty("--alert-color", alertColor);
 
         const isAlert = boost <= threshold;
@@ -835,8 +835,8 @@ export function updateComponentInstanceDom(
           "rgba(0, 0, 0, 0.65)"
         );
         if (effectiveBg) box.style.backgroundColor = effectiveBg;
-        const radius = inst.customProps?.borderRadius ?? inst.customProps?.bgRadius ?? 4;
-        box.style.borderRadius = `${radius}px`;
+        const radius = inst.customProps?.borderRadius ?? inst.customProps?.bgRadius ?? 0.25;
+        box.style.borderRadius = `${radius}vw`;
       }
       if (fill) {
         const uuSpeed = toRealUuSpeed(speed);
@@ -852,7 +852,7 @@ export function updateComponentInstanceDom(
         fill.style.backgroundColor = color;
         fill.classList.toggle("supersonic-glow", isSupersonic);
         if (inst.customProps?.borderRadius !== undefined) {
-          fill.style.borderRadius = inst.customProps.borderRadius + "px";
+          fill.style.borderRadius = inst.customProps.borderRadius + "vw";
         }
       }
       break;
@@ -872,8 +872,8 @@ export function updateComponentInstanceDom(
           "rgba(0, 0, 0, 0.65)"
         );
         if (effectiveBg) box.style.backgroundColor = effectiveBg;
-        const radius = inst.customProps?.borderRadius ?? inst.customProps?.bgRadius ?? 4;
-        box.style.borderRadius = `${radius}px`;
+        const radius = inst.customProps?.borderRadius ?? inst.customProps?.bgRadius ?? 0.25;
+        box.style.borderRadius = `${radius}vw`;
       }
       if (fill) {
         const uuSpeed = toRealUuSpeed(speed);
@@ -889,7 +889,7 @@ export function updateComponentInstanceDom(
         fill.style.backgroundColor = color;
         fill.classList.toggle("supersonic-glow", isSupersonic);
         if (inst.customProps?.borderRadius !== undefined) {
-          fill.style.borderRadius = inst.customProps.borderRadius + "px";
+          fill.style.borderRadius = inst.customProps.borderRadius + "vw";
         }
       }
       break;

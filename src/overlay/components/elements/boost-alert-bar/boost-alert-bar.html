@@ -16,9 +16,9 @@
   "baseHeightPx": 32,
   "customProperties": [
     { "key": "threshold", "label": "Alert Threshold", "type": "number", "min": 0, "max": 100, "unit": "%", "default": 12 },
-    { "key": "borderRadius", "label": "Corner Radius (Square/Circle)", "type": "number", "min": 0, "max": 100, "unit": "px", "default": 4 },
+    { "key": "borderRadius", "label": "Corner Radius", "type": "number", "min": 0, "max": 2.0, "step": 0.05, "unit": "vw", "default": 0.25 },
     { "key": "alertColor", "label": "Alert / Glow Color", "type": "color", "default": "#ef4444" },
-    { "key": "borderWidth", "label": "Border Width", "type": "number", "min": 1, "max": 20, "unit": "px", "default": 2 },
+    { "key": "borderWidth", "label": "Border Width", "type": "number", "min": 0.02, "max": 0.5, "step": 0.01, "unit": "vw", "default": 0.1 },
     { "key": "enableBlink", "label": "Enable Glow & Blink", "type": "boolean", "default": true }
   ]
 }
@@ -34,10 +34,10 @@
   height: 100%;
   box-sizing: border-box;
   background: transparent !important;
-  border: 2px solid transparent;
+  border: 0.1vw solid transparent;
   overflow: hidden;
   position: relative;
-  border-radius: 4px;
+  border-radius: 0.25vw;
   container-type: size;
   pointer-events: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;

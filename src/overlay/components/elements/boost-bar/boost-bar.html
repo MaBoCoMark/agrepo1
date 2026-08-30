@@ -17,7 +17,7 @@
   "customProperties": [
     { "key": "enableBlink", "label": "Enable Danger Blink", "type": "boolean", "default": true },
     { "key": "bgColor", "label": "Background Color", "type": "color", "default": "rgba(0, 0, 0, 0.65)" },
-    { "key": "borderRadius", "label": "Border Radius", "type": "number", "min": 0, "max": 20, "unit": "px", "default": 4 },
+    { "key": "borderRadius", "label": "Border Radius", "type": "number", "min": 0, "max": 2.0, "step": 0.05, "unit": "vw", "default": 0.25 },
     { "key": "colorHigh", "label": "High Boost Color (>=60)", "type": "color", "default": "#10b981" },
     { "key": "colorMid", "label": "Mid Boost Color (30-59)", "type": "color", "default": "#f59e0b" },
     { "key": "colorLow", "label": "Low Boost Color (<30)", "type": "color", "default": "#ef4444" }
@@ -35,11 +35,11 @@
   height: 100%;
   box-sizing: border-box;
   background: rgba(0, 0, 0, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 0.08vw solid rgba(255, 255, 255, 0.2);
   overflow: hidden;
   display: flex;
   align-items: center;
-  border-radius: 4px;
+  border-radius: 0.25vw;
   container-type: size;
 }
 

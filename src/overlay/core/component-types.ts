@@ -22,10 +22,10 @@ export type AnchorType =
 export interface GlobalLayoutSettings {
   opacity: number; // 0.1 - 1.0 (default 1.0)
   textColor: string; // Hex / RGBA (default #ffffff)
-  strokeWidth: number; // 0 - 15 px (default 0)
+  strokeWidth: number; // 0 - 1.0 vw (default 0)
   strokeColor: string; // Hex / RGBA (default #000000)
   cardBgColor: string; // Hex / RGBA (default #0a0e17)
-  cardBorderRadius: number; // 0 - 25 px (default 0)
+  cardBorderRadius: number; // 0 - 2.0 vw (default 0)
   bgColor?: string; // Backwards compatible alias
   bgRadius?: number; // Backwards compatible alias
   autoHideNonExistingPlayers?: boolean; // When true, hides P2/P3 HUD if hasCar is false

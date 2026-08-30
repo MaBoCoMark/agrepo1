@@ -12,7 +12,6 @@ body {
   height: 100vh;
   overflow: hidden;
   user-select: none;
-  font-family: 'GHMonoR', monospace;
   background: transparent;
 }
 
@@ -44,7 +43,6 @@ body.layout-editing #scene-canvas {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  font-family: 'GHMonoR', monospace;
   color: #f0f0f0;
   user-select: none;
   pointer-events: none;
@@ -721,7 +719,6 @@ body.layout-editing .comp-container:hover {
   align-items: center;
   height: 1em;
   line-height: 1;
-  font-family: inherit;
   font-variant-numeric: tabular-nums;
   letter-spacing: normal;
 }

@@ -267,7 +267,13 @@ export function applyStaticComponentStyles(
   const supportsGlobal = meta?.supportsGlobalStyle !== false;
   const followGlobal = supportsGlobal && (inst.followGlobal !== false);
 
-  // 1. Text color & stroke
+  // 0. Update container opacity dynamically
+  const effectiveOpacity = (inst.followGlobal !== false)
+    ? (globalSettings.opacity ?? 1.0)
+    : (inst.opacity !== undefined ? inst.opacity : 1.0);
+  cached.container.style.opacity = effectiveOpacity.toString();
+
+  // 1. Text color & stroke (vw units for resolution-independent scaling)
   const effectiveTextColor = resolveEffectiveColor(
     inst.customProps?.textColorMode,
     inst.customProps?.textColor,
@@ -292,15 +298,15 @@ export function applyStaticComponentStyles(
     }
 
     if (strokeWidth > 0 && strokeColor) {
-      valEl.style.setProperty('-webkit-text-stroke', `${strokeWidth}px ${strokeColor}`);
+      valEl.style.setProperty('-webkit-text-stroke', `${strokeWidth}vw ${strokeColor}`);
       valEl.style.setProperty('paint-order', 'stroke fill');
     } else {
-      valEl.style.setProperty('-webkit-text-stroke', '0px transparent');
+      valEl.style.setProperty('-webkit-text-stroke', '0vw transparent');
       valEl.style.setProperty('paint-order', 'normal');
     }
   });
 
-  // 2. Background color & radius
+  // 2. Background color & radius (vw units)
   const globalBgColor = globalSettings.bgColor || globalSettings.cardBgColor;
   const effectiveBg = resolveEffectiveColor(
     inst.customProps?.bgColorMode,
@@ -324,7 +330,7 @@ export function applyStaticComponentStyles(
     } else {
       box.style.backgroundColor = '';
     }
-    box.style.borderRadius = `${radius}px`;
+    box.style.borderRadius = `${radius}vw`;
   });
 
   // 3. Text alignment
@@ -341,12 +347,12 @@ export function applyStaticComponentStyles(
     });
   }
 
-  // 4. Boost alert bar static styling
+  // 4. Boost alert bar static styling (vw units)
   if (inst.componentType === 'element-boost-alert-bar' && cached.boxEl) {
-    const alertRadius = Number(inst.customProps?.borderRadius ?? inst.customProps?.bgRadius ?? 4);
-    const alertBorderWidth = Number(inst.customProps?.borderWidth ?? 2);
-    cached.boxEl.style.borderRadius = `${alertRadius}px`;
-    cached.boxEl.style.borderWidth = `${alertBorderWidth}px`;
+    const alertRadius = Number(inst.customProps?.borderRadius ?? inst.customProps?.bgRadius ?? 0.25);
+    const alertBorderWidth = Number(inst.customProps?.borderWidth ?? 0.1);
+    cached.boxEl.style.borderRadius = `${alertRadius}vw`;
+    cached.boxEl.style.borderWidth = `${alertBorderWidth}vw`;
   }
 
   // 5. Curved Gauges SVG Static Setup (thickness, gap, orientation, trackColor)
@@ -355,14 +361,14 @@ export function applyStaticComponentStyles(
     const gap = Number(inst.customProps?.gap ?? 90);
     const orient = Number(inst.customProps?.orientation ?? 90);
     const trackColor = inst.customProps?.trackColor || 'rgba(255, 255, 255, 0.15)';
-    const radius = 50 - (thick / 2);
-    const perimeter = 2 * Math.PI * radius;
+    const radiusVal = 50 - (thick / 2);
+    const perimeter = 2 * Math.PI * radiusVal;
     const activeAngle = 360 - gap;
     const totalDash = perimeter * (activeAngle / 360);
     const rotate = orient + (gap / 2);
 
     if (cached.bgEl) {
-      cached.bgEl.setAttribute('r', radius.toString());
+      cached.bgEl.setAttribute('r', radiusVal.toString());
       cached.bgEl.setAttribute('stroke-width', thick.toString());
       cached.bgEl.setAttribute('stroke', trackColor);
       cached.bgEl.setAttribute('stroke-dasharray', `${totalDash} ${perimeter}`);
@@ -371,7 +377,7 @@ export function applyStaticComponentStyles(
     }
 
     if (cached.fillEl) {
-      cached.fillEl.setAttribute('r', radius.toString());
+      cached.fillEl.setAttribute('r', radiusVal.toString());
       cached.fillEl.setAttribute('stroke-width', thick.toString());
       cached.fillEl.style.transform = `rotate(${rotate}deg)`;
       cached.fillEl.style.transformOrigin = '50px 50px';
@@ -460,7 +466,7 @@ export function buildCompetitiveDomCache(
     container.className = 'comp-container';
     container.setAttribute('data-instance-id', inst.instanceId);
 
-    const effectiveOpacity = inst.followGlobal !== false ? globalSettings.opacity : inst.opacity;
+    const effectiveOpacity = inst.followGlobal !== false ? (globalSettings.opacity ?? 1.0) : (inst.opacity !== undefined ? inst.opacity : 1.0);
     const { leftVw, topVw } = calculateElementTopLeft(inst, screenH);
     container.style.left = `${leftVw}vw`;
     container.style.top = `${topVw}vw`;

@@ -266,11 +266,11 @@ export function getDefaultCompetitiveLayout(): ComponentInstance[] {
       offsetXvw: -11,
       offsetYvw: -4.5,
       followAspectRatio: false,
-      followGlobal: false,
+      followGlobal: true,
       customProps: {
         enableBlink: true,
         bgColor: "rgba(0, 0, 0, 0.65)",
-        borderRadius: 4
+        borderRadius: 0.25
       }
     },
     {
@@ -287,7 +287,7 @@ export function getDefaultCompetitiveLayout(): ComponentInstance[] {
       offsetXvw: -5,
       offsetYvw: -8.5,
       followAspectRatio: true,
-      followGlobal: false,
+      followGlobal: true,
       customProps: {
         enableBlink: true
       }
@@ -355,11 +355,11 @@ export function getDefaultCompetitiveLayout(): ComponentInstance[] {
       offsetXvw: 7.5,
       offsetYvw: -7.5,
       followAspectRatio: false,
-      followGlobal: false,
+      followGlobal: true,
       customProps: {
         enableBlink: false,
         bgColor: "rgba(0, 0, 0, 0.65)",
-        borderRadius: 4
+        borderRadius: 0.25
       }
     },
     {
@@ -391,11 +391,11 @@ export function getDefaultCompetitiveLayout(): ComponentInstance[] {
       offsetXvw: 7.5,
       offsetYvw: -2.3,
       followAspectRatio: false,
-      followGlobal: false,
+      followGlobal: true,
       customProps: {
         enableBlink: false,
         bgColor: "rgba(0, 0, 0, 0.65)",
-        borderRadius: 4
+        borderRadius: 0.25
       }
     }
   ];
@@ -463,14 +463,14 @@ export function createNewComponentInstance(
     customProps.showInitialFour = true;
   } else if (componentType === "element-boost-alert-bar") {
     customProps.threshold = 12;
-    customProps.borderRadius = 4;
+    customProps.borderRadius = 0.25;
     customProps.alertColor = "#ef4444";
-    customProps.borderWidth = 2;
+    customProps.borderWidth = 0.1;
     customProps.enableBlink = true;
   } else if (componentType === "element-boost-bar" || componentType === "player-boost-bar" || componentType === "element-vertical-boost-bar" || componentType === "element-boost-text" || componentType === "widget-boost-bar" || componentType === "widget-boost-combo" || componentType === "boost-bar" || componentType === "boost-combo") {
     customProps.enableBlink = true;
     customProps.bgColor = "rgba(0, 0, 0, 0.65)";
-    customProps.borderRadius = 4;
+    customProps.borderRadius = 0.25;
     customProps.colorHigh = "#10b981";
     customProps.colorMid = "#f59e0b";
     customProps.colorLow = "#ef4444";
@@ -489,7 +489,7 @@ export function createNewComponentInstance(
     customProps.colorLow = "#d4af37";
     customProps.colorMidStart = "#77ca7a";
     customProps.colorMidEnd = "#59f168";
-    customProps.borderRadius = 4;
+    customProps.borderRadius = 0.25;
     customProps.bgColor = "rgba(0, 0, 0, 0.65)";
   } else if (componentType === "element-curved-speedometer") {
     customProps.thickness = 8;
@@ -507,7 +507,7 @@ export function createNewComponentInstance(
     customProps.bgColor = "rgba(10, 14, 23, 0.85)";
     customProps.strokeWidth = 0;
     customProps.strokeColor = "#000000";
-    customProps.bgRadius = 4;
+    customProps.bgRadius = 0.25;
   } else if (componentType === "element-global-text-indicator") {
     customProps.previewDemoText = false;
     customProps.textColorMode = "default";
@@ -518,7 +518,7 @@ export function createNewComponentInstance(
     customProps.bgRadius = 0;
   } else if (componentType === "element-team-color-box") {
     customProps.boxColorMode = "my-primary";
-    customProps.borderRadius = 4;
+    customProps.borderRadius = 0.25;
   } else if (componentType === "element-custom-text") {
     customProps.customText = "SUPERSONIC";
     customProps.boolVar = "supersonic";
@@ -530,7 +530,7 @@ export function createNewComponentInstance(
     customProps.strokeWidth = 0;
     customProps.strokeColor = "#000000";
     customProps.bgColor = "rgba(10, 14, 23, 0.85)";
-    customProps.bgRadius = 4;
+    customProps.bgRadius = 0.25;
   } else if (componentType === "element-static-text") {
     customProps.staticText = "LABEL";
     customProps.textColorMode = "default";
@@ -554,13 +554,6 @@ export function createNewComponentInstance(
   const defaultOffset = getDefaultOffsetForAnchor(anchor);
   const id = "inst_" + Date.now() + "_" + Math.random().toString(36).substring(2, 6);
 
-  const hasBuiltInStyle = meta.supportsGlobalStyle === false ||
-    componentType.includes("boost-bar") ||
-    componentType.includes("boost-alert") ||
-    componentType.includes("speed-bar") ||
-    componentType.includes("curved-") ||
-    componentType.includes("indicator") ||
-    componentType === "element-boost-text";
 
   return {
     instanceId: id,
@@ -571,7 +564,7 @@ export function createNewComponentInstance(
     speedUnit: meta.supportsSpeedUnit ? speedUnit : undefined,
     textAlign: meta.supportsAlignment ? textAlign : undefined,
     followAspectRatio: followAspect !== undefined ? followAspect : meta.isProportional,
-    followGlobal: !hasBuiltInStyle,
+    followGlobal: true,
     opacity: 1.0,
     anchor: anchor,
     widthVw: meta.defaultWidthVw,

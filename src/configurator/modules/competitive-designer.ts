@@ -122,10 +122,10 @@ export function initCompetitiveDesigner(
     const strokeWCtrl = createSliderControl(
       'Global Stroke Width',
       0,
-      15,
-      1,
-      globalLayoutSettings.strokeWidth,
-      'px',
+      1.0,
+      0.01,
+      Number(globalLayoutSettings.strokeWidth ?? 0),
+      'vw',
       (val) => {
         globalLayoutSettings.strokeWidth = val;
         saveGlobal();
@@ -164,10 +164,10 @@ export function initCompetitiveDesigner(
     const cardRadiusCtrl = createSliderControl(
       'Global Card Corner Radius',
       0,
-      25,
-      1,
-      globalLayoutSettings.cardBorderRadius ?? globalLayoutSettings.bgRadius ?? 0,
-      'px',
+      2.0,
+      0.05,
+      Number(globalLayoutSettings.cardBorderRadius ?? globalLayoutSettings.bgRadius ?? 0),
+      'vw',
       (val) => {
         globalLayoutSettings.cardBorderRadius = val;
         globalLayoutSettings.bgRadius = val;
@@ -374,10 +374,10 @@ export function initCompetitiveDesigner(
       const radiusCtrl = createSliderControl(
         'Card Corner Radius',
         0,
-        25,
-        1,
+        2.0,
+        0.05,
         inst.customProps?.bgRadius !== undefined ? Number(inst.customProps.bgRadius) : (inst.customProps?.borderRadius !== undefined ? Number(inst.customProps.borderRadius) : 0),
-        'px',
+        'vw',
         (val) => {
           inst.customProps!.bgRadius = val;
           inst.customProps!.borderRadius = val;
@@ -404,10 +404,10 @@ export function initCompetitiveDesigner(
         const strokeCtrl = createSliderControl(
           'Outside Stroke Width',
           0,
-          15,
-          1,
+          1.0,
+          0.01,
           inst.customProps?.strokeWidth !== undefined ? Number(inst.customProps.strokeWidth) : 0,
-          'px',
+          'vw',
           (val) => {
             inst.customProps!.strokeWidth = val;
             saveAndEmit();
@@ -551,7 +551,7 @@ export function initCompetitiveDesigner(
         })
       );
       propsBox.appendChild(
-        createSliderControl('Border Width', 1, 8, 1, Number(inst.customProps?.borderWidth ?? 2), 'px', (val) => {
+        createSliderControl('Border Width', 0.02, 0.5, 0.01, Number(inst.customProps?.borderWidth ?? 0.1), 'vw', (val) => {
           inst.customProps!.borderWidth = val;
           saveAndEmit();
         })
@@ -572,7 +572,7 @@ export function initCompetitiveDesigner(
         })
       );
       propsBox.appendChild(
-        createSliderControl('Gauge Thickness (px)', 2, 20, 1, Number(inst.customProps?.thickness ?? 8), 'px', (val) => {
+        createSliderControl('Gauge Thickness', 2, 20, 1, Number(inst.customProps?.thickness ?? 8), '', (val) => {
           inst.customProps!.thickness = val;
           saveAndEmit();
         })
@@ -936,11 +936,11 @@ export function initCompetitiveDesigner(
       propsBox.appendChild(
         createSliderControl(
           'Center Dot Radius',
-          2,
-          20,
-          1,
-          inst.customProps.dotRadius ?? 5,
-          'px',
+          0.05,
+          1.0,
+          0.01,
+          Number(inst.customProps.dotRadius ?? 0.25),
+          'vw',
           (val) => {
             inst.customProps!.dotRadius = val;
             saveAndEmit();
@@ -1005,11 +1005,11 @@ export function initCompetitiveDesigner(
       propsBox.appendChild(
         createSliderControl(
           'Ring Border Width',
-          1,
-          8,
-          1,
-          inst.customProps.ringBorderWidth ?? 2,
-          'px',
+          0.02,
+          0.5,
+          0.01,
+          Number(inst.customProps.ringBorderWidth ?? 0.1),
+          'vw',
           (val) => {
             inst.customProps!.ringBorderWidth = val;
             saveAndEmit();

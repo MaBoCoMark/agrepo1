@@ -292,9 +292,10 @@ export function triggerBallHitOnMiniMaps(
     // 2. Center dot styling
     const dotColor = isMyTeam ? (custom.myTeamDotColor || '#00ff88') : (custom.oppTeamDotColor || '#ff3366');
     const dotOpacity = isMyTeam ? ((custom.myTeamDotOpacity ?? 100) / 100) : ((custom.oppTeamDotOpacity ?? 100) / 100);
-    const dotD = Math.max(2, (custom.dotRadius ?? 5) * 2);
-    dot.style.width = `${dotD}px`;
-    dot.style.height = `${dotD}px`;
+    const dotRadiusVw = Number(custom.dotRadius ?? 0.25);
+    const dotDVw = Math.max(0.1, dotRadiusVw * 2);
+    dot.style.width = `${dotDVw}vw`;
+    dot.style.height = `${dotDVw}vw`;
     const dotRgba = hexToRgba(dotColor, dotOpacity);
     dot.style.backgroundColor = dotRgba;
     dot.style.boxShadow = `0 0 8px ${dotRgba}`;
@@ -304,7 +305,7 @@ export function triggerBallHitOnMiniMaps(
     const ringBorderOpacity = isMyTeam ? ((custom.myTeamRingBorderOpacity ?? 85) / 100) : ((custom.oppTeamRingBorderOpacity ?? 85) / 100);
     const ringFillColor = isMyTeam ? (custom.myTeamRingFillColor || '#00ff88') : (custom.oppTeamRingFillColor || '#ff3366');
     const ringFillOpacity = isMyTeam ? ((custom.myTeamRingFillOpacity ?? 15) / 100) : ((custom.oppTeamRingFillOpacity ?? 15) / 100);
-    const ringBorderWidth = custom.ringBorderWidth ?? 2;
+    const ringBorderWidthVw = Number(custom.ringBorderWidth ?? 0.1);
 
     const containerW = cached.container.clientWidth || 240;
     const speedFraction = Math.max(0, Math.min(1.0, speedKph / 110));
@@ -313,7 +314,7 @@ export function triggerBallHitOnMiniMaps(
 
     ring.style.width = `${ringDiameter}px`;
     ring.style.height = `${ringDiameter}px`;
-    ring.style.border = `${ringBorderWidth}px solid ${hexToRgba(ringBorderColor, ringBorderOpacity)}`;
+    ring.style.border = `${ringBorderWidthVw}vw solid ${hexToRgba(ringBorderColor, ringBorderOpacity)}`;
     ring.style.backgroundColor = hexToRgba(ringFillColor, ringFillOpacity);
     ring.style.boxShadow = `0 0 8px ${hexToRgba(ringBorderColor, ringBorderOpacity * 0.5)}`;
     ring.style.borderRadius = '50%';
