@@ -257,6 +257,136 @@
       margin-bottom: 12px;
     }
 
+    
+    /* ⚡ Layer Filter & Indicator Styling */
+    .layer-filter-bar {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .layer-filtering-indicator {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      background: var(--primer-warning-muted, #fff8c5);
+      color: var(--primer-warning-fg, #9a6700);
+      border: 1px solid #d4a72c;
+      border-radius: 6px;
+      padding: 6px 10px;
+      margin-bottom: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      box-shadow: 0 0 10px rgba(210, 153, 34, 0.35);
+      animation: filter-pulse 2.2s infinite ease-in-out;
+      transition: all 0.2s ease;
+    }
+
+    [data-theme="dark"] .layer-filtering-indicator {
+      background: rgba(187, 128, 9, 0.22);
+      color: #f0b72f;
+      border-color: #d29922;
+      box-shadow: 0 0 12px rgba(210, 153, 34, 0.4);
+    }
+
+    @keyframes filter-pulse {
+      0% {
+        box-shadow: 0 0 4px rgba(210, 153, 34, 0.25);
+        border-color: #d4a72c;
+      }
+      50% {
+        box-shadow: 0 0 12px rgba(210, 153, 34, 0.6);
+        border-color: #f59e0b;
+      }
+      100% {
+        box-shadow: 0 0 4px rgba(210, 153, 34, 0.25);
+        border-color: #d4a72c;
+      }
+    }
+
+    .indicator-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .indicator-pulse-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #d29922;
+      box-shadow: 0 0 6px #d29922;
+      animation: dot-blink 1s infinite alternate;
+    }
+
+    @keyframes dot-blink {
+      0% { transform: scale(0.85); opacity: 0.7; }
+      100% { transform: scale(1.2); opacity: 1; }
+    }
+
+    .indicator-label {
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      font-weight: 800;
+      font-size: 11px;
+      color: #9a6700;
+    }
+
+    [data-theme="dark"] .indicator-label {
+      color: #f6c143;
+    }
+
+    .indicator-count-badge {
+      background: rgba(154, 103, 0, 0.15);
+      border: 1px solid rgba(154, 103, 0, 0.25);
+      padding: 1px 6px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 700;
+      color: #734f00;
+    }
+
+    [data-theme="dark"] .indicator-count-badge {
+      background: rgba(240, 183, 47, 0.2);
+      border-color: rgba(240, 183, 47, 0.35);
+      color: #fcd34d;
+    }
+
+    .indicator-clear-btn {
+      background: rgba(154, 103, 0, 0.15);
+      border: 1px solid rgba(154, 103, 0, 0.35);
+      color: #734f00;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 10px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.15s;
+    }
+
+    .indicator-clear-btn:hover {
+      background: rgba(154, 103, 0, 0.3);
+      color: #4b3400;
+    }
+
+    [data-theme="dark"] .indicator-clear-btn {
+      background: rgba(240, 183, 47, 0.18);
+      border-color: rgba(240, 183, 47, 0.4);
+      color: #fcd34d;
+    }
+
+    [data-theme="dark"] .indicator-clear-btn:hover {
+      background: rgba(240, 183, 47, 0.35);
+      color: #ffffff;
+    }
+
+    .layer-filter-clear-btn:hover {
+      color: var(--primer-fg-default) !important;
+    }
+
     .comp-list-container {
       display: flex;
       flex-direction: column;
@@ -876,6 +1006,26 @@
         <button id="deselect-all-btn" class="btn btn-secondary btn-sm" title="Deselect all components (hide 8-point draggers)">Deselect All</button>
       </div>
     </div>
+
+    <!-- 🔍 Layer Search & Regex Filter Bar with Clear Option -->
+    <div class="layer-filter-bar">
+      <div style="position: relative; flex: 1; display: flex; align-items: center;">
+        <input type="text" id="layer-filter-regex" class="input-field" placeholder="🔍 Filter added layers / regex (e.g. p1, boost|speed, text, #1)..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width: 100%; padding-right: 26px; font-size: 11px;">
+        <button type="button" id="layer-filter-clear-btn" class="layer-filter-clear-btn" title="Clear filter (Escape)" style="position: absolute; right: 6px; background: none; border: none; color: var(--primer-fg-muted); cursor: pointer; font-size: 13px; line-height: 1; padding: 2px; display: none;">✕</button>
+      </div>
+      <button type="button" id="layer-filter-clear-action-btn" class="btn btn-secondary btn-sm" style="font-size: 11px; white-space: nowrap; display: none;" title="Reset filter">Clear</button>
+    </div>
+
+    <!-- ⚡ Pale-Yellow Prominent Filtering Active Indicator -->
+    <div id="layer-filtering-indicator" class="layer-filtering-indicator">
+      <div class="indicator-left">
+        <span class="indicator-pulse-dot"></span>
+        <span class="indicator-label">FILTERING</span>
+        <span id="layer-filter-count-badge" class="indicator-count-badge">Showing 0 / 0</span>
+      </div>
+      <button type="button" id="layer-filter-indicator-reset" class="indicator-clear-btn" title="Clear active filter">✕ Clear Filter</button>
+    </div>
+
     <div id="competitive-component-list" class="comp-list-container"><!-- Dynamic list rendered here --></div>
 
     <!-- Layout Actions Bar: Copy JSON, Paste/Import JSON, Reset Layout -->

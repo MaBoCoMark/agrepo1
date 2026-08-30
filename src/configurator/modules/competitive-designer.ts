@@ -1,3 +1,12 @@
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 import { emitTo, listen } from '@tauri-apps/api/event';
 import {
   ComponentInstance,
@@ -63,6 +72,36 @@ export function initCompetitiveDesigner(
   const addBtn = document.getElementById('add-component-btn') as HTMLButtonElement | null;
   const collapseAllBtn = document.getElementById('collapse-all-btn');
   const deselectAllBtn = document.getElementById('deselect-all-btn');
+
+  // Layer Filter & Regex search controls
+  const layerFilterRegexInput = document.getElementById('layer-filter-regex') as HTMLInputElement | null;
+  const layerFilterClearBtn = document.getElementById('layer-filter-clear-btn') as HTMLButtonElement | null;
+  const layerFilterClearActionBtn = document.getElementById('layer-filter-clear-action-btn') as HTMLButtonElement | null;
+  const layerFilteringIndicator = document.getElementById('layer-filtering-indicator') as HTMLElement | null;
+  const layerFilterCountBadge = document.getElementById('layer-filter-count-badge') as HTMLElement | null;
+  const layerFilterIndicatorReset = document.getElementById('layer-filter-indicator-reset') as HTMLButtonElement | null;
+
+  function clearLayerFilter() {
+    if (layerFilterRegexInput) {
+      layerFilterRegexInput.value = '';
+      layerFilterRegexInput.focus();
+    }
+    renderComponentList();
+  }
+
+  layerFilterClearBtn?.addEventListener('click', clearLayerFilter);
+  layerFilterClearActionBtn?.addEventListener('click', clearLayerFilter);
+  layerFilterIndicatorReset?.addEventListener('click', clearLayerFilter);
+
+  layerFilterRegexInput?.addEventListener('input', () => {
+    renderComponentList();
+  });
+
+  layerFilterRegexInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      clearLayerFilter();
+    }
+  });
 
   const targetPlayerSelect = document.getElementById('add-target-player-select') as HTMLSelectElement | null;
   const speedUnitSelect = document.getElementById('add-speed-unit-select') as HTMLSelectElement | null;
@@ -1154,7 +1193,94 @@ export function initCompetitiveDesigner(
     if (!compList) return;
     compList.innerHTML = '';
 
+    const query = layerFilterRegexInput?.value.trim() || '';
+    const isFilteringActive = query.length > 0;
+    const totalCount = competitiveLayout.length;
+
+    // Filter layout items based on regex query
+    const filteredIndices: number[] = [];
     competitiveLayout.forEach((inst, index) => {
+      if (!isFilteringActive) {
+        filteredIndices.push(index);
+        return;
+      }
+
+      const meta = COMPONENT_METAS[inst.componentType] || {
+        displayName: inst.componentType,
+        tier: inst.tier || 'element',
+        category: inst.category || (inst.componentType.includes('player') || inst.componentType.includes('boost') || inst.componentType.includes('speed') ? 'player' : 'global'),
+        supportsSpeedUnit: false,
+        supportsAlignment: false
+      };
+
+      const isPlayer = inst.category === 'player' || meta.category === 'player' || Boolean(inst.targetPlayer);
+      const targetP = (inst.targetPlayer || (isPlayer ? 'p1' : 'global')).toLowerCase();
+      const customStr = inst.customProps?.customText || inst.customProps?.staticText || '';
+
+      const searchableText = [
+        meta.displayName,
+        inst.componentType,
+        inst.instanceId,
+        inst.category || meta.category,
+        meta.tier,
+        targetP,
+        `#${index + 1}`,
+        inst.anchor,
+        customStr
+      ].filter(Boolean).join(' ');
+
+      if (matchesRegexOrQuery(searchableText, query)) {
+        filteredIndices.push(index);
+      }
+    });
+
+    // Update pale-yellow filtering indicator & clear button states
+    if (layerFilteringIndicator) {
+      layerFilteringIndicator.style.display = isFilteringActive ? 'flex' : 'none';
+    }
+    if (layerFilterCountBadge) {
+      layerFilterCountBadge.textContent = `Showing ${filteredIndices.length} / ${totalCount}`;
+    }
+    if (layerFilterClearBtn) {
+      layerFilterClearBtn.style.display = isFilteringActive ? 'block' : 'none';
+    }
+    if (layerFilterClearActionBtn) {
+      layerFilterClearActionBtn.style.display = isFilteringActive ? 'block' : 'none';
+    }
+
+    if (filteredIndices.length === 0) {
+      if (isFilteringActive) {
+        const emptyCard = document.createElement('div');
+        emptyCard.style.textAlign = 'center';
+        emptyCard.style.padding = '18px 10px';
+        emptyCard.style.color = 'var(--primer-fg-muted)';
+        emptyCard.style.fontSize = '11px';
+        emptyCard.style.background = 'var(--primer-canvas-subtle)';
+        emptyCard.style.borderRadius = '6px';
+        emptyCard.style.border = '1px dashed var(--primer-border-default)';
+        emptyCard.innerHTML = `
+          <div style="margin-bottom: 6px; font-weight: 600;">No added layers match: <span style="color: var(--primer-warning-fg); font-family: monospace;">"${escapeHtml(query)}"</span></div>
+          <button type="button" class="btn btn-secondary btn-sm" id="empty-clear-filter-btn" style="margin-top: 4px; font-size: 10px;">✕ Clear Filter</button>
+        `;
+        emptyCard.querySelector('#empty-clear-filter-btn')?.addEventListener('click', clearLayerFilter);
+        compList.appendChild(emptyCard);
+      } else {
+        const emptyCard = document.createElement('div');
+        emptyCard.style.textAlign = 'center';
+        emptyCard.style.padding = '18px 10px';
+        emptyCard.style.color = 'var(--primer-fg-muted)';
+        emptyCard.style.fontSize = '11px';
+        emptyCard.style.background = 'var(--primer-canvas-subtle)';
+        emptyCard.style.borderRadius = '6px';
+        emptyCard.style.border = '1px dashed var(--primer-border-default)';
+        emptyCard.textContent = 'No components in HUD layout. Add one above or explore the Catalog.';
+        compList.appendChild(emptyCard);
+      }
+      return;
+    }
+
+    filteredIndices.forEach((origIndex) => {
+      const inst = competitiveLayout[origIndex];
       const meta = COMPONENT_METAS[inst.componentType] || {
         displayName: inst.componentType,
         tier: inst.tier || 'element',
@@ -1172,24 +1298,24 @@ export function initCompetitiveDesigner(
       const isAlign = meta.supportsAlignment === true || inst.componentType.includes('text');
 
       const tierBadge = meta.tier === 'element'
-        ? '<span class=\"comp-type-tag\" style=\"background: #8250df;\">ELEMENT</span>'
+        ? '<span class="comp-type-tag" style="background: #8250df;">ELEMENT</span>'
         : meta.tier === 'panel'
-        ? '<span class=\"comp-type-tag\" style=\"background: #0969da;\">PANEL</span>'
-        : '<span class=\"comp-type-tag\" style=\"background: #1f883d;\">WIDGET</span>';
+        ? '<span class="comp-type-tag" style="background: #0969da;">PANEL</span>'
+        : '<span class="comp-type-tag" style="background: #1f883d;">WIDGET</span>';
 
       const playerBadge = isPlayer
-        ? `<span class=\"comp-type-tag\" style=\"background: #bc4c00;\">${(inst.targetPlayer || 'p1').toUpperCase()}</span>`
-        : '<span class=\"comp-type-tag\" style=\"background: #656d76;\">GLOBAL</span>';
+        ? `<span class="comp-type-tag" style="background: #bc4c00;">${(inst.targetPlayer || 'p1').toUpperCase()}</span>`
+        : '<span class="comp-type-tag" style="background: #656d76;">GLOBAL</span>';
 
-      const isFirst = index === 0;
-      const isLast = index === competitiveLayout.length - 1;
+      const isFirst = origIndex === 0;
+      const isLast = origIndex === competitiveLayout.length - 1;
 
       card.innerHTML = `
         <div class="comp-card-header">
           <div class="comp-card-title">
             ${tierBadge}
             ${playerBadge}
-            <span class="layer-badge" title="Layer Stacking Order">#${index + 1}</span>
+            <span class="layer-badge" title="Layer Stacking Order">#${origIndex + 1}</span>
             <span>${meta.displayName || inst.componentType}</span>
           </div>
           
@@ -1361,10 +1487,10 @@ export function initCompetitiveDesigner(
         emitTo('overlay', 'update-competitive-layout', { layout: competitiveLayout });
       });
 
-      // Layer Order buttons
+      // Layer Order buttons (operating on true array index origIndex)
       card.querySelector('.btn-top')?.addEventListener('click', (e) => {
         e.stopPropagation();
-        competitiveLayout.splice(index, 1);
+        competitiveLayout.splice(origIndex, 1);
         competitiveLayout.push(inst);
         saveCompetitiveLayout(competitiveLayout);
         emitTo('overlay', 'update-competitive-layout', { layout: competitiveLayout });
@@ -1373,10 +1499,10 @@ export function initCompetitiveDesigner(
 
       card.querySelector('.btn-up')?.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (index < competitiveLayout.length - 1) {
-          const temp = competitiveLayout[index + 1];
-          competitiveLayout[index + 1] = inst;
-          competitiveLayout[index] = temp;
+        if (origIndex < competitiveLayout.length - 1) {
+          const temp = competitiveLayout[origIndex + 1];
+          competitiveLayout[origIndex + 1] = inst;
+          competitiveLayout[origIndex] = temp;
           saveCompetitiveLayout(competitiveLayout);
           emitTo('overlay', 'update-competitive-layout', { layout: competitiveLayout });
           renderComponentList();
@@ -1385,10 +1511,10 @@ export function initCompetitiveDesigner(
 
       card.querySelector('.btn-down')?.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (index > 0) {
-          const temp = competitiveLayout[index - 1];
-          competitiveLayout[index - 1] = inst;
-          competitiveLayout[index] = temp;
+        if (origIndex > 0) {
+          const temp = competitiveLayout[origIndex - 1];
+          competitiveLayout[origIndex - 1] = inst;
+          competitiveLayout[origIndex] = temp;
           saveCompetitiveLayout(competitiveLayout);
           emitTo('overlay', 'update-competitive-layout', { layout: competitiveLayout });
           renderComponentList();
@@ -1397,7 +1523,7 @@ export function initCompetitiveDesigner(
 
       card.querySelector('.btn-bottom')?.addEventListener('click', (e) => {
         e.stopPropagation();
-        competitiveLayout.splice(index, 1);
+        competitiveLayout.splice(origIndex, 1);
         competitiveLayout.unshift(inst);
         saveCompetitiveLayout(competitiveLayout);
         emitTo('overlay', 'update-competitive-layout', { layout: competitiveLayout });
