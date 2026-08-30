@@ -48,6 +48,10 @@ export function updateMockStream(latestData: TelemetryBuffer): void {
     latestData.ballTeamNum = latestData.ballTeamNum === 0 ? 1 : 0;
   }
 
+  if (!latestData.p1Name || latestData.p1Name === "-") latestData.p1Name = "Player 1";
+  if (!latestData.p2Name || latestData.p2Name === "-") latestData.p2Name = "Player 2";
+  if (!latestData.p3Name || latestData.p3Name === "-") latestData.p3Name = "Player 3";
+
   // 3. P1 Boost
   mockSimState.p1Boost.val += mockSimState.p1Boost.step * mockSimState.p1Boost.dir;
   if (mockSimState.p1Boost.val >= 100) { mockSimState.p1Boost.val = 100; mockSimState.p1Boost.dir = -1; }
@@ -108,14 +112,17 @@ export function updateMockStream(latestData: TelemetryBuffer): void {
     latestData.p1OnGround = Math.random() > 0.3;
     latestData.p1OnWall = !latestData.p1OnGround && Math.random() > 0.5;
     latestData.p1Powersliding = Math.random() > 0.7;
+    latestData.p1Demolished = mockSimState.frameCount % 360 === 0;
 
     latestData.p2OnGround = Math.random() > 0.4;
     latestData.p2OnWall = !latestData.p2OnGround && Math.random() > 0.6;
     latestData.p2Powersliding = Math.random() > 0.8;
+    latestData.p2Demolished = mockSimState.frameCount % 480 === 0;
 
     latestData.p3OnGround = Math.random() > 0.2;
     latestData.p3OnWall = !latestData.p3OnGround && Math.random() > 0.7;
     latestData.p3Powersliding = Math.random() > 0.85;
+    latestData.p3Demolished = mockSimState.frameCount % 600 === 0;
   }
 
   // 9. Mock BallHit generation for Mini-Map Widget instances

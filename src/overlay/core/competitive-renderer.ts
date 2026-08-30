@@ -1256,6 +1256,32 @@ export function bindCompetitiveDomCache(
           else if (type === 'element-onwall-indicator') addOnWallListener(p, onBoolChange);
           else if (type === 'element-powersliding-indicator') addPowerslidingListener(p, onBoolChange);
           else if (type === 'element-supersonic-indicator') addSupersonicListener(p, onBoolChange);
+
+          if (activeColorMode && activeColorMode !== 'custom') {
+            teamColorsListeners.push(() => {
+              if (cached.lastBoolState) {
+                const activeColor = resolveColor(activeColorMode, customActiveColor, defaultActiveColor, latestData);
+                dotEl.style.backgroundColor = activeColor;
+                if (activeColor !== 'transparent' && !activeColor.startsWith('rgba(0, 0, 0, 0)')) {
+                  dotEl.style.boxShadow = `0 0 10px ${activeColor}`;
+                } else {
+                  dotEl.style.boxShadow = 'none';
+                }
+              }
+            });
+          }
+
+          let initialRawVal = false;
+          if (type === 'element-overtime-indicator') initialRawVal = Boolean(latestData.bOvertime);
+          else if (type === 'element-demolished-indicator') initialRawVal = Boolean(p === 'p1' ? latestData.p1Demolished : p === 'p2' ? latestData.p2Demolished : latestData.p3Demolished);
+          else if (type === 'element-hascar-indicator') initialRawVal = Boolean(p === 'p1' ? latestData.p1HasCar : p === 'p2' ? latestData.p2HasCar : latestData.p3HasCar);
+          else if (type === 'element-boosting-indicator') initialRawVal = Boolean(p === 'p1' ? latestData.p1Boosting : p === 'p2' ? latestData.p2Boosting : latestData.p3Boosting);
+          else if (type === 'element-onground-indicator') initialRawVal = Boolean(p === 'p1' ? latestData.p1OnGround : p === 'p2' ? latestData.p2OnGround : latestData.p3OnGround);
+          else if (type === 'element-onwall-indicator') initialRawVal = Boolean(p === 'p1' ? latestData.p1OnWall : p === 'p2' ? latestData.p2OnWall : latestData.p3OnWall);
+          else if (type === 'element-powersliding-indicator') initialRawVal = Boolean(p === 'p1' ? latestData.p1Powersliding : p === 'p2' ? latestData.p2Powersliding : latestData.p3Powersliding);
+          else if (type === 'element-supersonic-indicator') initialRawVal = Boolean(p === 'p1' ? latestData.p1Supersonic : p === 'p2' ? latestData.p2Supersonic : latestData.p3Supersonic);
+
+          onBoolChange(initialRawVal);
         }
         break;
       }
@@ -1292,6 +1318,18 @@ export function bindCompetitiveDomCache(
           else if (boolVar === 'powersliding') addPowerslidingListener(p, onBoolChange);
           else if (boolVar === 'demolished') addDemolishedListener(p, onBoolChange);
           else if (boolVar === 'overtime') bOvertimeListeners.push(onBoolChange);
+
+          let initialVal = false;
+          if (boolVar === 'supersonic') initialVal = Boolean(p === 'p1' ? latestData.p1Supersonic : p === 'p2' ? latestData.p2Supersonic : latestData.p3Supersonic);
+          else if (boolVar === 'boosting') initialVal = Boolean(p === 'p1' ? latestData.p1Boosting : p === 'p2' ? latestData.p2Boosting : latestData.p3Boosting);
+          else if (boolVar === 'hascar') initialVal = Boolean(p === 'p1' ? latestData.p1HasCar : p === 'p2' ? latestData.p2HasCar : latestData.p3HasCar);
+          else if (boolVar === 'onground') initialVal = Boolean(p === 'p1' ? latestData.p1OnGround : p === 'p2' ? latestData.p2OnGround : latestData.p3OnGround);
+          else if (boolVar === 'onwall') initialVal = Boolean(p === 'p1' ? latestData.p1OnWall : p === 'p2' ? latestData.p2OnWall : latestData.p3OnWall);
+          else if (boolVar === 'powersliding') initialVal = Boolean(p === 'p1' ? latestData.p1Powersliding : p === 'p2' ? latestData.p2Powersliding : latestData.p3Powersliding);
+          else if (boolVar === 'demolished') initialVal = Boolean(p === 'p1' ? latestData.p1Demolished : p === 'p2' ? latestData.p2Demolished : latestData.p3Demolished);
+          else if (boolVar === 'overtime') initialVal = Boolean(latestData.bOvertime);
+
+          onBoolChange(initialVal);
         }
         break;
       }
@@ -1300,13 +1338,15 @@ export function bindCompetitiveDomCache(
       case 'element-global-text-indicator': {
         const valEl = cached.valEl;
         if (valEl) {
-          bOvertimeListeners.push((ot: boolean) => {
+          const updateOt = (ot: boolean) => {
             if (ot !== cached.lastBoolState) {
               cached.lastBoolState = ot;
               valEl.textContent = ot ? 'OVERTIME' : 'REGULAR TIME';
               valEl.style.color = ot ? '#ff3b30' : '#30d158';
             }
-          });
+          };
+          bOvertimeListeners.push(updateOt);
+          updateOt(latestData.bOvertime);
         }
         break;
       }
@@ -1315,12 +1355,14 @@ export function bindCompetitiveDomCache(
       case 'widget-overtime-status': {
         const dotEl = cached.dotEl;
         if (dotEl) {
-          bOvertimeListeners.push((ot: boolean) => {
+          const updateOt = (ot: boolean) => {
             if (ot !== cached.lastBoolState) {
               cached.lastBoolState = ot;
               dotEl.className = `status-dot dyn-dot ${ot ? 'bool-on ot-active' : 'bool-off'}`;
             }
-          });
+          };
+          bOvertimeListeners.push(updateOt);
+          updateOt(latestData.bOvertime);
         }
         break;
       }
@@ -1330,12 +1372,14 @@ export function bindCompetitiveDomCache(
       case 'widget-player-status': {
         const dotEl = cached.dotEl;
         if (dotEl) {
-          addSupersonicListener(p, (supersonic: boolean) => {
+          const updateSuper = (supersonic: boolean) => {
             if (supersonic !== cached.lastBoolState) {
               cached.lastBoolState = supersonic;
               dotEl.className = `status-dot dyn-dot ${supersonic ? 'bool-on active' : 'bool-off'}`;
             }
-          });
+          };
+          addSupersonicListener(p, updateSuper);
+          updateSuper(Boolean(p === 'p1' ? latestData.p1Supersonic : p === 'p2' ? latestData.p2Supersonic : latestData.p3Supersonic));
         }
         break;
       }
@@ -1527,31 +1571,45 @@ export function bindCompetitiveDomCache(
         }
         if (cached.dotCar) {
           const dot = cached.dotCar;
-          addHasCarListener(p, (hasCar) => { dot.className = `status-dot dyn-hascar ${hasCar ? 'bool-on' : 'bool-off'}`; });
+          const fn = (hasCar: boolean) => { dot.className = `status-dot dyn-hascar ${hasCar ? 'bool-on' : 'bool-off'}`; };
+          addHasCarListener(p, fn);
+          fn(Boolean(p === 'p1' ? latestData.p1HasCar : p === 'p2' ? latestData.p2HasCar : latestData.p3HasCar));
         }
         if (cached.dotBoost) {
           const dot = cached.dotBoost;
-          addBoostingListener(p, (isBoosting) => { dot.className = `status-dot dyn-boosting ${isBoosting ? 'bool-on' : 'bool-off'}`; });
+          const fn = (isBoosting: boolean) => { dot.className = `status-dot dyn-boosting ${isBoosting ? 'bool-on' : 'bool-off'}`; };
+          addBoostingListener(p, fn);
+          fn(Boolean(p === 'p1' ? latestData.p1Boosting : p === 'p2' ? latestData.p2Boosting : latestData.p3Boosting));
         }
         if (cached.dotGround) {
           const dot = cached.dotGround;
-          addOnGroundListener(p, (onGround) => { dot.className = `status-dot dyn-onground ${onGround ? 'bool-on' : 'bool-off'}`; });
+          const fn = (onGround: boolean) => { dot.className = `status-dot dyn-onground ${onGround ? 'bool-on' : 'bool-off'}`; };
+          addOnGroundListener(p, fn);
+          fn(Boolean(p === 'p1' ? latestData.p1OnGround : p === 'p2' ? latestData.p2OnGround : latestData.p3OnGround));
         }
         if (cached.dotWall) {
           const dot = cached.dotWall;
-          addOnWallListener(p, (onWall) => { dot.className = `status-dot dyn-onwall ${onWall ? 'bool-on' : 'bool-off'}`; });
+          const fn = (onWall: boolean) => { dot.className = `status-dot dyn-onwall ${onWall ? 'bool-on' : 'bool-off'}`; };
+          addOnWallListener(p, fn);
+          fn(Boolean(p === 'p1' ? latestData.p1OnWall : p === 'p2' ? latestData.p2OnWall : latestData.p3OnWall));
         }
         if (cached.dotSlide) {
           const dot = cached.dotSlide;
-          addPowerslidingListener(p, (powersliding) => { dot.className = `status-dot dyn-slide ${powersliding ? 'bool-on' : 'bool-off'}`; });
+          const fn = (powersliding: boolean) => { dot.className = `status-dot dyn-slide ${powersliding ? 'bool-on' : 'bool-off'}`; };
+          addPowerslidingListener(p, fn);
+          fn(Boolean(p === 'p1' ? latestData.p1Powersliding : p === 'p2' ? latestData.p2Powersliding : latestData.p3Powersliding));
         }
         if (cached.dotDemo) {
           const dot = cached.dotDemo;
-          addDemolishedListener(p, (demolished) => { dot.className = `status-dot dyn-demo ${demolished ? 'bool-on' : 'bool-off'}`; });
+          const fn = (demolished: boolean) => { dot.className = `status-dot dyn-demo ${demolished ? 'bool-on' : 'bool-off'}`; };
+          addDemolishedListener(p, fn);
+          fn(Boolean(p === 'p1' ? latestData.p1Demolished : p === 'p2' ? latestData.p2Demolished : latestData.p3Demolished));
         }
         if (cached.dotSuper) {
           const dot = cached.dotSuper;
-          addSupersonicListener(p, (supersonic) => { dot.className = `status-dot dyn-super ${supersonic ? 'bool-on' : 'bool-off'}`; });
+          const fn = (supersonic: boolean) => { dot.className = `status-dot dyn-super ${supersonic ? 'bool-on' : 'bool-off'}`; };
+          addSupersonicListener(p, fn);
+          fn(Boolean(p === 'p1' ? latestData.p1Supersonic : p === 'p2' ? latestData.p2Supersonic : latestData.p3Supersonic));
         }
         break;
       }

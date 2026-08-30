@@ -175,7 +175,7 @@ export interface CachedComponentInstance {
   lastScoreText: string;
   lastTimeSeconds: number;
   lastBallTeam: number;
-  lastBoolState: boolean;
+  lastBoolState?: boolean;
   lastOpacity: string;
   lastDisplay: string;
   lastColor: string;
@@ -605,7 +605,7 @@ export function buildCompetitiveDomCache(
       lastScoreText: '',
       lastTimeSeconds: -1,
       lastBallTeam: -1,
-      lastBoolState: false,
+      lastBoolState: undefined,
       lastOpacity: '',
       lastDisplay: '',
       lastColor: '',

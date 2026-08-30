@@ -737,12 +737,21 @@ export function initCompetitiveDesigner(
 
     // Indicators (Six-Color Active Mode)
     if (isIndicator) {
+      let defaultColor = '#30d158';
+      if (inst.componentType === 'element-demolished-indicator') defaultColor = '#ff453a';
+      else if (inst.componentType === 'element-boosting-indicator') defaultColor = '#ff9500';
+      else if (inst.componentType === 'element-onground-indicator') defaultColor = '#0a84ff';
+      else if (inst.componentType === 'element-onwall-indicator') defaultColor = '#bf5af2';
+      else if (inst.componentType === 'element-powersliding-indicator') defaultColor = '#ffd60a';
+      else if (inst.componentType === 'element-supersonic-indicator') defaultColor = '#bf5af2';
+      else if (inst.componentType === 'element-overtime-indicator') defaultColor = '#ff453a';
+
       propsBox.appendChild(
         createColorModeControl(
           'Active Color Mode',
           inst.customProps?.activeColorMode as ColorSource,
           inst.customProps?.activeColor,
-          '#30d158',
+          defaultColor,
           (mode, color) => {
             inst.customProps!.activeColorMode = mode;
             inst.customProps!.activeColor = color;
