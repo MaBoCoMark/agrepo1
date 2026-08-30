@@ -25,8 +25,10 @@ export function initWebSocketControls(): void {
   const savedSim = localStorage.getItem('saved_mock_sim') === 'true';
   if (mockSimCheckbox) mockSimCheckbox.checked = savedSim;
 
-  const savedDisableRetry = localStorage.getItem('saved_ws_disable_retry') === 'true';
-  if (autoRetryCheckbox) autoRetryCheckbox.checked = savedDisableRetry;
+  // QOL: Disable Auto Retry state should NOT be persisted across sessions.
+  // It always defaults to enabled (autoRetryCheckbox is unchecked) on startup.
+  localStorage.removeItem('saved_ws_disable_retry');
+  if (autoRetryCheckbox) autoRetryCheckbox.checked = false;
 
   function updateWsUI(status: 'connected' | 'connecting' | 'disconnected') {
     currentWsStatus = status;
@@ -76,7 +78,6 @@ export function initWebSocketControls(): void {
 
   autoRetryCheckbox?.addEventListener('change', () => {
     const disableRetry = autoRetryCheckbox.checked;
-    localStorage.setItem('saved_ws_disable_retry', disableRetry.toString());
     emitTo('overlay', 'toggle-ws-auto-retry', { disabled: disableRetry });
   });
 
@@ -90,9 +91,5 @@ export function initWebSocketControls(): void {
   if (savedSim) {
     emitTo('overlay', 'toggle-mock-simulation', true);
     emitTo('overlay', 'toggle-mock-simulation', { enabled: true });
-  }
-
-  if (savedDisableRetry) {
-    emitTo('overlay', 'toggle-ws-auto-retry', { disabled: true });
   }
 }

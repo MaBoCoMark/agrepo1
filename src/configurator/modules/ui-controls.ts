@@ -36,23 +36,37 @@ export function parseRgbaString(
   }
   const clean = rgbaStr.trim().toLowerCase();
   if (clean.startsWith('#')) {
+    if (clean.length === 4) {
+      return {
+        hex: '#' + clean[1] + clean[1] + clean[2] + clean[2] + clean[3] + clean[3],
+        alpha: 1.0
+      };
+    }
+    if (clean.length === 5) {
+      const hex = '#' + clean[1] + clean[1] + clean[2] + clean[2] + clean[3] + clean[3];
+      const a = parseInt(clean[4] + clean[4], 16) / 255;
+      return { hex, alpha: Math.round(a * 100) / 100 };
+    }
     if (clean.length === 9) {
       const hex = clean.substring(0, 7);
       const alphaHex = clean.substring(7, 9);
       const alpha = parseInt(alphaHex, 16) / 255;
       return { hex, alpha: Math.round(alpha * 100) / 100 };
     }
-    return { hex: clean.substring(0, 7), alpha: 1.0 };
+    if (clean.length === 7) {
+      return { hex: clean, alpha: 1.0 };
+    }
+    return { hex: fallbackHex, alpha: fallbackAlpha };
   }
-  const match = clean.match(/rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\s*\)/);
+  const match = clean.match(/rgba?\s*\(\s*(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)(?:\s*,\s*([\d.]+))?\s*\)/);
   if (match) {
-    const r = parseInt(match[1], 10);
-    const g = parseInt(match[2], 10);
-    const b = parseInt(match[3], 10);
+    const r = Math.round(parseFloat(match[1]));
+    const g = Math.round(parseFloat(match[2]));
+    const b = Math.round(parseFloat(match[3]));
     const a = match[4] !== undefined ? parseFloat(match[4]) : 1.0;
     return {
       hex: rgbToHex(r, g, b),
-      alpha: Math.min(1.0, Math.max(0.0, a))
+      alpha: Math.min(1.0, Math.max(0.0, Math.round(a * 100) / 100))
     };
   }
   return { hex: fallbackHex, alpha: fallbackAlpha };
@@ -141,6 +155,9 @@ export function createColorModeControl(
   defaultColor: string,
   onChange: (mode: ColorSource, customColor: string) => void
 ): HTMLElement {
+  const defaultParsed = parseRgbaString(defaultColor, '#0969da', 1.0);
+  const parsed = parseRgbaString(currentColor || defaultColor, defaultParsed.hex, defaultParsed.alpha);
+
   const container = document.createElement('div');
   container.className = 'ctrl-group';
   container.style.flexDirection = 'column';
@@ -155,7 +172,22 @@ export function createColorModeControl(
   const lbl = document.createElement('span');
   lbl.className = 'ctrl-label';
   lbl.textContent = label;
+
+  const hexValText = document.createElement('span');
+  hexValText.style.fontFamily = 'monospace';
+  hexValText.style.fontSize = '10px';
+  hexValText.style.color = 'var(--primer-fg-muted)';
+
+  const activeMode = currentMode || 'default';
+  if (activeMode === 'custom' || activeMode === 'default') {
+    hexValText.textContent = `${parsed.hex} (${Math.round(parsed.alpha * 100)}%)`;
+  } else {
+    const matchedOpt = COLOR_SOURCE_OPTIONS.find((opt) => opt.value === activeMode);
+    hexValText.textContent = matchedOpt ? matchedOpt.label.split(' (')[0] : activeMode;
+  }
+
   labelRow.appendChild(lbl);
+  labelRow.appendChild(hexValText);
   container.appendChild(labelRow);
 
   const selectRow = document.createElement('div');
@@ -171,32 +203,65 @@ export function createColorModeControl(
     const option = document.createElement('option');
     option.value = opt.value;
     option.textContent = opt.label;
-    if ((currentMode || 'default') === opt.value) {
+    if (activeMode === opt.value) {
       option.selected = true;
     }
     select.appendChild(option);
   });
 
-  const colorInput = document.createElement('input');
-  colorInput.type = 'color';
-  colorInput.className = 'input-color';
-  colorInput.value = currentColor || defaultColor;
-  colorInput.style.width = '30px';
-  colorInput.style.height = '24px';
-  colorInput.style.display = (currentMode === 'custom' || currentMode === undefined) ? 'inline-block' : 'none';
-
   selectRow.appendChild(select);
-  selectRow.appendChild(colorInput);
   container.appendChild(selectRow);
+
+  const customInputsRow = document.createElement('div');
+  customInputsRow.style.display = (activeMode === 'custom' || activeMode === 'default') ? 'flex' : 'none';
+  customInputsRow.style.alignItems = 'center';
+  customInputsRow.style.gap = '8px';
+
+  const colorPicker = document.createElement('input');
+  colorPicker.type = 'color';
+  colorPicker.className = 'input-color';
+  colorPicker.value = parsed.hex;
+  colorPicker.style.width = '32px';
+  colorPicker.style.height = '24px';
+  colorPicker.style.flexShrink = '0';
+
+  const alphaSlider = document.createElement('input');
+  alphaSlider.type = 'range';
+  alphaSlider.className = 'slider';
+  alphaSlider.min = '0';
+  alphaSlider.max = '100';
+  alphaSlider.value = Math.round(parsed.alpha * 100).toString();
+  alphaSlider.style.flex = '1';
+
+  customInputsRow.appendChild(colorPicker);
+  customInputsRow.appendChild(alphaSlider);
+  container.appendChild(customInputsRow);
+
+  const update = () => {
+    const hex = colorPicker.value;
+    const alphaPct = parseInt(alphaSlider.value, 10);
+    const a = alphaPct / 100;
+    hexValText.textContent = `${hex} (${alphaPct}%)`;
+    const rgba = hexAndAlphaToRgba(hex, a);
+    onChange(select.value as ColorSource, rgba);
+  };
+
+  colorPicker.addEventListener('input', update);
+  alphaSlider.addEventListener('input', update);
 
   select.addEventListener('change', () => {
     const newMode = select.value as ColorSource;
-    colorInput.style.display = (newMode === 'custom' || newMode === 'default') ? 'inline-block' : 'none';
-    onChange(newMode, colorInput.value);
-  });
-
-  colorInput.addEventListener('input', () => {
-    onChange(select.value as ColorSource, colorInput.value);
+    const isCustomOrDef = (newMode === 'custom' || newMode === 'default');
+    customInputsRow.style.display = isCustomOrDef ? 'flex' : 'none';
+    if (isCustomOrDef) {
+      hexValText.textContent = `${colorPicker.value} (${alphaSlider.value}%)`;
+    } else {
+      const matchedOpt = COLOR_SOURCE_OPTIONS.find((opt) => opt.value === newMode);
+      hexValText.textContent = matchedOpt ? matchedOpt.label.split(' (')[0] : newMode;
+    }
+    const hex = colorPicker.value;
+    const a = parseInt(alphaSlider.value, 10) / 100;
+    onChange(newMode, hexAndAlphaToRgba(hex, a));
   });
 
   return container;
