@@ -1324,6 +1324,82 @@
         }
       }
 
+      // 3b. Dual-Layer Boost Pie (.dyn-pie-svg, .dyn-outer-path, .dyn-inner-path)
+      const outerPath = componentMount.querySelector(".dyn-outer-path, #outerPath");
+      const innerPath = componentMount.querySelector(".dyn-inner-path, #innerPath");
+      const pieSvg = componentMount.querySelector(".dyn-pie-svg, #pieSvg, svg");
+      if (outerPath && innerPath && pieSvg) {
+        const val = Math.max(0, Math.min(100, boost));
+        const rotation = Number(currentCustomProps.rotation ?? 225);
+        let outerGap = Math.max(0, Math.min(180, Number(currentCustomProps.outerGap ?? 90)));
+        let innerGap = Math.max(0, Math.min(180, Number(currentCustomProps.innerGap ?? 90)));
+        if (currentCustomProps.syncGap) {
+          innerGap = outerGap;
+        }
+        let outerR = Math.max(10, Math.min(48, Number(currentCustomProps.outerRadius ?? 48)));
+        let innerR = Math.max(5, Math.min(30, Number(currentCustomProps.innerRadius ?? 26)));
+        if (outerR <= innerR) {
+          innerR = Math.max(5, outerR - 1);
+        }
+        const isInnerDynamic = currentCustomProps.innerDynamic !== false;
+        const enableBlink = currentCustomProps.enableBlink !== false;
+        const colCrit = currentCustomProps.colorCritical || "#000000";
+        const colBlink = currentCustomProps.colorBlink || "#ff4d4f";
+        const colLow = currentCustomProps.colorLow || "#ff4d4f";
+        const colMid = currentCustomProps.colorMid || "#faad14";
+        const colHigh = currentCustomProps.colorHigh || "#52c41a";
+        const colFull = currentCustomProps.colorFull || "#1890ff";
+
+        let colorState = { type: "solid", color: colFull };
+        if (val < 12) colorState = { type: "solid", color: colCrit };
+        else if (val < 24) colorState = { type: enableBlink ? "blink" : "solid", color: colBlink };
+        else if (val < 36) colorState = { type: "solid", color: colLow };
+        else if (val < 72) colorState = { type: "solid", color: colMid };
+        else if (val < 96) colorState = { type: "solid", color: colHigh };
+
+        pieSvg.style.transform = "rotate(" + rotation + "deg)";
+        outerPath.style.stroke = colorState.color;
+        innerPath.style.fill = colorState.color;
+
+        const isBlink = colorState.type === "blink";
+        outerPath.classList.toggle("blink-red", isBlink);
+        innerPath.classList.toggle("blink-red", isBlink);
+
+        const outerAvailableAngle = 360 - outerGap;
+        const innerAvailableAngle = 360 - innerGap;
+        const outerAngle = isInnerDynamic ? outerAvailableAngle : (val / 100) * outerAvailableAngle;
+        const innerAngle = isInnerDynamic ? (val / 100) * innerAvailableAngle : innerAvailableAngle;
+
+        const strokeWidth = outerR - innerR;
+        const midRadius = innerR + (strokeWidth / 2);
+
+        function p2c(cx, cy, r, deg) {
+          const rad = (deg - 90) * Math.PI / 180.0;
+          return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+        }
+        function arcD(cx, cy, r, sDeg, eDeg) {
+          if (eDeg <= sDeg) return "";
+          if (eDeg - sDeg >= 360) eDeg = sDeg + 359.99;
+          const s = p2c(cx, cy, r, eDeg);
+          const e = p2c(cx, cy, r, sDeg);
+          const sw = eDeg - sDeg <= 180 ? "0" : "1";
+          return "M " + s.x + " " + s.y + " A " + r + " " + r + " 0 " + sw + " 0 " + e.x + " " + e.y;
+        }
+        function pieD(cx, cy, r, sDeg, eDeg) {
+          if (eDeg <= sDeg) return "";
+          if (eDeg - sDeg >= 360) return "M " + cx + " " + (cy - r) + " A " + r + " " + r + " 0 1 1 " + (cx - 0.01) + " " + (cy - r) + " Z";
+          const s = p2c(cx, cy, r, eDeg);
+          const e = p2c(cx, cy, r, sDeg);
+          const sw = eDeg - sDeg <= 180 ? "0" : "1";
+          return "M " + cx + " " + cy + " L " + s.x + " " + s.y + " A " + r + " " + r + " 0 " + sw + " 0 " + e.x + " " + e.y + " Z";
+        }
+
+        outerPath.style.fill = "none";
+        outerPath.setAttribute("stroke-width", strokeWidth.toString());
+        outerPath.setAttribute("d", arcD(50, 50, midRadius, 0, outerAngle));
+        innerPath.setAttribute("d", pieD(50, 50, innerR, 0, innerAngle));
+      }
+
       // 4. Status Dot Indicators (.dyn-dot)
       const dotEl = componentMount.querySelector(".dyn-dot");
       if (dotEl) {

@@ -483,6 +483,21 @@ export function createNewComponentInstance(
     customProps.colorHigh = "#10b981";
     customProps.colorMid = "#f59e0b";
     customProps.colorLow = "#ef4444";
+  } else if (componentType === "element-double-layer-boost-pie" || componentType === "element-boost-pie") {
+    customProps.rotation = 225;
+    customProps.outerGap = 90;
+    customProps.innerGap = 90;
+    customProps.syncGap = true;
+    customProps.outerRadius = 48;
+    customProps.innerRadius = 26;
+    customProps.innerDynamic = true;
+    customProps.enableBlink = true;
+    customProps.colorCritical = "#000000";
+    customProps.colorBlink = "#ff4d4f";
+    customProps.colorLow = "#ff4d4f";
+    customProps.colorMid = "#faad14";
+    customProps.colorHigh = "#52c41a";
+    customProps.colorFull = "#1890ff";
   } else if (componentType === "element-curved-boost-bar") {
     customProps.thickness = 8;
     customProps.gap = 90;

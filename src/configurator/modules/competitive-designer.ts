@@ -367,6 +367,7 @@ export function initCompetitiveDesigner(
     const isSpeedBar = inst.componentType.includes('speed-bar') && !inst.componentType.includes('curved');
     const isCurvedBoost = inst.componentType === 'element-curved-boost-bar';
     const isCurvedSpeed = inst.componentType === 'element-curved-speedometer';
+    const isBoostPie = inst.componentType === 'element-double-layer-boost-pie' || inst.componentType === 'element-boost-pie' || inst.componentType.includes('boost-pie');
     const isMiniMap = inst.componentType === 'widget-mini-map' || inst.componentType === 'mini-map';
     const isRespawnTimer = inst.componentType === 'widget-respawn-timer' || inst.componentType === 'respawn-timer';
 
@@ -626,6 +627,102 @@ export function initCompetitiveDesigner(
       propsBox.appendChild(
         createRgbaInputControl('Track Color', inst.customProps?.trackColor || 'rgba(255, 255, 255, 0.15)', '#ffffff', 0.15, (val) => {
           inst.customProps!.trackColor = val;
+          saveAndEmit();
+        })
+      );
+    }
+
+    if (isBoostPie) {
+      propsBox.appendChild(
+        createSliderControl('Overall Rotation (0°-360°)', 0, 360, 1, Number(inst.customProps?.rotation ?? 225), '°', (val) => {
+          inst.customProps!.rotation = val;
+          saveAndEmit();
+        })
+      );
+      propsBox.appendChild(
+        createSliderControl('Outer Gap Angle (0°-180°)', 0, 180, 1, Number(inst.customProps?.outerGap ?? 90), '°', (val) => {
+          inst.customProps!.outerGap = val;
+          if (inst.customProps?.syncGap) {
+            inst.customProps!.innerGap = val;
+          }
+          saveAndEmit();
+        })
+      );
+      propsBox.appendChild(
+        createSliderControl('Inner Gap Angle (0°-180°)', 0, 180, 1, Number(inst.customProps?.innerGap ?? 90), '°', (val) => {
+          inst.customProps!.innerGap = val;
+          if (inst.customProps?.syncGap) {
+            inst.customProps!.outerGap = val;
+          }
+          saveAndEmit();
+        })
+      );
+      propsBox.appendChild(
+        createCheckboxControl('Sync Gap Angles', inst.customProps?.syncGap !== false, (val) => {
+          inst.customProps!.syncGap = val;
+          if (val) {
+            inst.customProps!.innerGap = inst.customProps!.outerGap;
+          }
+          saveAndEmit();
+        })
+      );
+      propsBox.appendChild(
+        createSliderControl('Outer Radius Ratio (10-48)', 10, 48, 1, Number(inst.customProps?.outerRadius ?? 48), '', (val) => {
+          inst.customProps!.outerRadius = val;
+          saveAndEmit();
+        })
+      );
+      propsBox.appendChild(
+        createSliderControl('Inner Radius Ratio (5-30)', 5, 30, 1, Number(inst.customProps?.innerRadius ?? 26), '', (val) => {
+          inst.customProps!.innerRadius = val;
+          saveAndEmit();
+        })
+      );
+      propsBox.appendChild(
+        createCheckboxControl('Inner Dynamic (Outer Full, Inner Progress)', inst.customProps?.innerDynamic !== false, (val) => {
+          inst.customProps!.innerDynamic = val;
+          saveAndEmit();
+        })
+      );
+      propsBox.appendChild(
+        createCheckboxControl('Enable Danger Blink (<24)', inst.customProps?.enableBlink !== false, (val) => {
+          inst.customProps!.enableBlink = val;
+          saveAndEmit();
+        })
+      );
+      propsBox.appendChild(
+        createRgbaInputControl('Critical Boost Color (<12)', inst.customProps?.colorCritical || '#000000', '#000000', 1.0, (val) => {
+          inst.customProps!.colorCritical = val;
+          saveAndEmit();
+        })
+      );
+      propsBox.appendChild(
+        createRgbaInputControl('Blinking Boost Color (12-23)', inst.customProps?.colorBlink || '#ff4d4f', '#ff4d4f', 1.0, (val) => {
+          inst.customProps!.colorBlink = val;
+          saveAndEmit();
+        })
+      );
+      propsBox.appendChild(
+        createRgbaInputControl('Low Boost Color (24-35)', inst.customProps?.colorLow || '#ff4d4f', '#ff4d4f', 1.0, (val) => {
+          inst.customProps!.colorLow = val;
+          saveAndEmit();
+        })
+      );
+      propsBox.appendChild(
+        createRgbaInputControl('Mid Boost Color (36-71)', inst.customProps?.colorMid || '#faad14', '#faad14', 1.0, (val) => {
+          inst.customProps!.colorMid = val;
+          saveAndEmit();
+        })
+      );
+      propsBox.appendChild(
+        createRgbaInputControl('High Boost Color (72-95)', inst.customProps?.colorHigh || '#52c41a', '#52c41a', 1.0, (val) => {
+          inst.customProps!.colorHigh = val;
+          saveAndEmit();
+        })
+      );
+      propsBox.appendChild(
+        createRgbaInputControl('Full Boost Color (>=96)', inst.customProps?.colorFull || '#1890ff', '#1890ff', 1.0, (val) => {
+          inst.customProps!.colorFull = val;
           saveAndEmit();
         })
       );

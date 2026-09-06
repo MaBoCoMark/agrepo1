@@ -7,6 +7,7 @@ import { BoostTierState, createInitialBoostTierState } from './boost-meter';
 import { bindCompetitiveDomCache } from './competitive-renderer';
 import { resetPreviousData, latestData } from './telemetry-state';
 import { STANDARD_BOOST_LOCATIONS } from './pitch-geometry';
+import { createStrokeArc, createPieSlice } from './boost-pie';
 
 /**
  * ============================================================================
@@ -115,6 +116,12 @@ export interface CachedComponentInstance {
   fillEl: HTMLElement | null;
   bgEl: SVGCircleElement | null;
   dotEl: HTMLElement | null;
+
+  // Dual-Layer Boost Pie specific cached nodes
+  pieSvg?: SVGSVGElement | null;
+  outerPath?: SVGPathElement | null;
+  innerPath?: SVGPathElement | null;
+  lastBoostPieVal?: number;
 
   // Mini-Map specific cached nodes
   miniMapStage: HTMLElement | null;
@@ -390,6 +397,40 @@ export function applyStaticComponentStyles(
     }
   }
 
+  // 5b. Dual-Layer Boost Pie Static Setup
+  if (inst.componentType === 'element-double-layer-boost-pie' || inst.componentType === 'element-boost-pie') {
+    const rotation = Number(inst.customProps?.rotation ?? 225);
+    let outerGap = Math.max(0, Math.min(180, Number(inst.customProps?.outerGap ?? 90)));
+    let innerGap = Math.max(0, Math.min(180, Number(inst.customProps?.innerGap ?? 90)));
+    if (inst.customProps?.syncGap) {
+      innerGap = outerGap;
+    }
+    let outerR = Math.max(10, Math.min(48, Number(inst.customProps?.outerRadius ?? 48)));
+    let innerR = Math.max(5, Math.min(30, Number(inst.customProps?.innerRadius ?? 26)));
+    if (outerR <= innerR) {
+      innerR = Math.max(5, outerR - 1);
+    }
+    const isInnerDynamic = inst.customProps?.innerDynamic !== false;
+    const strokeWidth = outerR - innerR;
+    const midRadius = innerR + (strokeWidth / 2);
+    const outerAvailableAngle = 360 - outerGap;
+    const innerAvailableAngle = 360 - innerGap;
+
+    if (cached.pieSvg) {
+      cached.pieSvg.style.transform = "rotate(" + rotation + "deg)";
+    }
+    if (cached.outerPath) {
+      cached.outerPath.style.fill = 'none';
+      cached.outerPath.setAttribute('stroke-width', strokeWidth.toString());
+      if (isInnerDynamic) {
+        cached.outerPath.setAttribute('d', createStrokeArc(50, 50, midRadius, 0, outerAvailableAngle));
+      }
+    }
+    if (cached.innerPath && !isInnerDynamic) {
+      cached.innerPath.setAttribute('d', createPieSlice(50, 50, innerR, 0, innerAvailableAngle));
+    }
+  }
+
   // 6. Mini-Map & Ball Hit Pitch Widget Static Setup
   if (inst.componentType === 'widget-mini-map' || inst.componentType === 'mini-map') {
     const custom = inst.customProps || {};
@@ -589,6 +630,11 @@ export function buildCompetitiveDomCache(
       fillEl: container.querySelector<HTMLElement>('.dyn-boost-fill, .el-boost-bar-fill, .hud-boost-bar-fill, .dyn-speed-fill, .el-speed-bar-fill, .dyn-v-boost-fill, .el-v-boost-bar-fill, .dyn-v-speed-fill, .el-v-speed-bar-fill, .widget-bar-fill, .dyn-curved-fill, .curved-progress-bar'),
       bgEl: container.querySelector<SVGCircleElement>('.dyn-curved-bg, .curved-bg-track'),
       dotEl: container.querySelector<HTMLElement>('.dyn-dot, .status-dot, .el-pure-dot, .el-countdown-lamp, .el-countdown-num'),
+
+      pieSvg: container.querySelector<SVGSVGElement>('.dyn-pie-svg, svg'),
+      outerPath: container.querySelector<SVGPathElement>('.dyn-outer-path, #outerPath'),
+      innerPath: container.querySelector<SVGPathElement>('.dyn-inner-path, #innerPath'),
+      lastBoostPieVal: -1,
 
       miniMapStage,
       miniMapHitIndicator,

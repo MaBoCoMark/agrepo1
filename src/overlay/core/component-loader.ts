@@ -8,6 +8,7 @@ import {
 import { loadGlobalLayoutSettings, isTextComponent } from "./layout-store";
 import { resolveEffectiveColor } from "./team-colors";
 import { toRealUuSpeed, calcNonlinearSpeedProgress, calcSpeedColor } from "./speed-meter";
+import { createStrokeArc, createPieSlice, getBoostPieColorByValue } from "./boost-pie";
 
 export interface ParsedComponent {
   manifest: ComponentMeta;
@@ -945,6 +946,54 @@ export function updateComponentInstanceDom(
         fill.setAttribute("stroke", color);
         fill.setAttribute("stroke-dasharray", progressDash + " " + perimeter);
         fill.classList.toggle("danger-blink", blink);
+      }
+      break;
+    }
+
+    case "element-double-layer-boost-pie":
+    case "element-boost-pie": {
+      const outerPath = container.querySelector<SVGPathElement>(".dyn-outer-path, #outerPath");
+      const innerPath = container.querySelector<SVGPathElement>(".dyn-inner-path, #innerPath");
+      const svgEl = container.querySelector<SVGSVGElement>(".dyn-pie-svg, svg");
+      if (outerPath && innerPath && svgEl) {
+        const val = Math.max(0, Math.min(100, boost));
+        const rotation = Number(inst.customProps?.rotation ?? 225);
+        let outerGap = Math.max(0, Math.min(180, Number(inst.customProps?.outerGap ?? 90)));
+        let innerGap = Math.max(0, Math.min(180, Number(inst.customProps?.innerGap ?? 90)));
+        if (inst.customProps?.syncGap) {
+          innerGap = outerGap;
+        }
+        let outerR = Math.max(10, Math.min(48, Number(inst.customProps?.outerRadius ?? 48)));
+        let innerR = Math.max(5, Math.min(30, Number(inst.customProps?.innerRadius ?? 26)));
+        if (outerR <= innerR) {
+          innerR = Math.max(5, outerR - 1);
+        }
+        const isInnerDynamic = inst.customProps?.innerDynamic !== false;
+        const colorState = getBoostPieColorByValue(val, inst.customProps);
+
+        svgEl.style.transform = "rotate(" + rotation + "deg)";
+
+        const activeColor = colorState.color;
+        outerPath.style.stroke = activeColor;
+        innerPath.style.fill = activeColor;
+
+        const isBlink = colorState.type === "blink";
+        outerPath.classList.toggle("blink-red", isBlink);
+        innerPath.classList.toggle("blink-red", isBlink);
+
+        const outerAvailableAngle = 360 - outerGap;
+        const innerAvailableAngle = 360 - innerGap;
+
+        const outerAngle = isInnerDynamic ? outerAvailableAngle : (val / 100) * outerAvailableAngle;
+        const innerAngle = isInnerDynamic ? (val / 100) * innerAvailableAngle : innerAvailableAngle;
+
+        const strokeWidth = outerR - innerR;
+        const midRadius = innerR + (strokeWidth / 2);
+
+        outerPath.style.fill = "none";
+        outerPath.setAttribute("stroke-width", strokeWidth.toString());
+        outerPath.setAttribute("d", createStrokeArc(50, 50, midRadius, 0, outerAngle));
+        innerPath.setAttribute("d", createPieSlice(50, 50, innerR, 0, innerAngle));
       }
       break;
     }

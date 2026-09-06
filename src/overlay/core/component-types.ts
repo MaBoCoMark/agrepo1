@@ -110,6 +110,18 @@ export interface ComponentInstanceCustomProps {
   fadeDuration?: number;
   showInitialFour?: boolean;
 
+  // Dual-Layer Boost Pie Custom Props
+  rotation?: number;
+  outerGap?: number;
+  innerGap?: number;
+  syncGap?: boolean;
+  outerRadius?: number;
+  innerRadius?: number;
+  innerDynamic?: boolean;
+  colorCritical?: string;
+  colorBlink?: string;
+  colorFull?: string;
+
   // Mini-Map & Ball Hit Widget Custom Props
   containerBgColor?: string;
   containerBgOpacity?: number;

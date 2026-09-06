@@ -1,0 +1,89 @@
+<script type="application/json" id="component-manifest">
+{
+  "id": "element-double-layer-boost-pie",
+  "displayName": "Dual-Layer Boost Pie",
+  "tier": "element",
+  "category": "player",
+  "isProportional": true,
+  "supportsSpeedUnit": false,
+  "supportsAlignment": false,
+  "supportsGlobalStyle": false,
+  "defaultWidthVw": 10,
+  "defaultHeightVw": 10,
+  "minWidthVw": 3,
+  "minHeightVw": 3,
+  "baseWidthPx": 160,
+  "baseHeightPx": 160,
+  "customProperties": [
+    { "key": "rotation", "label": "Overall Rotation", "type": "number", "min": 0, "max": 360, "step": 1, "unit": "deg", "default": 225 },
+    { "key": "outerGap", "label": "Outer Gap Angle", "type": "number", "min": 0, "max": 180, "step": 1, "unit": "deg", "default": 90 },
+    { "key": "innerGap", "label": "Inner Gap Angle", "type": "number", "min": 0, "max": 180, "step": 1, "unit": "deg", "default": 90 },
+    { "key": "syncGap", "label": "Sync Gap Angles", "type": "boolean", "default": true },
+    { "key": "outerRadius", "label": "Outer Radius Ratio", "type": "number", "min": 10, "max": 48, "step": 1, "default": 48 },
+    { "key": "innerRadius", "label": "Inner Radius Ratio", "type": "number", "min": 5, "max": 30, "step": 1, "default": 26 },
+    { "key": "innerDynamic", "label": "Inner Dynamic Progress", "type": "boolean", "default": true },
+    { "key": "enableBlink", "label": "Enable Low Boost Blink", "type": "boolean", "default": true },
+    { "key": "colorCritical", "label": "Critical Boost Color (<12)", "type": "color", "default": "#000000" },
+    { "key": "colorBlink", "label": "Blinking Boost Color (12-23)", "type": "color", "default": "#ff4d4f" },
+    { "key": "colorLow", "label": "Low Boost Color (24-35)", "type": "color", "default": "#ff4d4f" },
+    { "key": "colorMid", "label": "Mid Boost Color (36-71)", "type": "color", "default": "#faad14" },
+    { "key": "colorHigh", "label": "High Boost Color (72-95)", "type": "color", "default": "#52c41a" },
+    { "key": "colorFull", "label": "Full Boost Color (>=96)", "type": "color", "default": "#1890ff" }
+  ]
+}
+</script>
+
+<template id="component-template">
+  <div class="el-double-layer-boost-pie-box dyn-boost-pie-box">
+    <div class="chart-container dyn-chart-container">
+      <svg viewBox="0 0 100 100" class="dyn-pie-svg" id="pieSvg">
+        <path class="dyn-outer-path" id="outerPath" fill="none" />
+        <path class="dyn-inner-path" id="innerPath" />
+      </svg>
+    </div>
+  </div>
+</template>
+
+<style>
+.el-double-layer-boost-pie-box {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  background: transparent;
+  container-type: size;
+}
+
+.el-double-layer-boost-pie-box .chart-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.el-double-layer-boost-pie-box svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  display: block;
+}
+
+.dyn-outer-path,
+.dyn-inner-path {
+  transition: none !important;
+}
+
+@keyframes blinkRed {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; }
+}
+
+.blink-red {
+  animation: blinkRed 0.8s infinite !important;
+}
+</style>

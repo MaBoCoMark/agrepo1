@@ -13,6 +13,7 @@ import {
   calcSpeedColor
 } from './speed-meter';
 import { hexToRgba } from './team-colors';
+import { createStrokeArc, createPieSlice, getBoostPieColorByValue } from './boost-pie';
 
 /**
  * ============================================================================
@@ -1138,6 +1139,70 @@ export function bindCompetitiveDomCache(
               fillEl.classList.toggle('supersonic-glow', isSupersonic);
             }
           });
+        }
+        break;
+      }
+
+      // 15b. Dual-Layer Boost Pie (SVG Double-Layer Pie Arc)
+      case 'element-double-layer-boost-pie':
+      case 'element-boost-pie': {
+        const outerPath = cached.outerPath;
+        const innerPath = cached.innerPath;
+        const svgEl = cached.pieSvg;
+        if (outerPath && innerPath && svgEl) {
+          const rotation = Number(inst.customProps?.rotation ?? 225);
+          let outerGap = Math.max(0, Math.min(180, Number(inst.customProps?.outerGap ?? 90)));
+          let innerGap = Math.max(0, Math.min(180, Number(inst.customProps?.innerGap ?? 90)));
+          if (inst.customProps?.syncGap) {
+            innerGap = outerGap;
+          }
+          let outerR = Math.max(10, Math.min(48, Number(inst.customProps?.outerRadius ?? 48)));
+          let innerR = Math.max(5, Math.min(30, Number(inst.customProps?.innerRadius ?? 26)));
+          if (outerR <= innerR) {
+            innerR = Math.max(5, outerR - 1);
+          }
+          const isInnerDynamic = inst.customProps?.innerDynamic !== false;
+          const strokeWidth = outerR - innerR;
+          const midRadius = innerR + (strokeWidth / 2);
+          const outerAvailableAngle = 360 - outerGap;
+          const innerAvailableAngle = 360 - innerGap;
+
+          svgEl.style.transform = "rotate(" + rotation + "deg)";
+          outerPath.style.fill = "none";
+          outerPath.setAttribute("stroke-width", strokeWidth.toString());
+
+          if (isInnerDynamic) {
+            outerPath.setAttribute("d", createStrokeArc(50, 50, midRadius, 0, outerAvailableAngle));
+          } else {
+            innerPath.setAttribute("d", createPieSlice(50, 50, innerR, 0, innerAvailableAngle));
+          }
+
+          const onBoostChange = (boost: number) => {
+            const val = Math.max(0, Math.min(100, boost));
+            if (val === cached.lastBoostPieVal) return;
+            cached.lastBoostPieVal = val;
+
+            const colorState = getBoostPieColorByValue(val, inst.customProps);
+            const activeColor = colorState.color;
+            outerPath.style.stroke = activeColor;
+            innerPath.style.fill = activeColor;
+
+            const isBlink = colorState.type === "blink";
+            outerPath.classList.toggle("blink-red", isBlink);
+            innerPath.classList.toggle("blink-red", isBlink);
+
+            if (isInnerDynamic) {
+              const innerAngle = (val / 100) * innerAvailableAngle;
+              innerPath.setAttribute("d", createPieSlice(50, 50, innerR, 0, innerAngle));
+            } else {
+              const outerAngle = (val / 100) * outerAvailableAngle;
+              outerPath.setAttribute("d", createStrokeArc(50, 50, midRadius, 0, outerAngle));
+            }
+          };
+
+          addBoostListener(p, onBoostChange);
+          const curBoost = p === 'p1' ? latestData.p1Boost : p === 'p2' ? latestData.p2Boost : latestData.p3Boost;
+          onBoostChange(curBoost >= 0 ? curBoost : 100);
         }
         break;
       }
