@@ -123,7 +123,7 @@
       font-size: 11px;
       color: var(--primer-accent-fg);
       font-weight: 600;
-      min-width: 50px;
+      min-width: 55px;
       text-align: right;
     }
 
@@ -191,7 +191,7 @@
     <div class="control-row">
       <span class="control-label">Font Size:</span>
       <div class="slider-input-pair">
-        <input type="range" id="font-size-slider" min="0.5" max="4.0" step="0.1" value="1.2">
+        <input type="range" id="font-size-slider" min="0.5" max="10.0" step="0.1" value="5">
         <span id="font-size-badge" class="slider-val-badge">1.2 vw</span>
       </div>
     </div>
@@ -216,14 +216,14 @@
     </div>
   </div>
 
-  <!-- Pure Stroke (No Shadow, max 5px, 0.1 precision, in vw) -->
+  <!-- Pure Stroke (0.00 - 1.00 VW, step 0.01 VW) -->
   <div class="primer-card">
     <div class="section-title">Text Stroke (Pure Outline)</div>
     <div class="control-row">
       <span class="control-label">Stroke Width:</span>
       <div class="slider-input-pair">
-        <input type="range" id="stroke-size-slider" min="0.0" max="5.0" step="0.1" value="1.5">
-        <span id="stroke-size-badge" class="slider-val-badge">1.5px</span>
+        <input type="range" id="stroke-size-slider" min="0.0" max="1.0" step="0.01" value="0.08">
+        <span id="stroke-size-badge" class="slider-val-badge">0.08 vw</span>
       </div>
     </div>
     <div class="control-row">
@@ -242,9 +242,9 @@
     </div>
   </div>
 
-  <!-- Background & Border Radius (0% to 50%) -->
+  <!-- Background & Box Padding (外框大小 / 超出文字宽度) -->
   <div class="primer-card">
-    <div class="section-title">Background & Radius</div>
+    <div class="section-title">Background & Box Padding (外框大小)</div>
     <div class="control-row">
       <span class="control-label">BG Color:</span>
       <div class="color-input-pair">
@@ -264,6 +264,39 @@
       <div class="slider-input-pair">
         <input type="range" id="radius-slider" min="0" max="50" step="1" value="20">
         <span id="radius-badge" class="slider-val-badge">20%</span>
+      </div>
+    </div>
+    <div class="control-row">
+      <span class="control-label" title="超出文字部分的水平宽度（设为0紧贴边缘）">Padding X (左右):</span>
+      <div class="slider-input-pair">
+        <input type="range" id="padding-x-slider" min="0.0" max="2.0" step="0.01" value="0.4">
+        <span id="padding-x-badge" class="slider-val-badge">0.40 vw</span>
+      </div>
+    </div>
+    <div class="control-row">
+      <span class="control-label" title="超出文字部分的垂直高度（设为0紧贴边缘）">Padding Y (上下):</span>
+      <div class="slider-input-pair">
+        <input type="range" id="padding-y-slider" min="0.0" max="2.0" step="0.01" value="0.2">
+        <span id="padding-y-badge" class="slider-val-badge">0.20 vw</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Corner Position Offset (整体偏移右上角距离) -->
+  <div class="primer-card">
+    <div class="section-title">Position Offset (右上角偏移)</div>
+    <div class="control-row">
+      <span class="control-label" title="距屏幕顶部偏移距离">Top Offset (距顶):</span>
+      <div class="slider-input-pair">
+        <input type="range" id="offset-top-slider" min="0.0" max="10.0" step="0.05" value="0.8">
+        <span id="offset-top-badge" class="slider-val-badge">0.80 vw</span>
+      </div>
+    </div>
+    <div class="control-row">
+      <span class="control-label" title="距屏幕右侧偏移距离">Right Offset (距右):</span>
+      <div class="slider-input-pair">
+        <input type="range" id="offset-right-slider" min="0.0" max="10.0" step="0.05" value="1.0">
+        <span id="offset-right-badge" class="slider-val-badge">1.00 vw</span>
       </div>
     </div>
   </div>

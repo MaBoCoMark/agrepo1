@@ -8,6 +8,13 @@ pub static CURRENT_BOUND_KEY: Mutex<Option<String>> = Mutex::new(None);
 pub static HOTKEY_SUCCESS: AtomicBool = AtomicBool::new(false);
 pub static SYSTEM_TIME_VISIBLE: AtomicBool = AtomicBool::new(true);
 
+fn default_stroke_size_vw() -> f32 { 0.08 }
+fn default_stroke_size_px() -> f32 { 1.5 }
+fn default_padding_x_vw() -> f32 { 0.4 }
+fn default_padding_y_vw() -> f32 { 0.2 }
+fn default_offset_top_vw() -> f32 { 0.8 }
+fn default_offset_right_vw() -> f32 { 1.0 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemTimeConfig {
     pub visible: bool,
@@ -16,11 +23,22 @@ pub struct SystemTimeConfig {
     pub text_opacity: u32,
     pub stroke_color: String,
     pub stroke_opacity: u32,
+    #[serde(default = "default_stroke_size_vw")]
+    pub stroke_size_vw: f32,
+    #[serde(default = "default_stroke_size_px")]
     pub stroke_size_px: f32,
     pub background_color: String,
     pub background_opacity: u32,
     pub border_radius_percent: u32,
     pub global_opacity: u32,
+    #[serde(default = "default_padding_x_vw")]
+    pub padding_x_vw: f32,
+    #[serde(default = "default_padding_y_vw")]
+    pub padding_y_vw: f32,
+    #[serde(default = "default_offset_top_vw")]
+    pub offset_top_vw: f32,
+    #[serde(default = "default_offset_right_vw")]
+    pub offset_right_vw: f32,
 }
 
 impl Default for SystemTimeConfig {
@@ -32,11 +50,16 @@ impl Default for SystemTimeConfig {
             text_opacity: 100,
             stroke_color: "#000000".to_string(),
             stroke_opacity: 100,
+            stroke_size_vw: 0.08,
             stroke_size_px: 1.5,
             background_color: "#000000".to_string(),
             background_opacity: 40,
             border_radius_percent: 20,
             global_opacity: 100,
+            padding_x_vw: 0.4,
+            padding_y_vw: 0.2,
+            offset_top_vw: 0.8,
+            offset_right_vw: 1.0,
         }
     }
 }
