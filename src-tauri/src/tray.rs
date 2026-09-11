@@ -147,6 +147,8 @@ fn open_configurator_window<R: Runtime>(app: &tauri::AppHandle<R>) {
 
 fn open_system_time_configurator_window<R: Runtime>(app: &tauri::AppHandle<R>) {
     if let Some(window) = app.get_webview_window("system_time_configurator") {
+        let _ = window.show();
+        let _ = window.unminimize();
         let _ = window.set_focus();
     } else {
         let overlay = app.get_webview_window("overlay");

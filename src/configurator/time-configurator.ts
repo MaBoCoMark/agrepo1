@@ -1,6 +1,5 @@
 import { emit, listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
-import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { initThemeController } from './modules/theme-controller';
 
 export interface SystemTimeConfig {
@@ -106,6 +105,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   // If local config exists, make sure backend is in sync
   if (hasLocalConfig) {
     try {
+      const currentVis = await invoke<boolean>('get_system_time_visible');
+      if (typeof currentVis === 'boolean') {
+        config.visible = currentVis;
+      }
+    } catch {
+      // Non-Tauri fallback
+    }
+    try {
       await invoke('save_system_time_config', { config });
     } catch {
       // Non-Tauri fallback
@@ -159,7 +166,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const globalOpacityBadge = document.getElementById('global-opacity-badge') as HTMLElement | null;
 
   const btnReset = document.getElementById('btn-reset-defaults') as HTMLButtonElement | null;
-  const btnClose = document.getElementById('btn-close-window') as HTMLButtonElement | null;
 
   function syncInputsFromConfig() {
     if (visibleCheck) visibleCheck.checked = config.visible;
@@ -204,7 +210,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (globalOpacityBadge) globalOpacityBadge.textContent = `${config.global_opacity}%`;
   }
 
-  // Real-time preview function: emits update to memory without writing to disk / localStorage
+  // Real-time preview function: emits update to memory without waiting for disk flush
   function broadcastPreview() {
     config.stroke_size_px = parseFloat((config.stroke_size_vw * 19.2).toFixed(1));
     try {
@@ -214,10 +220,48 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // Save to persistent storage (localStorage and backend) upon closing
-  let isSaved = false;
+  // Immediate save helper with debounced IPC invoke to ensure persistence across closing and reopening
+  let debounceSaveTimer: ReturnType<typeof setTimeout> | null = null;
+  function onConfigChanged(commitImmediate = false) {
+    config.stroke_size_px = parseFloat((config.stroke_size_vw * 19.2).toFixed(1));
+    saveToLocal(config);
+    broadcastPreview();
+
+    if (commitImmediate) {
+      if (debounceSaveTimer) {
+        clearTimeout(debounceSaveTimer);
+        debounceSaveTimer = null;
+      }
+      try {
+        invoke('save_system_time_config', { config });
+      } catch {
+        // Non-Tauri fallback
+      }
+      try {
+        emit('save-system-time-config', config);
+      } catch {
+        // Non-Tauri fallback
+      }
+    } else {
+      if (debounceSaveTimer) clearTimeout(debounceSaveTimer);
+      debounceSaveTimer = setTimeout(() => {
+        debounceSaveTimer = null;
+        try {
+          invoke('save_system_time_config', { config });
+        } catch {
+          // Non-Tauri fallback
+        }
+        try {
+          emit('save-system-time-config', config);
+        } catch {
+          // Non-Tauri fallback
+        }
+      }, 100);
+    }
+  }
+
+  // Save to persistent storage (localStorage and backend) upon closing / unloading
   function persistConfig() {
-    if (isSaved) return;
     config.stroke_size_px = parseFloat((config.stroke_size_vw * 19.2).toFixed(1));
     saveToLocal(config);
     try {
@@ -230,28 +274,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch {
       // Non-Tauri fallback
     }
-    isSaved = true;
   }
 
   syncInputsFromConfig();
 
-  // Event Listeners (all trigger real-time in-memory preview)
+  // Event Listeners (all trigger real-time in-memory preview and persist state)
   visibleCheck?.addEventListener('change', () => {
     config.visible = visibleCheck.checked;
-    broadcastPreview();
+    onConfigChanged(true);
   });
 
   fontSizeSlider?.addEventListener('input', () => {
     const val = parseFloat(fontSizeSlider.value);
     config.font_size_vw = val;
     if (fontSizeBadge) fontSizeBadge.textContent = `${val.toFixed(1)} vw`;
-    broadcastPreview();
+    onConfigChanged(false);
+  });
+  fontSizeSlider?.addEventListener('change', () => {
+    onConfigChanged(true);
   });
 
   textColorPicker?.addEventListener('input', () => {
     config.text_color = textColorPicker.value;
     if (textColorHex) textColorHex.value = textColorPicker.value;
-    broadcastPreview();
+    onConfigChanged(false);
+  });
+  textColorPicker?.addEventListener('change', () => {
+    onConfigChanged(true);
   });
 
   textColorHex?.addEventListener('change', () => {
@@ -260,7 +309,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
       config.text_color = val;
       if (textColorPicker) textColorPicker.value = val;
-      broadcastPreview();
+      onConfigChanged(true);
     }
   });
 
@@ -268,7 +317,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const val = parseInt(textOpacitySlider.value, 10);
     config.text_opacity = val;
     if (textOpacityBadge) textOpacityBadge.textContent = `${val}%`;
-    broadcastPreview();
+    onConfigChanged(false);
+  });
+  textOpacitySlider?.addEventListener('change', () => {
+    onConfigChanged(true);
   });
 
   strokeSizeSlider?.addEventListener('input', () => {
@@ -277,13 +329,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (strokeSizeBadge) {
       strokeSizeBadge.textContent = `${val.toFixed(2)} vw`;
     }
-    broadcastPreview();
+    onConfigChanged(false);
+  });
+  strokeSizeSlider?.addEventListener('change', () => {
+    onConfigChanged(true);
   });
 
   strokeColorPicker?.addEventListener('input', () => {
     config.stroke_color = strokeColorPicker.value;
     if (strokeColorHex) strokeColorHex.value = strokeColorPicker.value;
-    broadcastPreview();
+    onConfigChanged(false);
+  });
+  strokeColorPicker?.addEventListener('change', () => {
+    onConfigChanged(true);
   });
 
   strokeColorHex?.addEventListener('change', () => {
@@ -292,7 +350,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
       config.stroke_color = val;
       if (strokeColorPicker) strokeColorPicker.value = val;
-      broadcastPreview();
+      onConfigChanged(true);
     }
   });
 
@@ -300,13 +358,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     const val = parseInt(strokeOpacitySlider.value, 10);
     config.stroke_opacity = val;
     if (strokeOpacityBadge) strokeOpacityBadge.textContent = `${val}%`;
-    broadcastPreview();
+    onConfigChanged(false);
+  });
+  strokeOpacitySlider?.addEventListener('change', () => {
+    onConfigChanged(true);
   });
 
   bgColorPicker?.addEventListener('input', () => {
     config.background_color = bgColorPicker.value;
     if (bgColorHex) bgColorHex.value = bgColorPicker.value;
-    broadcastPreview();
+    onConfigChanged(false);
+  });
+  bgColorPicker?.addEventListener('change', () => {
+    onConfigChanged(true);
   });
 
   bgColorHex?.addEventListener('change', () => {
@@ -315,7 +379,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
       config.background_color = val;
       if (bgColorPicker) bgColorPicker.value = val;
-      broadcastPreview();
+      onConfigChanged(true);
     }
   });
 
@@ -323,65 +387,76 @@ document.addEventListener('DOMContentLoaded', async () => {
     const val = parseInt(bgOpacitySlider.value, 10);
     config.background_opacity = val;
     if (bgOpacityBadge) bgOpacityBadge.textContent = `${val}%`;
-    broadcastPreview();
+    onConfigChanged(false);
+  });
+  bgOpacitySlider?.addEventListener('change', () => {
+    onConfigChanged(true);
   });
 
   radiusSlider?.addEventListener('input', () => {
     const val = parseInt(radiusSlider.value, 10);
     config.border_radius_percent = val;
     if (radiusBadge) radiusBadge.textContent = `${val}%`;
-    broadcastPreview();
+    onConfigChanged(false);
+  });
+  radiusSlider?.addEventListener('change', () => {
+    onConfigChanged(true);
   });
 
   paddingXSlider?.addEventListener('input', () => {
     const val = parseFloat(paddingXSlider.value);
     config.padding_x_vw = val;
     if (paddingXBadge) paddingXBadge.textContent = `${val.toFixed(2)} vw`;
-    broadcastPreview();
+    onConfigChanged(false);
+  });
+  paddingXSlider?.addEventListener('change', () => {
+    onConfigChanged(true);
   });
 
   paddingYSlider?.addEventListener('input', () => {
     const val = parseFloat(paddingYSlider.value);
     config.padding_y_vw = val;
     if (paddingYBadge) paddingYBadge.textContent = `${val.toFixed(2)} vw`;
-    broadcastPreview();
+    onConfigChanged(false);
+  });
+  paddingYSlider?.addEventListener('change', () => {
+    onConfigChanged(true);
   });
 
   offsetTopSlider?.addEventListener('input', () => {
     const val = parseFloat(offsetTopSlider.value);
     config.offset_top_vw = val;
     if (offsetTopBadge) offsetTopBadge.textContent = `${val.toFixed(2)} vw`;
-    broadcastPreview();
+    onConfigChanged(false);
+  });
+  offsetTopSlider?.addEventListener('change', () => {
+    onConfigChanged(true);
   });
 
   offsetRightSlider?.addEventListener('input', () => {
     const val = parseFloat(offsetRightSlider.value);
     config.offset_right_vw = val;
     if (offsetRightBadge) offsetRightBadge.textContent = `${val.toFixed(2)} vw`;
-    broadcastPreview();
+    onConfigChanged(false);
+  });
+  offsetRightSlider?.addEventListener('change', () => {
+    onConfigChanged(true);
   });
 
   globalOpacitySlider?.addEventListener('input', () => {
     const val = parseInt(globalOpacitySlider.value, 10);
     config.global_opacity = val;
     if (globalOpacityBadge) globalOpacityBadge.textContent = `${val}%`;
-    broadcastPreview();
+    onConfigChanged(false);
+  });
+  globalOpacitySlider?.addEventListener('change', () => {
+    onConfigChanged(true);
   });
 
   btnReset?.addEventListener('click', () => {
     config = { ...DEFAULT_SYSTEM_TIME_CONFIG };
     syncInputsFromConfig();
-    broadcastPreview();
-  });
-
-  // Persistent saving upon configurator close
-  btnClose?.addEventListener('click', () => {
-    persistConfig();
-    try {
-      getCurrentWebviewWindow().close();
-    } catch {
-      window.close();
-    }
+    onConfigChanged(true);
   });
 
   window.addEventListener('beforeunload', () => {
@@ -391,15 +466,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   window.addEventListener('pagehide', () => {
     persistConfig();
   });
-
-  try {
-    const appWindow = getCurrentWebviewWindow();
-    appWindow.onCloseRequested(async () => {
-      persistConfig();
-    });
-  } catch {
-    // Non-Tauri fallback
-  }
 
   // Listen to Tray checkbox toggle events
   await listen<{ visible: boolean }>('system-time-visibility-changed', (e) => {
