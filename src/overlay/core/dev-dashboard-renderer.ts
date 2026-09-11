@@ -60,9 +60,13 @@ export function renderDevDashboard(
     previousData.bOvertime = latestData.bOvertime;
   }
 
-  // 3. Ball Speed
+  // 3. Ball Speed (Official API sends kph float, format to integer KPH)
   if (latestData.ballSpeed !== previousData.ballSpeed) {
-    if (devDom.ballSpeed) devDom.ballSpeed.textContent = `${Math.floor(latestData.ballSpeed * 0.036)} KPH`;
+    if (devDom.ballSpeed) {
+      const raw = latestData.ballSpeed;
+      const kph = raw > 250 ? Math.floor(raw * 0.036) : Math.floor(raw);
+      devDom.ballSpeed.textContent = `${kph} KPH`;
+    }
     previousData.ballSpeed = latestData.ballSpeed;
   }
 
@@ -116,7 +120,7 @@ export function renderDevDashboard(
   }
   if (latestData.p1HasCar) {
     if (latestData.p1Speed !== previousData.p1Speed) {
-      if (devDom.p1Speed) devDom.p1Speed.textContent = Math.floor(latestData.p1Speed).toString();
+      if (devDom.p1Speed) { const raw = latestData.p1Speed; const kph = raw > 150 ? Math.floor(raw * 0.036) : Math.floor(raw); devDom.p1Speed.textContent = kph.toString(); }
       previousData.p1Speed = latestData.p1Speed;
     }
     if (latestData.p1Boost !== previousData.p1Boost) {
@@ -168,7 +172,7 @@ export function renderDevDashboard(
   }
   if (latestData.p2HasCar) {
     if (latestData.p2Speed !== previousData.p2Speed) {
-      if (devDom.p2Speed) devDom.p2Speed.textContent = Math.floor(latestData.p2Speed).toString();
+      if (devDom.p2Speed) { const raw = latestData.p2Speed; const kph = raw > 150 ? Math.floor(raw * 0.036) : Math.floor(raw); devDom.p2Speed.textContent = kph.toString(); }
       previousData.p2Speed = latestData.p2Speed;
     }
     if (latestData.p2Boost !== previousData.p2Boost) {
@@ -220,7 +224,7 @@ export function renderDevDashboard(
   }
   if (latestData.p3HasCar) {
     if (latestData.p3Speed !== previousData.p3Speed) {
-      if (devDom.p3Speed) devDom.p3Speed.textContent = Math.floor(latestData.p3Speed).toString();
+      if (devDom.p3Speed) { const raw = latestData.p3Speed; const kph = raw > 150 ? Math.floor(raw * 0.036) : Math.floor(raw); devDom.p3Speed.textContent = kph.toString(); }
       previousData.p3Speed = latestData.p3Speed;
     }
     if (latestData.p3Boost !== previousData.p3Boost) {

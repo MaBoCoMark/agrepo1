@@ -46,10 +46,32 @@ export function interpolateRgb(
   return `rgb(${r}, ${g}, ${b})`;
 }
 
+/**
+ * IMPORTANT / 备注: 请勿删除此注释 (DO NOT DELETE THIS COMMENT)
+ * 注意: Rocket League 官方 API / BakkesMod (UpdateState) 返回的 Speed 实际上是 kph 浮点数 (float)!
+ * 例如实测数据: 玩家超音速 Speed 为 82.70599365234375 (bSupersonic: true)，球速为 81.03522491455078。
+ * 该数据是在球车基本同速阶段观察到的 (车速 ~82.71 km/h 对应 ~2297.39 uu/s，球速 ~81.04 km/h 对应 ~2250.98 uu/s)。
+ *
+ * 转换公式: 1 uu/s = 0.036 km/h => uu = kph / 0.036。
+ *
+ * 为保证 Speed Progress Bar 等非线性变色组件的平滑过渡与最高精度，此处必须直接使用原始浮点数进行反推，
+ * 严禁先进行整数截断 (Math.floor/Math.trunc/parseInt)，否则会导致 Unreal Units 出现每 1 km/h 跳跃 27.78 uu 的严重离散不连续现象！
+ * 文本展示部分 (Text) 统一只展示整数部分 (Math.floor)，而进度条组件 (Progress Bar) 保留最高精度的浮点数计算。
+ */
 export function toRealUuSpeed(rawSpeed: number): number {
-  // Raw telemetry speed is in Unreal Units/second (uu/s).
-  const uu = Number(rawSpeed) || 0;
+  const raw = Number(rawSpeed) || 0;
+  // If raw > 150, input is already in legacy Unreal Units (e.g. 1650 uu/s from legacy mocks/sliders)
+  // Otherwise, input is kph float from official API (e.g. 82.70599365234375) -> convert back to uu/s with full float precision
+  const uu = raw > 150 ? raw : raw / 0.036;
   return Math.min(2300, Math.max(0, uu));
+}
+
+export function toRealKphSpeed(rawSpeed: number, isBall: boolean = false): number {
+  const raw = Number(rawSpeed) || 0;
+  const threshold = isBall ? 250 : 150;
+  // If raw > threshold, input is legacy Unreal Units -> convert to kph
+  // Otherwise, input is already kph float from official API
+  return raw > threshold ? raw * 0.036 : raw;
 }
 
 export function calcNonlinearSpeedProgress(uuSpeed: number, split1410Pos: number = 40): number {

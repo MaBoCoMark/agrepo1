@@ -95,14 +95,25 @@ function fmtMinSec(totalSeconds: number): string {
   return `${isNeg ? '-' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
 }
 
+/**
+ * IMPORTANT / 备注: 请勿删除此注释 (DO NOT DELETE THIS COMMENT)
+ * 官方 API 坑位备忘:
+ * 官方 UpdateState 传回的 Speed 参数实际为 kph 浮点数 (如实测超音速车速 82.70599365234375, 球速 81.03522491455078, 球车基本同速)。
+ * text 部分应当只包含 unreal unit 的整数部分 (Math.floor(uu)) 以及 kph 的整数部分 (Math.floor(kph))；
+ * 而 progress bar (Speed Progress Bar / Curved Speedometer 等) 必须保留最高浮点精度，严禁在反推前做整数截断。
+ */
 function fmtSpeed(speed: number, unit?: string, isBall: boolean = false): string {
   const raw = Number(speed) || 0;
-  const uu = isBall ? Math.max(0, raw) : Math.min(2300, Math.max(0, raw));
+  const threshold = isBall ? 250 : 150;
+  const isLegacyUu = raw > threshold;
+  const kph = isLegacyUu ? raw * 0.036 : raw;
+  const uu = isLegacyUu ? raw : raw / 0.036;
+
   if (unit === "uu/s") {
-    return Math.floor(uu).toString();
+    const clampedUu = isBall ? Math.max(0, uu) : Math.min(2300, Math.max(0, uu));
+    return Math.floor(clampedUu).toString();
   }
-  const kph = uu * 0.036;
-  return Math.floor(kph).toString();
+  return Math.floor(Math.max(0, kph)).toString();
 }
 
 function fmtScoreDiff(diff: number): string {
@@ -667,8 +678,13 @@ export function bindCompetitiveDomCache(
           const reel = cached.digitReel;
           addSpeedListener(p, (speed: number) => {
             if (reel && reel.slots.length >= 4) {
-              const uu = toRealUuSpeed(speed);
-              const spdNum = unit === 'uu/s' ? Math.floor(uu) : Math.floor(uu * 0.036);
+              const raw = Number(speed) || 0;
+              const isLegacyUu = raw > 150;
+              const kph = isLegacyUu ? raw * 0.036 : raw;
+              const uu = isLegacyUu ? raw : raw / 0.036;
+              const clampedUu = Math.min(2300, Math.max(0, uu));
+              // Text display only contains integer portion
+              const spdNum = unit === 'uu/s' ? Math.floor(clampedUu) : Math.floor(Math.max(0, kph));
               const s = Math.max(0, Math.min(9999, Math.round(spdNum)));
               const d1000 = Math.floor(s / 1000);
               const d100 = Math.floor((s % 1000) / 100);
@@ -812,8 +828,12 @@ export function bindCompetitiveDomCache(
           const reel = cached.digitReel;
           ballSpeedListeners.push((ballSpeed: number) => {
             if (reel && reel.slots.length >= 4) {
-              const uu = Number(ballSpeed) || 0;
-              const spdNum = unit === 'uu/s' ? Math.floor(uu) : Math.floor(uu * 0.036);
+              const raw = Number(ballSpeed) || 0;
+              const isLegacyUu = raw > 250;
+              const kph = isLegacyUu ? raw * 0.036 : raw;
+              const uu = isLegacyUu ? raw : raw / 0.036;
+              // Text display only contains integer portion
+              const spdNum = unit === 'uu/s' ? Math.floor(Math.max(0, uu)) : Math.floor(Math.max(0, kph));
               const s = Math.max(0, Math.min(9999, Math.round(spdNum)));
               const d1000 = Math.floor(s / 1000);
               const d100 = Math.floor((s % 1000) / 100);
@@ -1088,6 +1108,9 @@ export function bindCompetitiveDomCache(
       case 'element-speed-bar': {
         const fillEl = cached.fillEl;
         if (fillEl) {
+          // IMPORTANT / 备注: 请勿删除此注释 (DO NOT DELETE THIS COMMENT)
+          // Speed Progress Bar 消费最高精度的连续浮点数 Unreal Units (由官方 API kph 浮点数反推，无截断)，
+          // 确保非线性变色组件 (0-1410-2200-2300 uu/s) 平滑无阶梯感。
           const split1410Pos = Number(inst.customProps?.split1410Pos ?? inst.customProps?.pos1410 ?? 40);
           const colorLow = inst.customProps?.colorLow || '#d4af37';
           const colorMidStart = inst.customProps?.colorMidStart || '#77ca7a';
@@ -1119,6 +1142,8 @@ export function bindCompetitiveDomCache(
       case 'element-vertical-speed-bar': {
         const fillEl = cached.fillEl;
         if (fillEl) {
+          // IMPORTANT / 备注: 请勿删除此注释 (DO NOT DELETE THIS COMMENT)
+          // Vertical Speed Progress Bar 消费最高精度浮点数 Unreal Units，保持无截断连续渲染。
           const split1410Pos = Number(inst.customProps?.split1410Pos ?? inst.customProps?.pos1410 ?? 40);
           const colorLow = inst.customProps?.colorLow || '#d4af37';
           const colorMidStart = inst.customProps?.colorMidStart || '#77ca7a';

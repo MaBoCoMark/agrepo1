@@ -7,9 +7,12 @@ import { processMiniMapBallHitPacket } from './websocket-manager';
  * ============================================================================
  */
 
+// IMPORTANT / 备注: 请勿删除此注释 (DO NOT DELETE THIS COMMENT)
+// 官方 API 传回的 Speed 为 kph 浮点数 (0-82.8 km/h 对应 0-2300 uu/s，超音速门槛 79.2 km/h 对应 2200 uu/s)。
+// Mock 流直接模拟 kph 浮点数，与官方真实遥测保持 100% 一致。
 export const mockSimState = {
   timeRaw: 270.0,
-  ballSpeed: 1200.0,
+  ballSpeed: 65.0,
   ballSpeedDir: 1,
   ballTeamToggleTimer: 0,
   scoreTimer: 0,
@@ -18,9 +21,9 @@ export const mockSimState = {
   p2Boost: { val: 18.0, step: 0.75, dir: -1 },
   p3Boost: { val: 85.0, step: 0.55, dir: -1 },
 
-  p1Speed: { val: 1650.0, step: 15.5, dir: 1, min: 200, max: 2300 },
-  p2Speed: { val: 1100.0, step: 22.0, dir: -1, min: 100, max: 2150 },
-  p3Speed: { val: 650.0, step: 12.0, dir: 1, min: 50, max: 1800 },
+  p1Speed: { val: 59.4, step: 0.558, dir: 1, min: 7.2, max: 82.8 },
+  p2Speed: { val: 39.6, step: 0.792, dir: -1, min: 3.6, max: 77.4 },
+  p3Speed: { val: 23.4, step: 0.432, dir: 1, min: 1.8, max: 64.8 },
 
   frameCount: 0
 };
@@ -36,10 +39,10 @@ export function updateMockStream(latestData: TelemetryBuffer): void {
   }
   latestData.timeSeconds = Math.floor(mockSimState.timeRaw);
 
-  // 2. Ball speed & ball team
-  mockSimState.ballSpeed += 8.5 * mockSimState.ballSpeedDir;
-  if (mockSimState.ballSpeed >= 3500) mockSimState.ballSpeedDir = -1;
-  if (mockSimState.ballSpeed <= 300) mockSimState.ballSpeedDir = 1;
+  // 2. Ball speed & ball team (kph float)
+  mockSimState.ballSpeed += 0.3 * mockSimState.ballSpeedDir;
+  if (mockSimState.ballSpeed >= 130.0) mockSimState.ballSpeedDir = -1;
+  if (mockSimState.ballSpeed <= 20.0) mockSimState.ballSpeedDir = 1;
   latestData.ballSpeed = mockSimState.ballSpeed;
 
   mockSimState.ballTeamToggleTimer++;
@@ -76,39 +79,39 @@ export function updateMockStream(latestData: TelemetryBuffer): void {
   latestData.p3Boosting = mockSimState.p3Boost.dir < 0;
   latestData.p3HasCar = true;
 
-  // 6. Speed simulation (High-Precision Unreal Units 0-2300 uu/s)
+  // 6. Speed simulation (Realistic kph floats corresponding to 0-2300 uu/s, supersonic >= 79.2 kph)
   mockSimState.p1Speed.val += mockSimState.p1Speed.step * mockSimState.p1Speed.dir;
-  if (mockSimState.p1Speed.val >= 2300) {
-    mockSimState.p1Speed.val = 2300;
+  if (mockSimState.p1Speed.val >= 82.8) {
+    mockSimState.p1Speed.val = 82.8;
     mockSimState.p1Speed.dir = -1;
-  } else if (mockSimState.p1Speed.val <= 200) {
-    mockSimState.p1Speed.val = 200;
+  } else if (mockSimState.p1Speed.val <= 7.2) {
+    mockSimState.p1Speed.val = 7.2;
     mockSimState.p1Speed.dir = 1;
   }
   latestData.p1Speed = mockSimState.p1Speed.val;
-  latestData.p1Supersonic = latestData.p1Speed >= 2200;
+  latestData.p1Supersonic = latestData.p1Speed >= 79.2;
 
   mockSimState.p2Speed.val += mockSimState.p2Speed.step * mockSimState.p2Speed.dir;
-  if (mockSimState.p2Speed.val >= 2150) {
-    mockSimState.p2Speed.val = 2150;
+  if (mockSimState.p2Speed.val >= 77.4) {
+    mockSimState.p2Speed.val = 77.4;
     mockSimState.p2Speed.dir = -1;
-  } else if (mockSimState.p2Speed.val <= 100) {
-    mockSimState.p2Speed.val = 100;
+  } else if (mockSimState.p2Speed.val <= 3.6) {
+    mockSimState.p2Speed.val = 3.6;
     mockSimState.p2Speed.dir = 1;
   }
   latestData.p2Speed = mockSimState.p2Speed.val;
-  latestData.p2Supersonic = latestData.p2Speed >= 2200;
+  latestData.p2Supersonic = latestData.p2Speed >= 79.2;
 
   mockSimState.p3Speed.val += mockSimState.p3Speed.step * mockSimState.p3Speed.dir;
-  if (mockSimState.p3Speed.val >= 1800) {
-    mockSimState.p3Speed.val = 1800;
+  if (mockSimState.p3Speed.val >= 64.8) {
+    mockSimState.p3Speed.val = 64.8;
     mockSimState.p3Speed.dir = -1;
-  } else if (mockSimState.p3Speed.val <= 50) {
-    mockSimState.p3Speed.val = 50;
+  } else if (mockSimState.p3Speed.val <= 1.8) {
+    mockSimState.p3Speed.val = 1.8;
     mockSimState.p3Speed.dir = 1;
   }
   latestData.p3Speed = mockSimState.p3Speed.val;
-  latestData.p3Supersonic = latestData.p3Speed >= 2200;
+  latestData.p3Supersonic = latestData.p3Speed >= 79.2;
 
   // 7. Score variations
   mockSimState.scoreTimer++;

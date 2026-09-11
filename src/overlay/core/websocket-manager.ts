@@ -382,6 +382,9 @@ export function processUpdateState(data: RLStateData): void {
 
   // P1 Fast Numerical/Boolean State
   if (p1) {
+    // IMPORTANT / 备注: 请勿删除此注释 (DO NOT DELETE THIS COMMENT)
+    // 注意: 官方 API (UpdateState) 传回的 Speed 为 kph 浮点数 (实测超音速车速 82.70599365234375, 球速 81.03522491455078, 球车基本同速)。
+    // 此处保持原始浮点数存入 latestData，严禁进行整数截断，以便进度条组件反推高精度连续 Unreal Units。
     latestData.p1Speed = Number(p1.Speed || 0);
     latestData.p1Boost = Math.max(0, Math.min(100, Math.round(p1.Boost || 0)));
     latestData.p1HasCar = Boolean(p1.bHasCar);
@@ -495,7 +498,8 @@ export function processMiniMapBallHitPacket(packet: any): void {
     payloadData.PostHitSpeed;
   if (rawSpd !== undefined && rawSpd !== null) {
     const numSpd = Number(rawSpd);
-    speed = numSpd * 0.036;
+    // Official API sends speed in kph. Only convert if legacy uu (> 250) was passed.
+    speed = numSpd > 250 ? numSpd * 0.036 : numSpd;
   }
 
   // Extract Player Team
@@ -771,12 +775,12 @@ export function disconnectWebSocket(): void {
 const REAL_SAMPLE_RAW: RLStateData = {
   MatchGuid: "852D9D5546F30BE5E44F6C88F7ED98EA",
   Players: [
-    { Name: "steamuser", Shortcut: 5, TeamNum: 1, bHasCar: true, Speed: 2299.98, Boost: 11, bSupersonic: true },
-    { Name: "Fury", Shortcut: 1, TeamNum: 0, bHasCar: true, Speed: 1111.11, Boost: 50 },
-    { Name: "Sticks", Shortcut: 6, TeamNum: 1, bOnGround: true, bHasCar: true, Speed: 2299.99, Boost: 15, bBoosting: true, bSupersonic: true },
-    { Name: "Stinger", Shortcut: 2, TeamNum: 0, bHasCar: true, Speed: 1527.77, Boost: 33 },
-    { Name: "Khan", Shortcut: 7, TeamNum: 1, bOnGround: true, bHasCar: true, Speed: 726.38, Boost: 100 },
-    { Name: "Outlaw", Shortcut: 3, TeamNum: 0, bHasCar: true, Speed: 833.33, Boost: 45 }
+    { Name: "steamuser", Shortcut: 5, TeamNum: 1, bHasCar: true, Speed: 82.70599365234375, Boost: 11, bSupersonic: true },
+    { Name: "Fury", Shortcut: 1, TeamNum: 0, bHasCar: true, Speed: 40.0, Boost: 50 },
+    { Name: "Sticks", Shortcut: 6, TeamNum: 1, bOnGround: true, bHasCar: true, Speed: 82.79, Boost: 15, bBoosting: true, bSupersonic: true },
+    { Name: "Stinger", Shortcut: 2, TeamNum: 0, bHasCar: true, Speed: 55.0, Boost: 33 },
+    { Name: "Khan", Shortcut: 7, TeamNum: 1, bOnGround: true, bHasCar: true, Speed: 26.15, Boost: 100 },
+    { Name: "Outlaw", Shortcut: 3, TeamNum: 0, bHasCar: true, Speed: 30.0, Boost: 45 }
   ],
   Game: {
     Teams: [
@@ -786,7 +790,7 @@ const REAL_SAMPLE_RAW: RLStateData = {
     PlaylistId: 24,
     TimeSeconds: 270,
     bOvertime: false,
-    Ball: { Speed: 1220.0, TeamNum: 0 },
+    Ball: { Speed: 81.03522491455078, TeamNum: 0 },
     bReplay: false,
     bHasWinner: false,
     Winner: "",

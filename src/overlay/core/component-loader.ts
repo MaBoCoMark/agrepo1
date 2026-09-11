@@ -145,19 +145,35 @@ export function formatMinutesSeconds(totalSeconds: number): string {
   return (isNegative ? "-" : "") + mins + ":" + formattedSecs;
 }
 
-export function toKph(rawSpeed: number): number {
-  return (Number(rawSpeed) || 0) * 0.036;
+/**
+ * IMPORTANT / 备注: 请勿删除此注释 (DO NOT DELETE THIS COMMENT)
+ * 注意: Rocket League 官方 API / BakkesMod (UpdateState) 返回的 Speed 实际上是 kph 浮点数 (float)!
+ * 实测数据 (球车基本同速阶段): 车速 82.70599365234375 kph (超音速), 球速 81.03522491455078 kph。
+ * 转换公式: 1 uu/s = 0.036 km/h => uu = kph / 0.036。
+ *
+ * 为保证 Speed Progress Bar 等非线性变色组件的平滑过渡与最高精度，此处必须直接使用原始浮点数进行反推，
+ * 严禁先进行整数截断，否则会导致 Unreal Units 出现每 1 km/h 跳跃 27.78 uu 的严重离散不连续现象！
+ * text 显示部分统一只展示整数部分 (Math.floor)，progress bar 保留最高浮点精度。
+ */
+export function toKph(rawSpeed: number, isBall: boolean = false): number {
+  const raw = Number(rawSpeed) || 0;
+  const threshold = isBall ? 250 : 150;
+  return raw > threshold ? raw * 0.036 : raw;
 }
 
-export function toUu(rawSpeed: number): number {
-  return Number(rawSpeed) || 0;
+export function toUu(rawSpeed: number, isBall: boolean = false): number {
+  const raw = Number(rawSpeed) || 0;
+  const threshold = isBall ? 250 : 150;
+  return raw > threshold ? raw : raw / 0.036;
 }
 
-export function formatSpeed(rawSpeed: number, speedUnit: SpeedUnit = "kph"): string {
+export function formatSpeed(rawSpeed: number, speedUnit: SpeedUnit = "kph", isBall: boolean = false): string {
   if (speedUnit === "uu/s") {
-    return Math.floor(toUu(rawSpeed)).toString();
+    const uu = toUu(rawSpeed, isBall);
+    const clampedUu = isBall ? Math.max(0, uu) : Math.min(2300, Math.max(0, uu));
+    return Math.floor(clampedUu).toString();
   }
-  return Math.floor(toKph(rawSpeed)).toString();
+  return Math.floor(Math.max(0, toKph(rawSpeed, isBall))).toString();
 }
 
 export function formatScoreDiff(diff: number): string {
@@ -535,7 +551,7 @@ export function updateComponentInstanceDom(
       if (valEl) {
         const slots = Array.from(container.querySelectorAll<HTMLElement>(".digit-slot"));
         if (slots.length >= 4) {
-          const spdNum = inst.speedUnit === "uu/s" ? Math.floor(toUu(telemetry.ballSpeed)) : Math.floor(toKph(telemetry.ballSpeed));
+          const spdNum = inst.speedUnit === "uu/s" ? Math.floor(toUu(telemetry.ballSpeed, true)) : Math.floor(toKph(telemetry.ballSpeed, true));
           const s = Math.max(0, Math.min(9999, Math.round(spdNum)));
           const d1000 = Math.floor(s / 1000);
           const d100 = Math.floor((s % 1000) / 100);
@@ -554,7 +570,7 @@ export function updateComponentInstanceDom(
           slots[2].style.opacity = s >= 10 ? "1" : "0";
           slots[3].style.opacity = "1";
         } else {
-          valEl.textContent = formatSpeed(telemetry.ballSpeed, inst.speedUnit);
+          valEl.textContent = formatSpeed(telemetry.ballSpeed, inst.speedUnit, true);
         }
         applyTextStyles(container, inst, telemetry, undefined);
       }
@@ -1083,7 +1099,7 @@ export function updateComponentInstanceDom(
       if (labelEl) {
         labelEl.textContent = `BALL SPEED (${inst.speedUnit === "uu/s" ? "UU/S" : "KM/H"})`;
       }
-      if (valEl) valEl.textContent = formatSpeed(telemetry.ballSpeed, inst.speedUnit);
+      if (valEl) valEl.textContent = formatSpeed(telemetry.ballSpeed, inst.speedUnit, true);
       applyTextStyles(container, inst, telemetry, undefined);
       break;
     }
@@ -1287,7 +1303,7 @@ export function updateComponentInstanceDom(
       }
       const ballVal = container.querySelector<HTMLElement>(".dyn-ball-val");
       if (ballVal) {
-        ballVal.textContent = `${formatSpeed(telemetry.ballSpeed, inst.speedUnit)} ${inst.speedUnit === "uu/s" ? "uu/s" : "km/h"}`;
+        ballVal.textContent = `${formatSpeed(telemetry.ballSpeed, inst.speedUnit, true)} ${inst.speedUnit === "uu/s" ? "uu/s" : "km/h"}`;
       }
       const usColor = container.querySelector<HTMLElement>(".dyn-us-color");
       if (usColor) {
