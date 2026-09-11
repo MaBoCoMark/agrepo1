@@ -206,6 +206,8 @@ pub fn init_hotkey<R: Runtime>(app: tauri::AppHandle<R>) {
                 let is_f12 = cand.name == "F12";
                 if is_f12 {
                     if let Some(overlay) = app.get_webview_window("overlay") {
+                        let _ = overlay.unmaximize();
+                        let _ = overlay.set_decorations(false);
                         let _ = overlay.set_fullscreen(true);
                     }
                     IS_FULLSCREEN.store(true, Ordering::SeqCst);
@@ -249,6 +251,7 @@ pub fn init_hotkey<R: Runtime>(app: tauri::AppHandle<R>) {
                         if IS_FULLSCREEN.load(Ordering::SeqCst) {
                             if let Some(overlay) = app.get_webview_window("overlay") {
                                 let _ = overlay.set_fullscreen(false);
+                                let _ = overlay.set_decorations(false);
                                 let _ = overlay.maximize();
                             }
                             IS_FULLSCREEN.store(false, Ordering::SeqCst);
@@ -320,25 +323,36 @@ fn toggle_fullscreen_impl<R: Runtime>(app: &tauri::AppHandle<R>, bound: &Option<
     };
 
     let is_fs = IS_FULLSCREEN.load(Ordering::SeqCst);
-    if is_fs {
-        if let Some(overlay) = app.get_webview_window("overlay") {
+    if let Some(overlay) = app.get_webview_window("overlay") {
+        if is_fs {
+            // 【退出全屏】
+            // 1. 先退出全屏
             let _ = overlay.set_fullscreen(false);
+            // 2. 强制剥离 Windows 重新注入的标题栏/边框样式
+            let _ = overlay.set_decorations(false);
+            // 3. 重新最大化
             let _ = overlay.maximize();
-        }
-        IS_FULLSCREEN.store(false, Ordering::SeqCst);
-        let _ = app.emit("fullscreen-changed", serde_json::json!({
-            "is_fullscreen": false,
-            "hotkey": key_name
-        }));
-    } else {
-        if let Some(overlay) = app.get_webview_window("overlay") {
+
+            IS_FULLSCREEN.store(false, Ordering::SeqCst);
+            let _ = app.emit("fullscreen-changed", serde_json::json!({
+                "is_fullscreen": false,
+                "hotkey": key_name
+            }));
+        } else {
+            // 【进入全屏】
+            // 1. 必须先解除最大化限制，突破 Work Area 约束以覆盖任务栏
+            let _ = overlay.unmaximize();
+            // 2. 确保无边框样式
+            let _ = overlay.set_decorations(false);
+            // 3. 进入真正的全屏
             let _ = overlay.set_fullscreen(true);
+
+            IS_FULLSCREEN.store(true, Ordering::SeqCst);
+            let _ = app.emit("fullscreen-changed", serde_json::json!({
+                "is_fullscreen": true,
+                "hotkey": key_name
+            }));
         }
-        IS_FULLSCREEN.store(true, Ordering::SeqCst);
-        let _ = app.emit("fullscreen-changed", serde_json::json!({
-            "is_fullscreen": true,
-            "hotkey": key_name
-        }));
     }
 }
 
