@@ -19,9 +19,14 @@ export let currentReplayData: ReplayViewerData = {
 };
 
 export let replayTransitionDuration = 0.75; // seconds
+export let replayEntranceDelay = 1.00; // seconds (default 1.00s, adjustable 0.00s - 2.00s)
 
 export function setReplayTransitionDuration(duration: number): void {
   replayTransitionDuration = duration;
+}
+
+export function setReplayEntranceDelay(delay: number): void {
+  replayEntranceDelay = Math.max(0, Math.min(2.0, Number(delay) || 0));
 }
 
 export function updateReplaySvgBorder(): void {
@@ -76,7 +81,7 @@ export function processGoalScored(rawObj: any): void {
   const goalSpeedRaw = rawObj.GoalSpeed;
   let speedStr = '0KPH';
   if (typeof goalSpeedRaw === 'number') {
-    speedStr = `${Math.round(goalSpeedRaw)}KPH`;
+    const kph = goalSpeedRaw > 150 ? Math.floor(goalSpeedRaw * 0.036) : Math.floor(goalSpeedRaw); speedStr = `${kph}KPH`;
   } else if (typeof goalSpeedRaw === 'string') {
     speedStr = goalSpeedRaw.endsWith('KPH') ? goalSpeedRaw : `${goalSpeedRaw}KPH`;
   }
@@ -95,6 +100,7 @@ export function processGoalScored(rawObj: any): void {
 }
 
 let switchSceneModeFn: ((target: string, notifyConfigurator?: boolean) => void) | null = null;
+let replayEnterTimeout: any = null;
 
 export function registerSceneSwitcher(fn: (target: string, notifyConfigurator?: boolean) => void): void {
   switchSceneModeFn = fn;
@@ -107,16 +113,42 @@ export function enterReplayView(): void {
   updateReplayViewerDOM();
   updateReplaySvgBorder();
 
+  if (replayEnterTimeout) {
+    clearTimeout(replayEnterTimeout);
+    replayEnterTimeout = null;
+  }
+
   const footer = document.getElementById('replayFooter') || document.querySelector('.rl-footer');
   if (footer) {
     footer.classList.remove('rl-footer-hiding');
     footer.classList.remove('rl-footer-visible');
-    void (footer as HTMLElement).offsetHeight;
-    footer.classList.add('rl-footer-visible');
+  }
+
+  const triggerSlideUp = () => {
+    const f = document.getElementById('replayFooter') || document.querySelector('.rl-footer');
+    if (f) {
+      f.classList.remove('rl-footer-hiding');
+      f.classList.remove('rl-footer-visible');
+      void (f as HTMLElement).offsetHeight;
+      f.classList.add('rl-footer-visible');
+    }
+  };
+
+  if (replayEntranceDelay <= 0) {
+    triggerSlideUp();
+  } else {
+    replayEnterTimeout = setTimeout(() => {
+      replayEnterTimeout = null;
+      triggerSlideUp();
+    }, replayEntranceDelay * 1000);
   }
 }
 
 export function willEndReplayView(): void {
+  if (replayEnterTimeout) {
+    clearTimeout(replayEnterTimeout);
+    replayEnterTimeout = null;
+  }
   const footer = document.getElementById('replayFooter') || document.querySelector('.rl-footer');
   if (footer) {
     footer.classList.remove('rl-footer-visible');
@@ -125,6 +157,10 @@ export function willEndReplayView(): void {
 }
 
 export function immediateEndReplayView(): void {
+  if (replayEnterTimeout) {
+    clearTimeout(replayEnterTimeout);
+    replayEnterTimeout = null;
+  }
   const footer = document.getElementById('replayFooter') || document.querySelector('.rl-footer');
   if (footer) {
     footer.classList.remove('rl-footer-visible');

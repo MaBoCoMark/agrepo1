@@ -37,7 +37,7 @@ export function initCatalogModal(
   const catalogTelemetry: TelemetryBuffer = {
     timeSeconds: 270,
     bOvertime: false,
-    ballSpeed: 75,
+    ballSpeed: 1200,
     ballTeamNum: 0,
     myTeamNum: 0,
     myScore: 2,

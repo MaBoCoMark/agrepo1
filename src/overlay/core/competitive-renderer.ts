@@ -95,13 +95,14 @@ function fmtMinSec(totalSeconds: number): string {
   return `${isNeg ? '-' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
 }
 
-function fmtSpeed(speed: number, unit?: string): string {
-  if (unit === 'uu/s') {
-    const uu = toRealUuSpeed(speed);
-    return Math.round(uu).toString();
+function fmtSpeed(speed: number, unit?: string, isBall: boolean = false): string {
+  const raw = Number(speed) || 0;
+  const uu = isBall ? Math.max(0, raw) : Math.min(2300, Math.max(0, raw));
+  if (unit === "uu/s") {
+    return Math.floor(uu).toString();
   }
-  const kph = speed > 150 ? speed * 0.036 : speed;
-  return Math.round(kph).toString();
+  const kph = uu * 0.036;
+  return Math.floor(kph).toString();
 }
 
 function fmtScoreDiff(diff: number): string {
@@ -666,7 +667,8 @@ export function bindCompetitiveDomCache(
           const reel = cached.digitReel;
           addSpeedListener(p, (speed: number) => {
             if (reel && reel.slots.length >= 4) {
-              const spdNum = unit === 'uu/s' ? toRealUuSpeed(speed) : (speed > 150 ? speed * 0.036 : speed);
+              const uu = toRealUuSpeed(speed);
+              const spdNum = unit === 'uu/s' ? Math.floor(uu) : Math.floor(uu * 0.036);
               const s = Math.max(0, Math.min(9999, Math.round(spdNum)));
               const d1000 = Math.floor(s / 1000);
               const d100 = Math.floor((s % 1000) / 100);
@@ -810,7 +812,8 @@ export function bindCompetitiveDomCache(
           const reel = cached.digitReel;
           ballSpeedListeners.push((ballSpeed: number) => {
             if (reel && reel.slots.length >= 4) {
-              const spdNum = unit === 'uu/s' ? toRealUuSpeed(ballSpeed) : (ballSpeed > 150 ? ballSpeed * 0.036 : ballSpeed);
+              const uu = Number(ballSpeed) || 0;
+              const spdNum = unit === 'uu/s' ? Math.floor(uu) : Math.floor(uu * 0.036);
               const s = Math.max(0, Math.min(9999, Math.round(spdNum)));
               const d1000 = Math.floor(s / 1000);
               const d100 = Math.floor((s % 1000) / 100);
@@ -821,7 +824,7 @@ export function bindCompetitiveDomCache(
               updateReelSlot(reel.slots[2], d10, s >= 10 ? '1' : '0');
               updateReelSlot(reel.slots[3], d1, '1');
             } else {
-              const str = fmtSpeed(ballSpeed, unit);
+              const str = fmtSpeed(ballSpeed, unit, true);
               if (str !== cached.lastTextContent) {
                 valEl.textContent = str;
                 cached.lastTextContent = str;
@@ -838,7 +841,7 @@ export function bindCompetitiveDomCache(
         if (valEl) {
           const unit = inst.speedUnit;
           ballSpeedListeners.push((ballSpeed: number) => {
-            const str = fmtSpeed(ballSpeed, unit);
+            const str = fmtSpeed(ballSpeed, unit, true);
             if (str !== cached.lastTextContent) {
               valEl.textContent = str;
               cached.lastTextContent = str;
@@ -1636,7 +1639,7 @@ export function bindCompetitiveDomCache(
           const ballVal = cached.ballVal;
           const unit = inst.speedUnit;
           ballSpeedListeners.push((bSpd: number) => {
-            const spd = `${fmtSpeed(bSpd, unit)} ${unit === 'uu/s' ? 'uu/s' : 'km/h'}`;
+            const spd = `${fmtSpeed(bSpd, unit, true)} ${unit === 'uu/s' ? 'uu/s' : 'km/h'}`;
             if (spd !== cached.lastSpeedDisplay) {
               ballVal.textContent = spd;
               cached.lastSpeedDisplay = spd;

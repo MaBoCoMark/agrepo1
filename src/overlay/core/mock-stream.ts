@@ -9,7 +9,7 @@ import { processMiniMapBallHitPacket } from './websocket-manager';
 
 export const mockSimState = {
   timeRaw: 270.0,
-  ballSpeed: 43.0,
+  ballSpeed: 1200.0,
   ballSpeedDir: 1,
   ballTeamToggleTimer: 0,
   scoreTimer: 0,
@@ -18,9 +18,9 @@ export const mockSimState = {
   p2Boost: { val: 18.0, step: 0.75, dir: -1 },
   p3Boost: { val: 85.0, step: 0.55, dir: -1 },
 
-  p1Speed: { val: 82.0, step: 0.6, dir: 1, max: 100 },
-  p2Speed: { val: 55.0, step: 0.9, dir: -1, max: 100 },
-  p3Speed: { val: 26.0, step: 0.4, dir: 1, max: 100 },
+  p1Speed: { val: 1650.0, step: 15.5, dir: 1, min: 200, max: 2300 },
+  p2Speed: { val: 1100.0, step: 22.0, dir: -1, min: 100, max: 2150 },
+  p3Speed: { val: 650.0, step: 12.0, dir: 1, min: 50, max: 1800 },
 
   frameCount: 0
 };
@@ -37,10 +37,10 @@ export function updateMockStream(latestData: TelemetryBuffer): void {
   latestData.timeSeconds = Math.floor(mockSimState.timeRaw);
 
   // 2. Ball speed & ball team
-  mockSimState.ballSpeed += 0.3 * mockSimState.ballSpeedDir;
-  if (mockSimState.ballSpeed >= 120) mockSimState.ballSpeedDir = -1;
-  if (mockSimState.ballSpeed <= 10) mockSimState.ballSpeedDir = 1;
-  latestData.ballSpeed = Math.floor(mockSimState.ballSpeed);
+  mockSimState.ballSpeed += 8.5 * mockSimState.ballSpeedDir;
+  if (mockSimState.ballSpeed >= 3500) mockSimState.ballSpeedDir = -1;
+  if (mockSimState.ballSpeed <= 300) mockSimState.ballSpeedDir = 1;
+  latestData.ballSpeed = mockSimState.ballSpeed;
 
   mockSimState.ballTeamToggleTimer++;
   if (mockSimState.ballTeamToggleTimer > 240) {
@@ -76,24 +76,39 @@ export function updateMockStream(latestData: TelemetryBuffer): void {
   latestData.p3Boosting = mockSimState.p3Boost.dir < 0;
   latestData.p3HasCar = true;
 
-  // 6. Speed simulation
+  // 6. Speed simulation (High-Precision Unreal Units 0-2300 uu/s)
   mockSimState.p1Speed.val += mockSimState.p1Speed.step * mockSimState.p1Speed.dir;
-  if (mockSimState.p1Speed.val >= 95) mockSimState.p1Speed.dir = -1;
-  if (mockSimState.p1Speed.val <= 10) mockSimState.p1Speed.dir = 1;
-  latestData.p1Speed = Math.floor(mockSimState.p1Speed.val);
-  latestData.p1Supersonic = latestData.p1Speed > 80;
+  if (mockSimState.p1Speed.val >= 2300) {
+    mockSimState.p1Speed.val = 2300;
+    mockSimState.p1Speed.dir = -1;
+  } else if (mockSimState.p1Speed.val <= 200) {
+    mockSimState.p1Speed.val = 200;
+    mockSimState.p1Speed.dir = 1;
+  }
+  latestData.p1Speed = mockSimState.p1Speed.val;
+  latestData.p1Supersonic = latestData.p1Speed >= 2200;
 
   mockSimState.p2Speed.val += mockSimState.p2Speed.step * mockSimState.p2Speed.dir;
-  if (mockSimState.p2Speed.val >= 90) mockSimState.p2Speed.dir = -1;
-  if (mockSimState.p2Speed.val <= 5) mockSimState.p2Speed.dir = 1;
-  latestData.p2Speed = Math.floor(mockSimState.p2Speed.val);
-  latestData.p2Supersonic = latestData.p2Speed > 80;
+  if (mockSimState.p2Speed.val >= 2150) {
+    mockSimState.p2Speed.val = 2150;
+    mockSimState.p2Speed.dir = -1;
+  } else if (mockSimState.p2Speed.val <= 100) {
+    mockSimState.p2Speed.val = 100;
+    mockSimState.p2Speed.dir = 1;
+  }
+  latestData.p2Speed = mockSimState.p2Speed.val;
+  latestData.p2Supersonic = latestData.p2Speed >= 2200;
 
   mockSimState.p3Speed.val += mockSimState.p3Speed.step * mockSimState.p3Speed.dir;
-  if (mockSimState.p3Speed.val >= 85) mockSimState.p3Speed.dir = -1;
-  if (mockSimState.p3Speed.val <= 0) mockSimState.p3Speed.dir = 1;
-  latestData.p3Speed = Math.floor(mockSimState.p3Speed.val);
-  latestData.p3Supersonic = latestData.p3Speed > 80;
+  if (mockSimState.p3Speed.val >= 1800) {
+    mockSimState.p3Speed.val = 1800;
+    mockSimState.p3Speed.dir = -1;
+  } else if (mockSimState.p3Speed.val <= 50) {
+    mockSimState.p3Speed.val = 50;
+    mockSimState.p3Speed.dir = 1;
+  }
+  latestData.p3Speed = mockSimState.p3Speed.val;
+  latestData.p3Supersonic = latestData.p3Speed >= 2200;
 
   // 7. Score variations
   mockSimState.scoreTimer++;

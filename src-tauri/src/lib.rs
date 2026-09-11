@@ -4,9 +4,18 @@ use tauri::{Manager, Emitter, EventTarget};
 pub fn run() {
     tauri::Builder::default()
         .on_window_event(|window, event| {
-            if window.label() == "overlay" {
-                match event {
-                    tauri::WindowEvent::Resized(_) | tauri::WindowEvent::ScaleFactorChanged { .. } => {
+            match event {
+                tauri::WindowEvent::Focused(_) => {
+                    #[cfg(target_os = "windows")]
+                    {
+                        let app_handle = window.app_handle();
+                        if let Some(overlay) = app_handle.get_webview_window("overlay") {
+                            let _ = overlay.set_decorations(false);
+                        }
+                    }
+                }
+                tauri::WindowEvent::Resized(_) | tauri::WindowEvent::ScaleFactorChanged { .. } => {
+                    if window.label() == "overlay" {
                         let app_handle = window.app_handle();
                         if let Some(config_window) = app_handle.get_webview_window("configurator") {
                             if let (Ok(size), Ok(scale)) = (window.inner_size(), window.scale_factor()) {
@@ -19,8 +28,8 @@ pub fn run() {
                             }
                         }
                     }
-                    _ => {}
                 }
+                _ => {}
             }
         })
         .run(tauri::generate_context!())

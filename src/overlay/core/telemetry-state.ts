@@ -183,3 +183,11 @@ export async function setOverlayClickThrough(ignore: boolean): Promise<void> {
     // ignore
   }
 }
+
+export async function ensureOverlayDecorations(): Promise<void> {
+  try {
+    await invoke("ensure_overlay_decorations");
+  } catch {
+    // fallback
+  }
+}

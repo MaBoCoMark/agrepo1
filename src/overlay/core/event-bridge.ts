@@ -1,7 +1,7 @@
-import { listen } from '@tauri-apps/api/event';
+import { listen, emitTo } from '@tauri-apps/api/event';
 import { ComponentInstance, GlobalLayoutSettings } from './component-types';
 import { saveCompetitiveLayout, saveGlobalLayoutSettings, loadGlobalLayoutSettings } from './layout-store';
-import { overlayState, setOverlayClickThrough } from './telemetry-state';
+import { overlayState, setOverlayClickThrough, ensureOverlayDecorations } from './telemetry-state';
 import { updateExitFullscreenPrompt } from './fullscreen-manager';
 import {
   switchRefMode,
@@ -29,6 +29,8 @@ import {
 } from './websocket-manager';
 import {
   setReplayTransitionDuration,
+  replayEntranceDelay,
+  setReplayEntranceDelay,
   enterReplayView,
   willEndReplayView,
   immediateEndReplayView
@@ -138,14 +140,31 @@ export async function setupOverlayEventListeners(): Promise<void> {
     }
   });
 
+  await listen<any>('change-replay-entrance-delay', (e) => {
+    const delay = typeof e.payload === "number" ? e.payload : Number(e.payload?.delay ?? 1.00);
+    setReplayEntranceDelay(delay);
+  });
+
   await listen<void>('simulate-replay-lifecycle', () => {
     enterReplayView();
+    const delayMs = (replayEntranceDelay || 0) * 1000;
     setTimeout(() => {
       willEndReplayView();
-    }, 3500);
+    }, delayMs + 2500);
     setTimeout(() => {
       immediateEndReplayView();
-    }, 4250);
+    }, delayMs + 3250);
+  });
+
+  // State Synchronization with Configurator
+  await listen<void>('request-overlay-state', () => {
+    emitTo('configurator', 'overlay-state-sync', {
+      currentActiveScene: overlayState.currentActiveScene,
+      isAutoSceneControl: overlayState.isAutoSceneControl,
+      isSimulating: overlayState.isSimulating,
+      isLayoutEditing: overlayState.isLayoutEditing,
+      replayEntranceDelay: replayEntranceDelay,
+    });
   });
 
   // 6. Competitive Layout & 8-Point Dragger
@@ -161,6 +180,7 @@ export async function setupOverlayEventListeners(): Promise<void> {
       dragger?.selectInstance(null);
       await setOverlayClickThrough(true);
     }
+    void ensureOverlayDecorations();
     updateExitFullscreenPrompt();
     renderCompetitiveScene(getCompetitiveInstances());
   });
@@ -289,3 +309,10 @@ export async function setupOverlayEventListeners(): Promise<void> {
   notifyWsStatus();
   updateDimensions();
 }
+
+window.addEventListener("focus", () => {
+  void ensureOverlayDecorations();
+});
+window.addEventListener("blur", () => {
+  void ensureOverlayDecorations();
+});

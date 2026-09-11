@@ -12,7 +12,7 @@ import { loadGlobalLayoutSettings, saveGlobalLayoutSettings } from '../../overla
 export function initRefSceneController(): void {
   const manifest = getMergedManifest();
   let activeScene = localStorage.getItem('saved_scene_mode') || 'developer-dashboard';
-  let isAutoSceneControlEnabled = true;
+  let isAutoSceneControlEnabled = localStorage.getItem('saved_auto_scene_control') !== 'false';
 
   const autoSceneCheck = document.getElementById('auto-scene-control-check') as HTMLInputElement | null;
   const autoHideCheck = document.getElementById('auto-hide-non-existing-check') as HTMLInputElement | null;
@@ -69,9 +69,10 @@ export function initRefSceneController(): void {
 
   // Automatic Scene Control Checkbox
   if (autoSceneCheck) {
-    isAutoSceneControlEnabled = autoSceneCheck.checked;
+    autoSceneCheck.checked = isAutoSceneControlEnabled;
     autoSceneCheck.addEventListener('change', () => {
       isAutoSceneControlEnabled = autoSceneCheck.checked;
+      localStorage.setItem('saved_auto_scene_control', isAutoSceneControlEnabled ? 'true' : 'false');
       updateSceneRadiosDisabledState(isAutoSceneControlEnabled);
       emitTo('overlay', 'toggle-auto-scene-control', isAutoSceneControlEnabled);
       emitTo('overlay', 'toggle-auto-scene-control', { enabled: isAutoSceneControlEnabled });
@@ -128,9 +129,58 @@ export function initRefSceneController(): void {
 
   // Listen for scene auto switch from overlay
   void listen<{ scene: string }>('scene-auto-switched', (event) => {
-    const sId = event.payload.scene;
-    updateActiveSceneRadio(sId);
-    updateSceneVisibility(sId);
+    const sId = event.payload?.scene;
+    if (sId) {
+      updateActiveSceneRadio(sId);
+      updateSceneVisibility(sId);
+    }
+  });
+
+  // State Synchronization with Overlay
+  function queryOverlayState() {
+    emitTo('overlay', 'request-overlay-state', {});
+  }
+
+  void listen<{
+    currentActiveScene?: string;
+    isAutoSceneControl?: boolean;
+    isSimulating?: boolean;
+    isLayoutEditing?: boolean;
+    replayEntranceDelay?: number;
+  }>('overlay-state-sync', (event) => {
+    const data = event.payload;
+    if (!data) return;
+
+    if (data.isAutoSceneControl !== undefined) {
+      isAutoSceneControlEnabled = data.isAutoSceneControl;
+      if (autoSceneCheck) {
+        autoSceneCheck.checked = data.isAutoSceneControl;
+      }
+      localStorage.setItem('saved_auto_scene_control', data.isAutoSceneControl ? 'true' : 'false');
+      updateSceneRadiosDisabledState(data.isAutoSceneControl);
+    }
+
+    if (data.currentActiveScene) {
+      activeScene = data.currentActiveScene;
+      updateActiveSceneRadio(data.currentActiveScene);
+      updateSceneVisibility(data.currentActiveScene);
+    }
+
+    if (data.replayEntranceDelay !== undefined) {
+      updateReplayEntranceDelayUI(data.replayEntranceDelay);
+    }
+  });
+
+  // Query state immediately and when focused / shown
+  queryOverlayState();
+  setTimeout(queryOverlayState, 120);
+  setTimeout(queryOverlayState, 300);
+
+  window.addEventListener('focus', () => {
+    queryOverlayState();
+  });
+  void listen('configurator-shown', () => {
+    queryOverlayState();
   });
 
   // 3. Opacity scroll
@@ -220,6 +270,31 @@ export function initRefSceneController(): void {
   }
 
   // 7. Replay Viewer Tuning & Test Controls
+  const replayDelaySlider = document.getElementById('replay-entrance-delay-slider') as HTMLInputElement | null;
+  const replayDelayVal = document.getElementById('replay-entrance-delay-val');
+  const savedDelayStr = localStorage.getItem('saved_replay_entrance_delay');
+  let currentReplayDelay = savedDelayStr !== null ? parseFloat(savedDelayStr) : 1.00;
+  if (isNaN(currentReplayDelay)) currentReplayDelay = 1.00;
+
+  function updateReplayEntranceDelayUI(val: number) {
+    currentReplayDelay = Math.max(0, Math.min(2.0, Number(val) || 0));
+    if (replayDelaySlider) replayDelaySlider.value = currentReplayDelay.toFixed(2);
+    if (replayDelayVal) replayDelayVal.textContent = currentReplayDelay.toFixed(2);
+  }
+
+  updateReplayEntranceDelayUI(currentReplayDelay);
+  emitTo('overlay', 'change-replay-entrance-delay', { delay: currentReplayDelay });
+
+  if (replayDelaySlider) {
+    replayDelaySlider.addEventListener('input', () => {
+      const val = parseFloat(replayDelaySlider.value);
+      updateReplayEntranceDelayUI(val);
+      localStorage.setItem('saved_replay_entrance_delay', currentReplayDelay.toFixed(2));
+      emitTo('overlay', 'change-replay-entrance-delay', { delay: currentReplayDelay });
+      emitTo('overlay', 'change-replay-entrance-delay', currentReplayDelay);
+    });
+  }
+
   const replayTransZone = document.getElementById('replay-transition-zone');
   const replayTransVal = document.getElementById('replay-transition-val');
   let currentReplayDuration = 0.75;

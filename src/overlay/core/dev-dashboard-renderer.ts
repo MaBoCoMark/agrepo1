@@ -62,7 +62,7 @@ export function renderDevDashboard(
 
   // 3. Ball Speed
   if (latestData.ballSpeed !== previousData.ballSpeed) {
-    if (devDom.ballSpeed) devDom.ballSpeed.textContent = `${latestData.ballSpeed} KPH`;
+    if (devDom.ballSpeed) devDom.ballSpeed.textContent = `${Math.floor(latestData.ballSpeed * 0.036)} KPH`;
     previousData.ballSpeed = latestData.ballSpeed;
   }
 
@@ -116,7 +116,7 @@ export function renderDevDashboard(
   }
   if (latestData.p1HasCar) {
     if (latestData.p1Speed !== previousData.p1Speed) {
-      if (devDom.p1Speed) devDom.p1Speed.textContent = latestData.p1Speed.toString();
+      if (devDom.p1Speed) devDom.p1Speed.textContent = Math.floor(latestData.p1Speed).toString();
       previousData.p1Speed = latestData.p1Speed;
     }
     if (latestData.p1Boost !== previousData.p1Boost) {
@@ -168,7 +168,7 @@ export function renderDevDashboard(
   }
   if (latestData.p2HasCar) {
     if (latestData.p2Speed !== previousData.p2Speed) {
-      if (devDom.p2Speed) devDom.p2Speed.textContent = latestData.p2Speed.toString();
+      if (devDom.p2Speed) devDom.p2Speed.textContent = Math.floor(latestData.p2Speed).toString();
       previousData.p2Speed = latestData.p2Speed;
     }
     if (latestData.p2Boost !== previousData.p2Boost) {
@@ -220,7 +220,7 @@ export function renderDevDashboard(
   }
   if (latestData.p3HasCar) {
     if (latestData.p3Speed !== previousData.p3Speed) {
-      if (devDom.p3Speed) devDom.p3Speed.textContent = latestData.p3Speed.toString();
+      if (devDom.p3Speed) devDom.p3Speed.textContent = Math.floor(latestData.p3Speed).toString();
       previousData.p3Speed = latestData.p3Speed;
     }
     if (latestData.p3Boost !== previousData.p3Boost) {

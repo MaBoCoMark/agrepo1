@@ -47,8 +47,8 @@ export function interpolateRgb(
 }
 
 export function toRealUuSpeed(rawSpeed: number): number {
-  // Real unit of speed is uu/s (0 - 2300). If rawSpeed is in KPH (<= 150), convert to uu/s.
-  const uu = rawSpeed > 150 ? rawSpeed : rawSpeed / 0.036;
+  // Raw telemetry speed is in Unreal Units/second (uu/s).
+  const uu = Number(rawSpeed) || 0;
   return Math.min(2300, Math.max(0, uu));
 }
 

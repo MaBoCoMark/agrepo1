@@ -832,7 +832,7 @@
   <!-- Automatic Scene Control Checkbox -->
   <div class="primer-card">
     <label style="display: flex; align-items: center; cursor: pointer; font-weight: bold; color: var(--primer-success-fg); font-size: 12px;">
-      <input type="checkbox" id="auto-scene-control-check" checked style="margin-right: 8px; cursor: pointer; transform: scale(1.15);">
+      <input type="checkbox" id="auto-scene-control-check" style="margin-right: 8px; cursor: pointer; transform: scale(1.15);">
       Automatic Scene Control
     </label>
     <div style="font-size: 11px; color: var(--primer-fg-muted); margin-top: 4px; margin-left: 24px;">
@@ -1074,6 +1074,11 @@
         <span>Simulate Full Goal & Replay Lifecycle</span>
       </button>
     </div>
+
+    <div class="section-title">Entrance Pop-up Delay (s)</div>
+    <p>Delay before sliding up: <span id="replay-entrance-delay-val" style="color: var(--primer-accent-fg); font-weight: 600;">1.00</span>s</p>
+    <input type="range" id="replay-entrance-delay-slider" min="0.00" max="2.00" step="0.01" value="1.00" style="width: 100%; cursor: pointer; accent-color: var(--primer-accent-fg); margin-bottom: 8px;">
+    <hr>
 
     <div class="section-title">Slide Transition Duration (s)</div>
     <p>Duration: <span id="replay-transition-val" style="color: var(--primer-accent-fg); font-weight: 600;">0.75</span>s</p>

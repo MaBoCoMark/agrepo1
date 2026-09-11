@@ -146,24 +146,18 @@ export function formatMinutesSeconds(totalSeconds: number): string {
 }
 
 export function toKph(rawSpeed: number): number {
-  if (rawSpeed > 150) {
-    return rawSpeed * 0.036;
-  }
-  return rawSpeed;
+  return (Number(rawSpeed) || 0) * 0.036;
 }
 
 export function toUu(rawSpeed: number): number {
-  if (rawSpeed > 150) {
-    return rawSpeed;
-  }
-  return rawSpeed / 0.036;
+  return Number(rawSpeed) || 0;
 }
 
 export function formatSpeed(rawSpeed: number, speedUnit: SpeedUnit = "kph"): string {
   if (speedUnit === "uu/s") {
-    return Math.round(toUu(rawSpeed)).toString();
+    return Math.floor(toUu(rawSpeed)).toString();
   }
-  return Math.round(toKph(rawSpeed)).toString();
+  return Math.floor(toKph(rawSpeed)).toString();
 }
 
 export function formatScoreDiff(diff: number): string {
@@ -425,7 +419,7 @@ export function updateComponentInstanceDom(
       if (valEl) {
         const slots = Array.from(container.querySelectorAll<HTMLElement>(".digit-slot"));
         if (slots.length >= 4) {
-          const spdNum = inst.speedUnit === "uu/s" ? toRealUuSpeed(speed) : (speed > 150 ? speed * 0.036 : speed);
+          const spdNum = inst.speedUnit === "uu/s" ? Math.floor(toUu(speed)) : Math.floor(toKph(speed));
           const s = Math.max(0, Math.min(9999, Math.round(spdNum)));
           const d1000 = Math.floor(s / 1000);
           const d100 = Math.floor((s % 1000) / 100);
@@ -541,7 +535,7 @@ export function updateComponentInstanceDom(
       if (valEl) {
         const slots = Array.from(container.querySelectorAll<HTMLElement>(".digit-slot"));
         if (slots.length >= 4) {
-          const spdNum = inst.speedUnit === "uu/s" ? toRealUuSpeed(telemetry.ballSpeed) : (telemetry.ballSpeed > 150 ? telemetry.ballSpeed * 0.036 : telemetry.ballSpeed);
+          const spdNum = inst.speedUnit === "uu/s" ? Math.floor(toUu(telemetry.ballSpeed)) : Math.floor(toKph(telemetry.ballSpeed));
           const s = Math.max(0, Math.min(9999, Math.round(spdNum)));
           const d1000 = Math.floor(s / 1000);
           const d100 = Math.floor((s % 1000) / 100);

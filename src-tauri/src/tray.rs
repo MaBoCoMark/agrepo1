@@ -109,8 +109,19 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
 }
 
 fn open_configurator_window<R: Runtime>(app: &tauri::AppHandle<R>) {
+    #[cfg(target_os = "windows")]
+    if let Some(overlay) = app.get_webview_window("overlay") {
+        let _ = overlay.set_decorations(false);
+    }
     if let Some(window) = app.get_webview_window("configurator") {
+        let _ = window.show();
+        let _ = window.unminimize();
         let _ = window.set_focus();
+        let _ = window.emit_to(
+            EventTarget::webview_window("configurator"),
+            "configurator-shown",
+            (),
+        );
     } else {
         let overlay = app.get_webview_window("overlay");
         
@@ -146,6 +157,10 @@ fn open_configurator_window<R: Runtime>(app: &tauri::AppHandle<R>) {
 }
 
 fn open_system_time_configurator_window<R: Runtime>(app: &tauri::AppHandle<R>) {
+    #[cfg(target_os = "windows")]
+    if let Some(overlay) = app.get_webview_window("overlay") {
+        let _ = overlay.set_decorations(false);
+    }
     if let Some(window) = app.get_webview_window("system_time_configurator") {
         let _ = window.show();
         let _ = window.unminimize();

@@ -329,6 +329,7 @@ fn toggle_fullscreen_impl<R: Runtime>(app: &tauri::AppHandle<R>, bound: &Option<
             // 1. 先退出全屏
             let _ = overlay.set_fullscreen(false);
             // 2. 强制剥离 Windows 重新注入的标题栏/边框样式
+            #[cfg(target_os = "windows")]
             let _ = overlay.set_decorations(false);
             // 3. 重新最大化
             let _ = overlay.maximize();
@@ -343,6 +344,7 @@ fn toggle_fullscreen_impl<R: Runtime>(app: &tauri::AppHandle<R>, bound: &Option<
             // 1. 必须先解除最大化限制，突破 Work Area 约束以覆盖任务栏
             let _ = overlay.unmaximize();
             // 2. 确保无边框样式
+            #[cfg(target_os = "windows")]
             let _ = overlay.set_decorations(false);
             // 3. 进入真正的全屏
             let _ = overlay.set_fullscreen(true);

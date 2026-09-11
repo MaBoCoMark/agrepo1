@@ -293,7 +293,7 @@ export function processUpdateState(data: RLStateData): void {
     }
     if (data.Game.Ball) {
       if (data.Game.Ball.Speed !== undefined) {
-        latestData.ballSpeed = Math.trunc(data.Game.Ball.Speed);
+        latestData.ballSpeed = Number(data.Game.Ball.Speed) || 0;
       }
       if (data.Game.Ball.TeamNum !== undefined) {
         latestData.ballTeamNum = Number(data.Game.Ball.TeamNum);
@@ -382,7 +382,7 @@ export function processUpdateState(data: RLStateData): void {
 
   // P1 Fast Numerical/Boolean State
   if (p1) {
-    latestData.p1Speed = Math.trunc(p1.Speed || 0);
+    latestData.p1Speed = Number(p1.Speed || 0);
     latestData.p1Boost = Math.max(0, Math.min(100, Math.round(p1.Boost || 0)));
     latestData.p1HasCar = Boolean(p1.bHasCar);
     latestData.p1Boosting = Boolean(p1.bBoosting);
@@ -406,7 +406,7 @@ export function processUpdateState(data: RLStateData): void {
   // P2 Fast Numerical/Boolean State
   const p2 = teammates[0] || null;
   if (p2) {
-    latestData.p2Speed = Math.trunc(p2.Speed || 0);
+    latestData.p2Speed = Number(p2.Speed || 0);
     latestData.p2Boost = Math.max(0, Math.min(100, Math.round(p2.Boost || 0)));
     latestData.p2HasCar = Boolean(p2.bHasCar);
     latestData.p2Boosting = Boolean(p2.bBoosting);
@@ -430,7 +430,7 @@ export function processUpdateState(data: RLStateData): void {
   // P3 Fast Numerical/Boolean State
   const p3 = teammates[1] || null;
   if (p3) {
-    latestData.p3Speed = Math.trunc(p3.Speed || 0);
+    latestData.p3Speed = Number(p3.Speed || 0);
     latestData.p3Boost = Math.max(0, Math.min(100, Math.round(p3.Boost || 0)));
     latestData.p3HasCar = Boolean(p3.bHasCar);
     latestData.p3Boosting = Boolean(p3.bBoosting);
@@ -495,7 +495,7 @@ export function processMiniMapBallHitPacket(packet: any): void {
     payloadData.PostHitSpeed;
   if (rawSpd !== undefined && rawSpd !== null) {
     const numSpd = Number(rawSpd);
-    speed = numSpd > 150 ? numSpd * 0.036 : numSpd;
+    speed = numSpd * 0.036;
   }
 
   // Extract Player Team
@@ -771,12 +771,12 @@ export function disconnectWebSocket(): void {
 const REAL_SAMPLE_RAW: RLStateData = {
   MatchGuid: "852D9D5546F30BE5E44F6C88F7ED98EA",
   Players: [
-    { Name: "steamuser", Shortcut: 5, TeamNum: 1, bHasCar: true, Speed: 82.7996, Boost: 11, bSupersonic: true },
-    { Name: "Fury", Shortcut: 1, TeamNum: 0, bHasCar: true, Speed: 40.0, Boost: 50 },
-    { Name: "Sticks", Shortcut: 6, TeamNum: 1, bOnGround: true, bHasCar: true, Speed: 82.7997, Boost: 15, bBoosting: true, bSupersonic: true },
-    { Name: "Stinger", Shortcut: 2, TeamNum: 0, bHasCar: true, Speed: 55.0, Boost: 33 },
-    { Name: "Khan", Shortcut: 7, TeamNum: 1, bOnGround: true, bHasCar: true, Speed: 26.1496, Boost: 100 },
-    { Name: "Outlaw", Shortcut: 3, TeamNum: 0, bHasCar: true, Speed: 30.0, Boost: 45 }
+    { Name: "steamuser", Shortcut: 5, TeamNum: 1, bHasCar: true, Speed: 2299.98, Boost: 11, bSupersonic: true },
+    { Name: "Fury", Shortcut: 1, TeamNum: 0, bHasCar: true, Speed: 1111.11, Boost: 50 },
+    { Name: "Sticks", Shortcut: 6, TeamNum: 1, bOnGround: true, bHasCar: true, Speed: 2299.99, Boost: 15, bBoosting: true, bSupersonic: true },
+    { Name: "Stinger", Shortcut: 2, TeamNum: 0, bHasCar: true, Speed: 1527.77, Boost: 33 },
+    { Name: "Khan", Shortcut: 7, TeamNum: 1, bOnGround: true, bHasCar: true, Speed: 726.38, Boost: 100 },
+    { Name: "Outlaw", Shortcut: 3, TeamNum: 0, bHasCar: true, Speed: 833.33, Boost: 45 }
   ],
   Game: {
     Teams: [
@@ -786,7 +786,7 @@ const REAL_SAMPLE_RAW: RLStateData = {
     PlaylistId: 24,
     TimeSeconds: 270,
     bOvertime: false,
-    Ball: { Speed: 43.92, TeamNum: 0 },
+    Ball: { Speed: 1220.0, TeamNum: 0 },
     bReplay: false,
     bHasWinner: false,
     Winner: "",
