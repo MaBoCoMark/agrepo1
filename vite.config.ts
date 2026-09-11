@@ -17,6 +17,7 @@ export default defineConfig({
       input: {
         configurator: resolve(__dirname, "configurator.html"),
         overlay: resolve(__dirname, "overlay.html"),
+        time_configurator: resolve(__dirname, "time-configurator.html"),
       },
     },
   },

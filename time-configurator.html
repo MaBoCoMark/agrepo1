@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="./src/styles/main.css">
+  <style>
+    body {
+      background: var(--primer-canvas-default);
+      color: var(--primer-fg-default);
+      padding: 14px;
+      margin: 0;
+      box-sizing: border-box;
+      user-select: none;
+      font-size: 12px;
+      transition: background-color 0.2s ease, color 0.2s ease;
+      overflow-y: auto;
+    }
+
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--primer-border-muted);
+    }
+
+    .app-title {
+      font-weight: bold;
+      font-size: 13px;
+      color: var(--primer-fg-default);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .primer-card {
+      background: var(--primer-canvas-card);
+      border: 1px solid var(--primer-border-default);
+      border-radius: 6px;
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      box-shadow: var(--primer-shadow-card);
+    }
+
+    .section-title {
+      font-weight: bold;
+      color: var(--primer-accent-fg);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .control-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .control-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .control-label {
+      color: var(--primer-fg-default);
+      font-size: 11px;
+      font-weight: 500;
+      min-width: 90px;
+    }
+
+    .input-field {
+      background: var(--primer-input-bg);
+      border: 1px solid var(--primer-input-border);
+      color: var(--primer-fg-default);
+      padding: 3px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+      box-sizing: border-box;
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: var(--primer-input-focus-border);
+      box-shadow: var(--primer-input-focus-shadow);
+    }
+
+    .color-input-pair {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .color-picker-input {
+      width: 28px;
+      height: 24px;
+      border: 1px solid var(--primer-border-default);
+      border-radius: 4px;
+      background: transparent;
+      cursor: pointer;
+      padding: 0;
+      flex-shrink: 0;
+    }
+
+    .slider-input-pair {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+    }
+
+    .slider-input-pair input[type="range"] {
+      flex: 1;
+      cursor: pointer;
+    }
+
+    .slider-val-badge {
+      font-size: 11px;
+      color: var(--primer-accent-fg);
+      font-weight: 600;
+      min-width: 50px;
+      text-align: right;
+    }
+
+    .btn {
+      background: var(--primer-btn-bg);
+      color: var(--primer-btn-text);
+      border: 1px solid var(--primer-btn-border);
+      border-radius: 6px;
+      padding: 5px 12px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 600;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .btn:hover:not(:disabled) {
+      background: var(--primer-btn-hover-bg);
+    }
+
+    .btn-secondary {
+      background: var(--primer-btn-bg);
+      color: var(--primer-fg-default);
+      border: 1px solid var(--primer-border-default);
+    }
+
+    .footer-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 14px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header Bar -->
+  <div class="header-bar">
+    <div class="app-title">
+      <span>⏱️</span>
+      <span>System Time Configurator</span>
+    </div>
+    <button id="theme-toggle-btn" class="btn btn-secondary" title="Toggle Light / Dark mode" style="padding: 2px 8px; font-size: 10px;">
+      <span id="theme-icon">☀️</span>
+      <span id="theme-text">Light Mode</span>
+    </button>
+  </div>
+
+  <!-- Visibility Toggle (Checkbox) -->
+  <div class="primer-card">
+    <label style="display: flex; align-items: center; cursor: pointer; font-weight: bold; color: var(--primer-success-fg); font-size: 12px;">
+      <input type="checkbox" id="time-visible-check" checked style="margin-right: 8px; cursor: pointer; transform: scale(1.2);">
+      Show System Time (是否显示)
+    </label>
+    <div style="font-size: 10px; color: var(--primer-fg-muted); margin-top: 4px; margin-left: 24px;">
+      Synchronized with System Tray menu checkbox in real-time.
+    </div>
+  </div>
+
+  <!-- Typography & Font Size in vw -->
+  <div class="primer-card">
+    <div class="section-title">Typography (vw Scaling)</div>
+    <div class="control-row">
+      <span class="control-label">Font Size:</span>
+      <div class="slider-input-pair">
+        <input type="range" id="font-size-slider" min="0.5" max="4.0" step="0.1" value="1.2">
+        <span id="font-size-badge" class="slider-val-badge">1.2 vw</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Text Color & Text Opacity -->
+  <div class="primer-card">
+    <div class="section-title">Text Color & Opacity</div>
+    <div class="control-row">
+      <span class="control-label">Text Color:</span>
+      <div class="color-input-pair">
+        <input type="color" id="text-color-picker" class="color-picker-input" value="#ffffff">
+        <input type="text" id="text-color-hex" class="input-field" value="#ffffff" style="width: 76px;">
+      </div>
+    </div>
+    <div class="control-row">
+      <span class="control-label">Text Opacity:</span>
+      <div class="slider-input-pair">
+        <input type="range" id="text-opacity-slider" min="0" max="100" step="1" value="100">
+        <span id="text-opacity-badge" class="slider-val-badge">100%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pure Stroke (No Shadow, max 5px, 0.1 precision, in vw) -->
+  <div class="primer-card">
+    <div class="section-title">Text Stroke (Pure Outline)</div>
+    <div class="control-row">
+      <span class="control-label">Stroke Width:</span>
+      <div class="slider-input-pair">
+        <input type="range" id="stroke-size-slider" min="0.0" max="5.0" step="0.1" value="1.5">
+        <span id="stroke-size-badge" class="slider-val-badge">1.5px</span>
+      </div>
+    </div>
+    <div class="control-row">
+      <span class="control-label">Stroke Color:</span>
+      <div class="color-input-pair">
+        <input type="color" id="stroke-color-picker" class="color-picker-input" value="#000000">
+        <input type="text" id="stroke-color-hex" class="input-field" value="#000000" style="width: 76px;">
+      </div>
+    </div>
+    <div class="control-row">
+      <span class="control-label">Stroke Opacity:</span>
+      <div class="slider-input-pair">
+        <input type="range" id="stroke-opacity-slider" min="0" max="100" step="1" value="100">
+        <span id="stroke-opacity-badge" class="slider-val-badge">100%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Background & Border Radius (0% to 50%) -->
+  <div class="primer-card">
+    <div class="section-title">Background & Radius</div>
+    <div class="control-row">
+      <span class="control-label">BG Color:</span>
+      <div class="color-input-pair">
+        <input type="color" id="bg-color-picker" class="color-picker-input" value="#000000">
+        <input type="text" id="bg-color-hex" class="input-field" value="#000000" style="width: 76px;">
+      </div>
+    </div>
+    <div class="control-row">
+      <span class="control-label">BG Opacity:</span>
+      <div class="slider-input-pair">
+        <input type="range" id="bg-opacity-slider" min="0" max="100" step="1" value="40">
+        <span id="bg-opacity-badge" class="slider-val-badge">40%</span>
+      </div>
+    </div>
+    <div class="control-row">
+      <span class="control-label">Border Radius:</span>
+      <div class="slider-input-pair">
+        <input type="range" id="radius-slider" min="0" max="50" step="1" value="20">
+        <span id="radius-badge" class="slider-val-badge">20%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Global Opacity (Overall Component) -->
+  <div class="primer-card">
+    <div class="section-title">Global Opacity (整体透明度)</div>
+    <div class="control-row">
+      <span class="control-label">Overall Opacity:</span>
+      <div class="slider-input-pair">
+        <input type="range" id="global-opacity-slider" min="0" max="100" step="1" value="100">
+        <span id="global-opacity-badge" class="slider-val-badge">100%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="footer-actions">
+    <button id="btn-reset-defaults" class="btn btn-secondary" title="Reset all properties to default settings">↺ Reset Defaults</button>
+    <button id="btn-close-window" class="btn btn-secondary">Close</button>
+  </div>
+
+  <script type="module" src="./src/configurator/time-configurator.ts"></script>
+</body>
+</html>

@@ -2,6 +2,7 @@ import { listen } from '@tauri-apps/api/event';
 import { ComponentInstance, GlobalLayoutSettings } from './component-types';
 import { saveCompetitiveLayout, saveGlobalLayoutSettings, loadGlobalLayoutSettings } from './layout-store';
 import { overlayState, setOverlayClickThrough } from './telemetry-state';
+import { updateExitFullscreenPrompt } from './fullscreen-manager';
 import {
   switchRefMode,
   switchSceneMode,
@@ -60,6 +61,7 @@ export async function setupOverlayEventListeners(): Promise<void> {
   await listen<any>('change-scene-layer', (e) => {
     const scene = typeof e.payload === 'string' ? e.payload : e.payload?.scene;
     if (scene) switchSceneMode(scene);
+    updateExitFullscreenPrompt();
   });
 
   await listen<any>('change-ref-opacity', (e) => {
@@ -93,6 +95,7 @@ export async function setupOverlayEventListeners(): Promise<void> {
         switchSceneMode('not-connected', true);
       }
     }
+    updateExitFullscreenPrompt();
   });
 
   // 4. Developer Dashboard Tuning
@@ -158,6 +161,7 @@ export async function setupOverlayEventListeners(): Promise<void> {
       dragger?.selectInstance(null);
       await setOverlayClickThrough(true);
     }
+    updateExitFullscreenPrompt();
     renderCompetitiveScene(getCompetitiveInstances());
   });
 

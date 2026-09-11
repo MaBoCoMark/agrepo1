@@ -6,6 +6,7 @@ import { DraggerController } from './dragger';
 import { overlayState, setOverlayClickThrough, resetPreviousData } from './telemetry-state';
 import { cacheDevDashboardNodes, buildCompetitiveDomCache } from './dom-cache';
 import { updateReplayViewerDOM, updateReplaySvgBorder, registerSceneSwitcher } from './replay-controller';
+import { updateExitFullscreenPrompt } from './fullscreen-manager';
 
 /**
  * ============================================================================
@@ -154,6 +155,7 @@ export function switchSceneMode(target: string, notifyConfigurator: boolean = fa
       document.body.classList.remove('layout-editing');
       dragger?.selectInstance(null);
       void setOverlayClickThrough(true);
+      updateExitFullscreenPrompt();
     }
   }
 

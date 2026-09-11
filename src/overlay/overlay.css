@@ -880,3 +880,106 @@ body.layout-editing .comp-container:hover {
   z-index: 2;
   pointer-events: none;
 }
+
+/* ============================================================================
+ * 🕒 System Time Top-Right HUD Widget (GPU Isolated Canvas)
+ * ============================================================================
+ */
+.system-time-container {
+  position: fixed;
+  top: 0.8vw;
+  right: 1.0vw;
+  z-index: 99990;
+  pointer-events: none;
+  user-select: none;
+  box-sizing: border-box;
+  line-height: 1;
+}
+
+#system-time-canvas {
+  display: block;
+  pointer-events: none;
+}
+
+/* ============================================================================
+ * 🖥️ Exit Fullscreen Reminder Banner in Layout Editing Mode
+ * ============================================================================
+ */
+.exit-fullscreen-prompt {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #f0f6fc;
+  background: rgba(22, 27, 34, 0.7);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(240, 246, 252, 0.18);
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  z-index: 999999;
+  pointer-events: none;
+  user-select: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  animation: exitFullscreenPromptPulse 6.5s linear infinite;
+}
+
+@keyframes exitFullscreenPromptPulse {
+  0% {
+    opacity: 0.7;
+  }
+  7.69% { /* 0.5s / 6.5s */
+    opacity: 0.7;
+  }
+  15.38% { /* 1.0s / 6.5s */
+    opacity: 0;
+  }
+  92.31% { /* 6.0s / 6.5s */
+    opacity: 0;
+  }
+  100% { /* 6.5s / 6.5s */
+    opacity: 0.7;
+  }
+}
+
+/* ============================================================================
+ * 🔔 Hotkey Status Toast Notification
+ * ============================================================================
+ */
+.hotkey-toast-container {
+  position: fixed;
+  bottom: 36px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 999999;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.hotkey-toast {
+  background: rgba(22, 27, 34, 0.92);
+  color: #58a6ff;
+  border: 1px solid rgba(88, 166, 255, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  padding: 8px 18px;
+  border-radius: 6px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  opacity: 1;
+  transition: opacity 0.5s ease;
+}
+
+.hotkey-toast.danger {
+  color: #ff7b72;
+  border-color: rgba(248, 81, 73, 0.4);
+  background: rgba(45, 14, 18, 0.92);
+  box-shadow: 0 8px 24px rgba(248, 81, 73, 0.25);
+}

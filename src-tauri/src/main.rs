@@ -1,10 +1,12 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod hotkey;
 mod tray;
 
-#[cfg(target_os = "windows")] use tauri::Manager; // Required for window lookups
-use tauri::{Listener};
+use tauri::Listener;
+#[cfg(target_os = "windows")]
+use tauri::Manager; // Required for window lookups
 
 #[tauri::command]
 fn set_overlay_click_through(app: tauri::AppHandle, ignore: bool) -> Result<(), String> {
@@ -24,7 +26,7 @@ fn set_overlay_click_through(app: tauri::AppHandle, ignore: bool) -> Result<(), 
 
 fn main() {
     tauri::Builder::default()
-        .plugin(tauri_plugin_opener::init()) 
+        .plugin(tauri_plugin_opener::init())
         .setup(|app| {
             // Locate the overlay window
             #[cfg(target_os = "windows")]
@@ -56,12 +58,24 @@ fn main() {
                     let _ = app_handle;
                 }
             });
-            
+
             tray::create_tray(app.handle())?;
+
+            #[cfg(target_os = "windows")]
+            {
+                hotkey::init_hotkey(app.handle().clone());
+            }
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            set_overlay_click_through
+            set_overlay_click_through,
+            hotkey::get_hotkey_status,
+            hotkey::toggle_fullscreen,
+            hotkey::set_system_time_visible,
+            hotkey::get_system_time_visible,
+            hotkey::get_system_time_config,
+            hotkey::save_system_time_config,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -7,6 +7,8 @@ import { setupOverlayEventListeners } from './event-bridge';
 import { connectWebSocket } from './websocket-manager';
 import { renderDevDashboard } from './dev-dashboard-renderer';
 import { renderCompetitiveSceneSelective } from './competitive-renderer';
+import { initFullscreenManager } from './fullscreen-manager';
+import { initSystemTime } from './system-time-manager';
 
 /**
  * ============================================================================
@@ -57,6 +59,8 @@ async function bootstrap(): Promise<void> {
   try {
     await loadLayers();
     await setupOverlayEventListeners();
+    await initFullscreenManager();
+    await initSystemTime();
     switchRefMode('empty');
     switchSceneMode('not-connected');
     connectWebSocket();

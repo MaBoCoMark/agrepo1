@@ -5,7 +5,8 @@
   "windows": [
     "main",
     "configurator",
-    "overlay"
+    "overlay",
+    "system_time_configurator"
   ],
   "permissions": [
     "core:default",
