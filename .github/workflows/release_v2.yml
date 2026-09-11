@@ -46,7 +46,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
-          pnpm tauri build --bundles nsis --config src-tauri/tauri.windows.conf.json -- --message-format=json > cargo_build.log 2>&1
+          stdbuf -oL -eL pnpm tauri build --bundles nsis --config src-tauri/tauri.windows.conf.json -- --message-format=json 2>&1 | tee cargo_build.log
 
       - name: Generate Build & Cache Summary
         if: always()
